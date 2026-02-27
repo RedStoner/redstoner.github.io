@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Requirements Reference</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="index.html">
+      QuestLines
+      <span>Plugin Wiki</span>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section-label">Getting Started</div>
+    <a href="index.html">
+      <span class="nav-icon">&#9632;</span> Overview
+    </a>
+    <a href="npc-setup.html">
+      <span class="nav-icon">&#9651;</span> NPC Setup
+    </a>
+
+    <div class="sidebar-section-label">Reference</div>
+    <a href="requirements.html" class="active">
+      <span class="nav-icon">&#10003;</span> Requirements
+    </a>
+    <a href="actions.html">
+      <span class="nav-icon">&#9654;</span> Actions
+    </a>
+
+    <div class="sidebar-section-label">Guides</div>
+    <a href="progression.html">
+      <span class="nav-icon">&#9670;</span> Quest Patterns
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    QuestLines &mdash; Hytale Plugin
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Reference</div>
+      <h1 class="page-title">Requirements</h1>
+      <p class="page-subtitle">
+        Requirements are colon-delimited strings that evaluate to <strong>true</strong> or
+        <strong>false</strong> for a given player. They appear on both <em>pages</em>
+        (controlling whether the page is selected at all) and <em>responses</em>
+        (controlling whether the button is visible). All requirements in a list must pass.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Where Requirements Appear</div>
+        <p>
+          <strong>Page requirements</strong> determine whether a page is shown when the player
+          interacts with an NPC. <strong>Response requirements</strong> determine whether an
+          individual button is shown on that page. An empty <code>[]</code> requirements list
+          always passes.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== QUEST STATE ======================== -->
+    <div class="section-group">
+      <h2>Quest State</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>questCompleted:questId</td>
+              <td>True if the player has completed the named quest.</td>
+            </tr>
+            <tr>
+              <td>questNotCompleted:questId</td>
+              <td>True if the player has <em>not</em> completed the named quest.</td>
+            </tr>
+            <tr>
+              <td>questStarted:questId</td>
+              <td>True if the quest is currently in progress (started but not completed).</td>
+            </tr>
+            <tr>
+              <td>questNotStarted:questId</td>
+              <td>True if the quest has not been started (and is also not completed).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Show the turn-in page only when quest is in progress</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Show reward page only after completion</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questCompleted:lost_sword"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== TAGS ======================== -->
+    <div class="section-group">
+      <h2>Player Tags</h2>
+      <p>
+        Tags are arbitrary string labels attached to a player's data. They are managed via
+        <code>addTag</code> and <code>removeTag</code> actions. Use them to track custom
+        state that doesn't map to a full quest.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>hasTag:tagName</td>
+              <td>True if the player currently has the named tag.</td>
+            </tr>
+            <tr>
+              <td>notTag:tagName</td>
+              <td>True if the player does <em>not</em> have the named tag.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Only show dialogue if player has the "vip" tag</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"hasTag:vip"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Show a path only if a branching choice has NOT been made</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"notTag:chose_evil_path"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== KILL COUNTING ======================== -->
+    <div class="section-group">
+      <h2>Kill Counting</h2>
+      <p>
+        Kill counting requires that the tracking tag <code>tracking:kill:entityTypeId</code>
+        be added to the player first (via an <code>addTag</code> action). The counter
+        automatically increments whenever the player kills an entity of that type.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>kill:entityTypeId:qty</td>
+              <td>True if the player has killed &ge; <em>qty</em> of the specified entity type.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">Tracking Tag Required</div>
+          <p>
+            Kill counting is <strong>not automatic</strong>. You must add
+            <code>addTag:tracking:kill:entityTypeId</code> to the player (typically via a
+            quest-start response) before kills are counted. Removing the tracking tag via
+            <code>removeTag:tracking:kill:entityTypeId</code> also resets the counter to 0.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require 10 goblin kills</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"kill:goblin:10"</span>
+<span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use the variable <code>{killprogress:entityTypeId}</code> in dialog text to show
+        the player their current count. See <a href="npc-setup.html#variables">Text Variables</a>.
+      </p>
+    </div>
+
+    <!-- ======================== HYCITIZEN KILL COUNTING ======================== -->
+    <div class="section-group">
+      <h2>HyCitizen Kill Counting</h2>
+      <p>
+        For killing named HyCitizens NPCs (rather than mob entity types). Requires the
+        tracking tag <code>tracking:killcitizen:citizenName</code> to be set first.
+        The name match is <strong>case-sensitive</strong> and matches the NPC's exact
+        display name.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>killCitizen:citizenName:qty</td>
+              <td>True if the player has killed &ge; <em>qty</em> HyCitizens NPCs with the given display name.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require killing 3 "Bandit Guard" citizens</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:bandit_raid"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"killCitizen:Bandit Guard:3"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== BLOCK BREAKING ======================== -->
+    <div class="section-group">
+      <h2>Block Breaking</h2>
+      <p>
+        Counts how many times a player has broken a specific block type. Requires the
+        tracking tag <code>tracking:block:blockId</code> to be active.
+        Removing the tracking tag resets the counter.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>break:blockId:qty</td>
+              <td>True if the player has broken &ge; <em>qty</em> of the specified block type.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require mining 20 iron ore</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:miners_task"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"break:iron_ore:20"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== BLOCK PLACING ======================== -->
+    <div class="section-group">
+      <h2>Block Placing</h2>
+      <p>
+        Counts block placements. Requires the tracking tag <code>tracking:place:blockId</code>.
+        Removing the tracking tag resets the counter.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>place:blockId:qty</td>
+              <td>True if the player has placed &ge; <em>qty</em> of the specified block type.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require placing 10 stone bricks</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:build_the_wall"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"place:stone_brick:10"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== INVENTORY ======================== -->
+    <div class="section-group">
+      <h2>Inventory</h2>
+      <p>
+        Checks whether the player currently has a sufficient quantity of an item in their
+        inventory. The optional fourth segment <code>:true</code> marks the item as
+        <strong>consumable</strong> — if the response passes and is selected, the items
+        are removed before actions execute.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>item:itemId:qty</td>
+              <td>True if the player has &ge; <em>qty</em> of the item. Items are not consumed.</td>
+            </tr>
+            <tr>
+              <td>item:itemId:qty:true</td>
+              <td>True if the player has &ge; <em>qty</em> of the item. Items <strong>are consumed</strong> when the response is used.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Consumption Timing</div>
+          <p>
+            When <code>:true</code> is set, items are consumed <em>before</em> the response's
+            actions execute. This ensures the player cannot back out after the server takes
+            the items.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Check without consuming</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"item:gold_ingot:5"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Check AND consume on use (item turn-in)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"item:ancient_blade:1:true"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== NPC TALK ======================== -->
+    <div class="section-group">
+      <h2>NPC Talk Count</h2>
+      <p>
+        Talk counts are tracked automatically on every NPC interaction — no tracking tag is
+        needed. The counter is incremented before the dialogue page is resolved.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>talk:citizenId:qty</td>
+              <td>True if the player has talked to this NPC &ge; <em>qty</em> times.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Unlock dialogue on the 3rd visit</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:citizen_42:3"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== COOLDOWN ======================== -->
+    <div class="section-group">
+      <h2>Cooldown</h2>
+      <p>
+        Checks whether enough time has elapsed since a timestamp was recorded via
+        <code>setTimestamp:key</code>. If the timestamp has <em>never</em> been set for
+        this player, the requirement returns <strong>true</strong>.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>cooldown:key:seconds</td>
+              <td>True if &ge; <em>seconds</em> have passed since <code>setTimestamp:key</code> was called, or if it was never called.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Daily Reward Pattern</div>
+          <p>
+            Because <code>cooldown</code> returns true when never set, place the
+            <em>ready</em> page (with <code>cooldown:key:86400</code>) <strong>before</strong>
+            the <em>waiting</em> page (with <code>not:cooldown:key:86400</code>). New players
+            will always see the ready page first. See
+            <a href="progression.html#daily">Quest Patterns &rarr; Daily Reward</a>.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Ready page: cooldown has elapsed (or never been set)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"cooldown:daily_key:86400"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Waiting page: cooldown is still active</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"not:cooldown:daily_key:86400"</span><span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use <code>{cooldown:key:totalSeconds}</code> in dialog text to show the remaining
+        wait time (e.g. "Come back in 4 hours 23 minutes.").
+      </p>
+    </div>
+
+    <!-- ======================== TIMED QUEST ======================== -->
+    <div class="section-group">
+      <h2>Timed Quest</h2>
+      <p>
+        Timed requirements check whether an active countdown is still running or has expired.
+        The timer is started via the <code>timedStart:key</code> action. Both requirements
+        return <strong>false</strong> if the timer was never started.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>timedActive:key:seconds</td>
+              <td>True if <code>timedStart:key</code> was called AND fewer than <em>seconds</em> have elapsed. Timer is still running.</td>
+            </tr>
+            <tr>
+              <td>timedExpired:key:seconds</td>
+              <td>True if <code>timedStart:key</code> was called AND &ge; <em>seconds</em> have elapsed. Time is up.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">Page Ordering for Timed Quests</div>
+          <p>
+            Place the <em>expired</em> page <strong>before</strong> the <em>active</em> page.
+            Both return false when never started, so the intro page (with
+            <code>questNotStarted</code>) catches those players. Once started, the expired
+            page is checked first — if time is up it shows the failure; otherwise the active
+            page shows. See <a href="progression.html#timed">Quest Patterns &rarr; Timed Quest</a>.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Expire page — must come BEFORE active page in Pages list</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"timedExpired:courier_timer:300"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Active page — shown while timer is running</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"timedActive:courier_timer:300"</span>
+<span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use <code>{timeleft:key:totalSeconds}</code> in dialog text to show the remaining
+        time (e.g. "You have 2 minutes 45 seconds left.").
+      </p>
+    </div>
+
+    <!-- ======================== POSITION ======================== -->
+    <div class="section-group">
+      <h2>Position</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>nearPosition:x:y:z:radius</td>
+              <td>True if the player is within <em>radius</em> blocks of the coordinate (x, y, z).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Player must be near the quest location to turn in</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"nearPosition:120:64:-340:10"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== WORLD TIME ======================== -->
+    <div class="section-group">
+      <h2>World Time</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>timeOfDay:morning</td>
+              <td>In-game hours 6&ndash;11.</td>
+            </tr>
+            <tr>
+              <td>timeOfDay:afternoon</td>
+              <td>In-game hours 12&ndash;16.</td>
+            </tr>
+            <tr>
+              <td>timeOfDay:evening</td>
+              <td>In-game hours 17&ndash;20.</td>
+            </tr>
+            <tr>
+              <td>timeOfDay:night</td>
+              <td>In-game hours 21&ndash;5.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// NPC only talks at night</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"timeOfDay:night"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== MOON PHASE ======================== -->
+    <div class="section-group">
+      <h2>Moon Phase</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>moonPhase:full</td>
+              <td>Moon phase index 0 (full moon).</td>
+            </tr>
+            <tr>
+              <td>moonPhase:waning</td>
+              <td>Moon phase indices 1&ndash;3.</td>
+            </tr>
+            <tr>
+              <td>moonPhase:new</td>
+              <td>Moon phase index 4 (new moon).</td>
+            </tr>
+            <tr>
+              <td>moonPhase:waxing</td>
+              <td>Moon phase indices 5&ndash;7.</td>
+            </tr>
+            <tr>
+              <td>moonPhase:3</td>
+              <td>Exact numeric phase check (0&ndash;7).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Werewolf quest only during full moon</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"moonPhase:full"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== WORLD ======================== -->
+    <div class="section-group">
+      <h2>World</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>world:worldName</td>
+              <td>True if the player is currently in the named world.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"world:overworld"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== LOGIC OPERATORS ======================== -->
+    <div class="section-group">
+      <h2>Logic Operators</h2>
+      <p>
+        Requirements can be composed using <code>any</code> (OR logic) and <code>not</code>
+        (negation). These wrap other requirements using pipe-separated sub-expressions
+        (for <code>any</code>) or by prepending <code>not:</code>.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>any:req1|req2|req3</td>
+              <td>True if <em>any</em> of the pipe-separated sub-requirements passes (OR logic).</td>
+            </tr>
+            <tr>
+              <td>not:type:value</td>
+              <td>Negates any requirement. Prefix any requirement with <code>not:</code> to invert it.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">not: syntax</div>
+          <p>
+            The <code>not:</code> prefix consumes the rest of the string as the inner
+            requirement. For example, <code>not:questCompleted:my_quest</code> parses as
+            <code>not( questCompleted:my_quest )</code>. For requirements that are already
+            negated by name (like <code>questNotStarted</code>), <code>not:</code> is
+            redundant but valid.
+          </p>
+        </div>
+      </div>
+
+      <h4>Examples</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Page visible if player has EITHER quest started</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"any:questStarted:quest_a|questStarted:quest_b"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Negate a cooldown to show a "still waiting" page</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"not:cooldown:daily_key:86400"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Multiple combined: started AND (has item OR has tag)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:delivery"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"any:item:package:1|hasTag:already_delivered"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== QUICK REFERENCE ======================== -->
+    <h2>Quick Reference</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Category</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>questCompleted:id</td><td>Quest State</td><td>Quest is completed</td></tr>
+          <tr><td>questNotCompleted:id</td><td>Quest State</td><td>Quest is not completed</td></tr>
+          <tr><td>questStarted:id</td><td>Quest State</td><td>Quest is in progress</td></tr>
+          <tr><td>questNotStarted:id</td><td>Quest State</td><td>Quest not started</td></tr>
+          <tr><td>hasTag:tag</td><td>Tags</td><td>Player has tag</td></tr>
+          <tr><td>notTag:tag</td><td>Tags</td><td>Player does not have tag</td></tr>
+          <tr><td>kill:entityTypeId:qty</td><td>Kill Count</td><td>Kill threshold (requires tracking tag)</td></tr>
+          <tr><td>killCitizen:name:qty</td><td>Citizen Kill</td><td>HyCitizen kill threshold (requires tracking tag)</td></tr>
+          <tr><td>break:blockId:qty</td><td>Block Break</td><td>Block break threshold (requires tracking tag)</td></tr>
+          <tr><td>place:blockId:qty</td><td>Block Place</td><td>Block place threshold (requires tracking tag)</td></tr>
+          <tr><td>item:itemId:qty</td><td>Inventory</td><td>Has item (no consume)</td></tr>
+          <tr><td>item:itemId:qty:true</td><td>Inventory</td><td>Has item (consume on use)</td></tr>
+          <tr><td>talk:citizenId:qty</td><td>NPC Talk</td><td>Talk count threshold (auto-tracked)</td></tr>
+          <tr><td>cooldown:key:seconds</td><td>Cooldown</td><td>Elapsed since setTimestamp (true if never set)</td></tr>
+          <tr><td>timedActive:key:seconds</td><td>Timer</td><td>Timer running and not yet expired</td></tr>
+          <tr><td>timedExpired:key:seconds</td><td>Timer</td><td>Timer started and expired</td></tr>
+          <tr><td>nearPosition:x:y:z:r</td><td>Position</td><td>Within radius blocks</td></tr>
+          <tr><td>timeOfDay:morning|afternoon|evening|night</td><td>World</td><td>Time of day</td></tr>
+          <tr><td>moonPhase:full|waning|new|waxing|&lt;int&gt;</td><td>World</td><td>Moon phase</td></tr>
+          <tr><td>world:worldName</td><td>World</td><td>Current world</td></tr>
+          <tr><td>any:req1|req2|...</td><td>Logic</td><td>OR across sub-requirements</td></tr>
+          <tr><td>not:requirement</td><td>Logic</td><td>Negate any requirement</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

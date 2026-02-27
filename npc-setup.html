@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — NPC Setup</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="index.html">
+      QuestLines
+      <span>Plugin Wiki</span>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section-label">Getting Started</div>
+    <a href="index.html">
+      <span class="nav-icon">&#9632;</span> Overview
+    </a>
+    <a href="npc-setup.html" class="active">
+      <span class="nav-icon">&#9651;</span> NPC Setup
+    </a>
+
+    <div class="sidebar-section-label">Reference</div>
+    <a href="requirements.html">
+      <span class="nav-icon">&#10003;</span> Requirements
+    </a>
+    <a href="actions.html">
+      <span class="nav-icon">&#9654;</span> Actions
+    </a>
+
+    <div class="sidebar-section-label">Guides</div>
+    <a href="progression.html">
+      <span class="nav-icon">&#9670;</span> Quest Patterns
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    QuestLines &mdash; Hytale Plugin
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Getting Started</div>
+      <h1 class="page-title">NPC Setup</h1>
+      <p class="page-subtitle">
+        QuestLines integrates with <strong>HyCitizens</strong> to link dialogue quests to
+        in-world NPCs. This page covers how to link quests to NPCs, configure random quest
+        pools, use wand mode, and understand the talk tracking system.
+      </p>
+    </div>
+
+    <!-- ======================== HYCITIZENS ======================== -->
+    <h2>HyCitizens Overview</h2>
+    <p>
+      HyCitizens is the NPC framework for Hytale servers. It manages NPC spawning,
+      appearance, and interaction events. QuestLines listens to the
+      <code>CitizenInteractEvent</code> emitted by HyCitizens to intercept player
+      interactions and open the appropriate dialogue.
+    </p>
+    <p>
+      Each NPC in HyCitizens has a unique <strong>citizen ID</strong> (e.g.
+      <code>citizen_42</code>). This ID is used as the key in QuestLines'
+      <code>npcs.json</code> to map that NPC to one or more quests. You don't need
+      to configure anything in HyCitizens itself — all the linkage lives in QuestLines.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Finding a Citizen ID</div>
+        <p>
+          Use <code>/ql wand &lt;questId&gt;</code> and punch an NPC. The wand mode
+          reads the NPC's citizen ID automatically and stores it in <code>npcs.json</code>.
+          You can also look up citizen IDs in the QuestLines editor UI (<code>/ql ui</code>
+          &rarr; NPC tab).
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== LINKING QUESTS ======================== -->
+    <h2>Linking Quests to an NPC</h2>
+    <p>
+      There are two methods to link a quest to an NPC:
+    </p>
+
+    <h3>Method 1 — Wand Mode (Recommended)</h3>
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Enter wand mode.</strong>
+          <p>Run <code>/ql wand &lt;questId&gt;</code> in chat. You'll receive a
+          confirmation that wand mode is active.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Punch the target NPC.</strong>
+          <p>Left-click (punch) the HyCitizens NPC in the world. QuestLines reads the
+          citizen's ID and adds it to <code>npcs.json</code> automatically.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Wand mode ends.</strong>
+          <p>The assignment is saved immediately. Run <code>/ql wandcancel</code> at
+          any time to abort without making changes.</p>
+        </div>
+      </li>
+    </ol>
+
+    <h3>Method 2 — Editor UI</h3>
+    <p>
+      Open the editor with <code>/ql ui</code> and navigate to the <strong>NPC</strong>
+      tab. From there you can browse all citizen IDs and manually assign quests to them.
+    </p>
+
+    <!-- ======================== NPCS.JSON FORMAT ======================== -->
+    <h2>npcs.json Format</h2>
+    <p>
+      The <code>npcs.json</code> file is the source of truth for NPC-to-quest mappings.
+      It has two top-level maps: <code>NpcQuestMap</code> for direct quest assignments
+      and <code>NpcRandomGroupMap</code> for random quest pools.
+    </p>
+
+    <pre class="code-block"><code><span class="hl-cmt">// npcs.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"NpcQuestMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-str">"lost_sword,daily_reward"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_07"</span><span class="hl-punc">:</span> <span class="hl-str">"goblin_king"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"NpcRandomGroupMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_10"</span><span class="hl-punc">:</span> <span class="hl-str">"questA|questB;questC|questD"</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+    <h3>Multiple Quests on One NPC</h3>
+    <p>
+      The value in <code>NpcQuestMap</code> is a <strong>comma-separated</strong> list of
+      quest IDs. When a player interacts with that NPC, QuestLines evaluates the quests
+      in this order — first quest first. The page resolution algorithm stops as soon as a
+      matching page is found, across all quests and their pages.
+    </p>
+
+    <div class="callout warning">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Quest Order Matters for Multi-Quest NPCs</div>
+        <p>
+          When an NPC has multiple quests, the evaluation order is:
+          Quest 1 pages (in order), then Quest 2 pages (in order), and so on.
+          If Quest 1 has a catch-all page with no requirements, it will always match
+          and Quest 2 will never be reached. Put more specific quests earlier in
+          the comma-separated list, or ensure every quest's final fallback page
+          has requirements that exclude other quest states.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== RANDOM QUEST POOLS ======================== -->
+    <h2>Random Quest Pools</h2>
+    <p>
+      The <code>NpcRandomGroupMap</code> assigns quests randomly per player. This is
+      used to create variety — different players get different bounties, tasks, or story
+      paths from the same NPC.
+    </p>
+
+    <h3>Format</h3>
+    <div class="format-spec">
+      <div class="format-line">"questA|questB;questC|questD"</div>
+      <ul>
+        <li><strong>Semicolon (<code>;</code>)</strong> separates independent pools. One quest is chosen per pool.</li>
+        <li><strong>Pipe (<code>|</code>)</strong> separates quest options within a pool. One is selected at random.</li>
+      </ul>
+    </div>
+
+    <p>
+      In the example above, the player is assigned <strong>one quest from pool 1</strong>
+      (either <code>questA</code> or <code>questB</code>) <strong>and one from pool 2</strong>
+      (either <code>questC</code> or <code>questD</code>), for a total of two assigned quests.
+    </p>
+
+    <h3>Assignment Tags</h3>
+    <p>
+      When a player is assigned a random quest, QuestLines stores the result as a tag:
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Tag format for random assignment</span>
+<span class="hl-str">"assigned_quest:questId:citizenId"</span>
+
+<span class="hl-cmt">// Example: player was assigned questA from citizen_10</span>
+<span class="hl-str">"assigned_quest:questA:citizen_10"</span></code></pre>
+
+    <p>
+      Use <code>hasTag:assigned_quest:questA:citizen_10</code> in page requirements to
+      show quest-variant-specific content. See
+      <a href="progression.html#random-pool">Quest Patterns &rarr; Random Quest Pool</a>
+      for a full worked example.
+    </p>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Re-Rolling Assignments</div>
+        <p>
+          Assignment tags persist until explicitly removed. To allow a player to receive
+          a new random assignment (e.g. daily bounties), add
+          <code>removeTag:assigned_quest:questId:citizenId</code> to the quest completion
+          actions. The next interaction will trigger a new random selection.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== WAND MODE ======================== -->
+    <h2>Wand Mode</h2>
+    <p>
+      Wand mode is the fastest way to link quests to NPCs in-world without editing JSON
+      directly.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/ql wand &lt;questId&gt;</td>
+            <td>Enter wand mode for the specified quest. Persists until you punch an NPC or cancel.</td>
+          </tr>
+          <tr>
+            <td>/ql wandcancel</td>
+            <td>Cancel the active wand mode without making any changes.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      While wand mode is active, a pending assignment is stored in memory keyed to your
+      player UUID. Punching any HyCitizens NPC will:
+    </p>
+    <ol>
+      <li>Read the NPC's citizen ID.</li>
+      <li>Append the quest ID to that NPC's entry in <code>NpcQuestMap</code>.</li>
+      <li>Save <code>npcs.json</code> to disk.</li>
+      <li>Exit wand mode and confirm the link in chat.</li>
+    </ol>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Wand Mode is Per-Player</div>
+        <p>
+          Multiple admins can be in wand mode simultaneously without interfering with
+          each other. Each pending assignment is stored against the admin's own UUID.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== TALK TRACKING ======================== -->
+    <h2>Talk Tracking</h2>
+    <p>
+      QuestLines automatically tracks how many times each player has interacted with
+      each NPC. No setup or tracking tag is required — the counter increments on
+      every interaction, before the page resolution algorithm runs.
+    </p>
+
+    <p>
+      Use the <code>talk:citizenId:qty</code> requirement to gate content on visit count:
+    </p>
+
+    <pre class="code-block"><code><span class="hl-cmt">// This page only shows after the player's third visit</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:citizen_42:3"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// A "returning visitor" page for visits 2+</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:citizen_42:2"</span><span class="hl-punc">]</span></code></pre>
+
+    <!-- ======================== TEXT VARIABLES ======================== -->
+    <h2 id="variables">Text Variables</h2>
+    <p>
+      Variables can be embedded in any <code>Dialog</code> or response <code>Text</code>
+      field. They are substituted at render time with live player data.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{username}</td>
+            <td>The player's username.</td>
+          </tr>
+          <tr>
+            <td>{npcname}</td>
+            <td>The <code>Name</code> field of the current page (the NPC's display name).</td>
+          </tr>
+          <tr>
+            <td>{questname}</td>
+            <td>The title of the first quest currently in the player's started quests list.</td>
+          </tr>
+          <tr>
+            <td>{killprogress:entityTypeId}</td>
+            <td>The player's current kill count for the specified entity type.</td>
+          </tr>
+          <tr>
+            <td>{breakprogress:blockId}</td>
+            <td>The player's current block break count for the specified block type.</td>
+          </tr>
+          <tr>
+            <td>{placeprogress:blockId}</td>
+            <td>The player's current block placement count for the specified block type.</td>
+          </tr>
+          <tr>
+            <td>{citizenkillprogress:citizenName}</td>
+            <td>The player's kill count for HyCitizens NPCs with the given display name.</td>
+          </tr>
+          <tr>
+            <td>{cooldown:key:totalSeconds}</td>
+            <td>Remaining cooldown time as a human-readable string (e.g. "4 hours 23 minutes"). Renders as "ready" when the cooldown has elapsed.</td>
+          </tr>
+          <tr>
+            <td>{timeleft:key:totalSeconds}</td>
+            <td>Remaining time on a countdown timer as a human-readable string. Renders as "expired" when time is up.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Example Usage</h3>
+    <pre class="code-block"><code><span class="hl-cmt">// In a kill quest progress page</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've slain {killprogress:goblin} of 10 goblins. Keep going, {username}!"</span>
+
+<span class="hl-cmt">// In a cooldown waiting page</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've already claimed your reward. Come back in {cooldown:daily_reward:86400}."</span>
+
+<span class="hl-cmt">// In a timed quest active page</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Hurry! You have {timeleft:courier_timer:300} to make the delivery."</span></code></pre>
+
+    <!-- ======================== INLINE FORMATTING ======================== -->
+    <h2>Inline Text Formatting</h2>
+    <p>
+      Dialog and response text supports inline rich-text formatting tags. These are
+      processed by QuestLines' <code>TextFormatter</code> before the text is rendered
+      in the UI.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Tag</th><th>Effect</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{b}...{/}</td>
+            <td>Bold text</td>
+            <td><code>{b}important{/}</code></td>
+          </tr>
+          <tr>
+            <td>{i}...{/}</td>
+            <td>Italic text</td>
+            <td><code>{i}emphasis{/}</code></td>
+          </tr>
+          <tr>
+            <td>{m}...{/}</td>
+            <td>Monospace text</td>
+            <td><code>{m}code-like{/}</code></td>
+          </tr>
+          <tr>
+            <td>{#RRGGBB}...{/}</td>
+            <td>Colored text (hex color)</td>
+            <td><code>{#FF4444}danger{/}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Example</h3>
+    <pre class="code-block"><code><span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"The {b}Sunstone Amulet{/} glows with a {#FFD700}golden light{/}. Bring it to me, {username}."</span>
+
+<span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"{i}I've already lost one today — I won't risk another.{/}"</span></code></pre>
+
+    <!-- ======================== QUICK SETUP CHECKLIST ======================== -->
+    <h2>Quick Setup Checklist</h2>
+    <p>
+      When creating a new quest and linking it to an NPC for the first time, run through
+      this checklist:
+    </p>
+
+    <ol>
+      <li>Create the quest file with a title and ordered page IDs via <code>/ql create</code> or manually.</li>
+      <li>Create all page files. Ensure the most specific requirements come first in the Pages list.</li>
+      <li>Run <code>/ql wand &lt;questId&gt;</code> and punch the NPC in-world to link it.</li>
+      <li>Verify the NPC entry in <code>/ql ui</code> shows the quest ID correctly.</li>
+      <li>Test the full quest flow by interacting with the NPC as a player. Check all stages.</li>
+      <li>Confirm tracking tags are added on quest start and removed on quest complete.</li>
+      <li>Run <code>/ql reload</code> if you edited JSON files directly on disk.</li>
+    </ol>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Test With a Fresh Player Profile</div>
+        <p>
+          To test the full quest lifecycle from scratch, create a test account with no
+          quest progress. Alternatively, use the Player tab in <code>/ql ui</code> to
+          manually clear quest state and tags for your own account during development.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

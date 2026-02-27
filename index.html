@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Overview</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="index.html">
+      QuestLines
+      <span>Plugin Wiki</span>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section-label">Getting Started</div>
+    <a href="index.html" class="active">
+      <span class="nav-icon">&#9632;</span> Overview
+    </a>
+    <a href="npc-setup.html">
+      <span class="nav-icon">&#9651;</span> NPC Setup
+    </a>
+
+    <div class="sidebar-section-label">Reference</div>
+    <a href="requirements.html">
+      <span class="nav-icon">&#10003;</span> Requirements
+    </a>
+    <a href="actions.html">
+      <span class="nav-icon">&#9654;</span> Actions
+    </a>
+
+    <div class="sidebar-section-label">Guides</div>
+    <a href="progression.html">
+      <span class="nav-icon">&#9670;</span> Quest Patterns
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    QuestLines &mdash; Hytale Plugin
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Getting Started</div>
+      <h1 class="page-title">QuestLines Overview</h1>
+      <p class="page-subtitle">
+        QuestLines is a Hytale server plugin that ties HyCitizens NPC dialogue to a quest system.
+        Players interact with NPCs to trigger branching dialogue — each response can have
+        requirements that control visibility and actions that drive quest state forward.
+      </p>
+    </div>
+
+    <!-- How it works -->
+    <h2>How It Works</h2>
+    <p>
+      When a player interacts with an NPC, QuestLines looks up all quests linked to that NPC
+      and walks through their pages in order. The <strong>first page whose requirements all
+      pass</strong> is displayed as a dialogue screen. The player sees the NPC's text and up
+      to four response buttons. Choosing a response executes its actions — updating quest state,
+      giving items, running commands, or navigating to another page.
+    </p>
+
+    <div class="cards-grid">
+      <a class="card" href="requirements.html">
+        <span class="card-icon">&#10003;</span>
+        <div class="card-title">Requirements</div>
+        <p class="card-desc">Control when a page or response is visible. Quest state, tags, kill counts, items, cooldowns, and more.</p>
+      </a>
+      <a class="card" href="actions.html">
+        <span class="card-icon">&#9654;</span>
+        <div class="card-title">Actions</div>
+        <p class="card-desc">Effects triggered by a response: start quests, give items, run commands, spawn NPCs, navigate pages.</p>
+      </a>
+      <a class="card" href="npc-setup.html">
+        <span class="card-icon">&#9651;</span>
+        <div class="card-title">NPC Setup</div>
+        <p class="card-desc">Link quests to NPCs, set up random quest pools, use wand mode, and configure talk tracking.</p>
+      </a>
+      <a class="card" href="progression.html">
+        <span class="card-icon">&#9670;</span>
+        <div class="card-title">Quest Patterns</div>
+        <p class="card-desc">Full worked examples: kill quests, item turn-ins, branching dialogue, cooldown rewards, timed quests.</p>
+      </a>
+    </div>
+
+    <!-- Core Concepts -->
+    <h2>Core Concepts</h2>
+
+    <h3>Quest</h3>
+    <p>
+      A Quest is the top-level container. It has a title, description, and an ordered list of
+      <strong>page IDs</strong>. When a player interacts with an NPC, the quest's pages are
+      evaluated in the order they appear in this list.
+    </p>
+
+    <h3>Page</h3>
+    <p>
+      A Page represents one screen of dialogue. It has its own requirements (which must pass
+      for the page to be selected), NPC display name, dialogue text, and up to four responses.
+    </p>
+
+    <h3>Response</h3>
+    <p>
+      A Response is one button on a dialogue screen. It has display text, its own requirements
+      (controlling whether the button appears), and a list of actions executed when clicked.
+    </p>
+
+    <h3>PlayerData</h3>
+    <p>
+      Each player has a persistent data record tracking: started quests, completed quests,
+      custom tags, kill/break/place progress counters, and timestamps for cooldown checks.
+      This data is stored in <code>players.json</code> and managed automatically.
+    </p>
+
+    <h2>Data Model</h2>
+    <p>
+      All configuration is stored as JSON files on the server. Below is the structure of
+      each config type.
+    </p>
+
+    <h3>Quest File &mdash; <code>quests/&lt;id&gt;.json</code></h3>
+    <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span>        <span class="hl-str">"The Lost Sword"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Description"</span><span class="hl-punc">:</span> <span class="hl-str">"Help the blacksmith retrieve his stolen blade."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span>
+  <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[],</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"lost_sword_intro"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"lost_sword_progress"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"lost_sword_turnin"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"lost_sword_complete"</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+
+    <h3>Page File &mdash; <code>pages/&lt;id&gt;.json</code></h3>
+    <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"lost_sword_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span>       <span class="hl-str">"A Favour to Ask"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>        <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>  <span class="hl-cmt">// NPC display name on this page</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:lost_sword"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>      <span class="hl-str">"Ah, {username}! My sword was stolen by goblins. Will you help?"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>         <span class="hl-str">"I'll find it for you."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span>      <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[</span><span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">,</span> <span class="hl-str">"addTag:tracking:kill:goblin"</span><span class="hl-punc">]</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"Response2"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>         <span class="hl-str">"Not right now."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span>      <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+    <h3>NPC Config &mdash; <code>npcs.json</code></h3>
+    <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"NpcQuestMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-str">"lost_sword,daily_reward"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_07"</span><span class="hl-punc">:</span> <span class="hl-str">"goblin_king"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"NpcRandomGroupMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_10"</span><span class="hl-punc">:</span> <span class="hl-str">"questA|questB;questC|questD"</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+    <h3>players.json &mdash; auto-managed</h3>
+    <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Players"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"player-uuid-here"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"CompletedQuests"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"tutorial"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"StartedQuests"</span><span class="hl-punc">:</span>   <span class="hl-punc">[</span><span class="hl-str">"lost_sword"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"Tags"</span><span class="hl-punc">:</span>           <span class="hl-punc">[</span><span class="hl-str">"tracking:kill:goblin"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"Progress"</span><span class="hl-punc">:</span>       <span class="hl-punc">{</span> <span class="hl-key">"kill:goblin"</span><span class="hl-punc">:</span> <span class="hl-num">3</span> <span class="hl-punc">},</span>
+      <span class="hl-key">"Timestamps"</span><span class="hl-punc">:</span>     <span class="hl-punc">{</span> <span class="hl-key">"daily_key"</span><span class="hl-punc">:</span> <span class="hl-num">1735000000000</span> <span class="hl-punc">}</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+    <!-- Page Resolution Algorithm -->
+    <h2>Page Resolution Algorithm</h2>
+    <p>
+      Understanding how QuestLines selects a page is essential for authoring correct quest flows.
+      The algorithm runs every time a player interacts with an NPC:
+    </p>
+
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Look up quests for this NPC.</strong>
+          <p>
+            The NPC's citizen ID is looked up in <code>npcs.json</code>. The comma-separated
+            list of quest IDs is the evaluation order for that NPC.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>For each quest, iterate its Pages list.</strong>
+          <p>
+            Pages are evaluated in the order they appear in the Quest's <code>Pages</code> array.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Check this page's Requirements.</strong>
+          <p>
+            All requirements must pass. If any fails, skip to the next page.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Show the first matching page.</strong>
+          <p>
+            As soon as a page passes all requirements, that dialogue is opened. No further
+            pages are evaluated.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>If no page matches, no dialogue opens.</strong>
+          <p>
+            The player's interaction with the NPC silently does nothing.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout warning">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Order Matters</div>
+        <p>
+          Put your most <strong>specific</strong> pages first. A completed-state page must
+          come before an in-progress page, which must come before the intro page.
+          If the intro page (with <code>questNotStarted</code>) were listed last, it would
+          never match once the quest was started because the in-progress page would match first.
+          See <a href="progression.html">Quest Patterns</a> for full worked examples.
+        </p>
+      </div>
+    </div>
+
+    <!-- Admin Commands -->
+    <h2>Admin Commands</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/ql create</td>
+            <td>Open the quest creation wizard to scaffold a new quest and its pages.</td>
+          </tr>
+          <tr>
+            <td>/ql ui</td>
+            <td>Open the full QuestLines editor UI to browse and edit quests, pages, NPCs, and players.</td>
+          </tr>
+          <tr>
+            <td>/ql wand &lt;questId&gt;</td>
+            <td>Enter wand mode. The next NPC you punch will be linked to the specified quest.</td>
+          </tr>
+          <tr>
+            <td>/ql wandcancel</td>
+            <td>Cancel an active wand mode assignment.</td>
+          </tr>
+          <tr>
+            <td>/ql reload</td>
+            <td>Reload all config files from disk without restarting the server.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Tip</div>
+        <p>
+          Use <code>/ql wand &lt;questId&gt;</code> as the fastest way to link quests to NPCs
+          in-world. See <a href="npc-setup.html">NPC Setup</a> for full details on wand mode
+          and alternative linking methods.
+        </p>
+      </div>
+    </div>
+
+    <!-- What's Next -->
+    <h2>What to Read Next</h2>
+    <div class="cards-grid">
+      <a class="card" href="npc-setup.html">
+        <span class="card-icon">&#9651;</span>
+        <div class="card-title">NPC Setup</div>
+        <p class="card-desc">Link quests to NPCs, configure random pools, and understand talk tracking.</p>
+      </a>
+      <a class="card" href="requirements.html">
+        <span class="card-icon">&#10003;</span>
+        <div class="card-title">Requirements Reference</div>
+        <p class="card-desc">Every requirement type with format and JSON examples.</p>
+      </a>
+      <a class="card" href="actions.html">
+        <span class="card-icon">&#9654;</span>
+        <div class="card-title">Actions Reference</div>
+        <p class="card-desc">Every action type with format, behavior notes, and JSON examples.</p>
+      </a>
+      <a class="card" href="progression.html">
+        <span class="card-icon">&#9670;</span>
+        <div class="card-title">Quest Patterns</div>
+        <p class="card-desc">Complete JSON examples for the most common quest structures.</p>
+      </a>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

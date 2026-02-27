@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Actions Reference</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="index.html">
+      QuestLines
+      <span>Plugin Wiki</span>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section-label">Getting Started</div>
+    <a href="index.html">
+      <span class="nav-icon">&#9632;</span> Overview
+    </a>
+    <a href="npc-setup.html">
+      <span class="nav-icon">&#9651;</span> NPC Setup
+    </a>
+
+    <div class="sidebar-section-label">Reference</div>
+    <a href="requirements.html">
+      <span class="nav-icon">&#10003;</span> Requirements
+    </a>
+    <a href="actions.html" class="active">
+      <span class="nav-icon">&#9654;</span> Actions
+    </a>
+
+    <div class="sidebar-section-label">Guides</div>
+    <a href="progression.html">
+      <span class="nav-icon">&#9670;</span> Quest Patterns
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    QuestLines &mdash; Hytale Plugin
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Reference</div>
+      <h1 class="page-title">Actions</h1>
+      <p class="page-subtitle">
+        Actions are colon-delimited strings in a response's <code>Actions</code> list.
+        They execute in order when the player clicks that response button.
+        Actions modify quest state, player data, inventory, the world, or navigate dialogue.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Execution Order</div>
+        <p>
+          If a response has an <code>item:...:true</code> requirement (consume on use),
+          items are removed <em>before</em> actions execute. Actions themselves run in
+          the order they appear in the list. A <code>page:pageId</code> action navigates
+          immediately — place it last in the list.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== QUEST STATE ======================== -->
+    <div class="section-group">
+      <h2>Quest State</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>questStarted:questId</td>
+              <td>Adds the quest to the player's <em>started quests</em> list and displays a "Quest Started" notification on screen.</td>
+            </tr>
+            <tr>
+              <td>questCompleted:questId</td>
+              <td>Adds the quest to <em>completed quests</em>, removes it from <em>started quests</em>, and shows a "Quest Completed" notification.</td>
+            </tr>
+            <tr>
+              <td>questRemoved:questId</td>
+              <td>Removes the quest from <em>both</em> started and completed lists. Useful for resettable or repeatable quests.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Accept the quest and begin tracking kills</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"addTag:tracking:kill:goblin"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Complete the quest and tear down tracking</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questCompleted:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"removeTag:tracking:kill:goblin"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== TAGS ======================== -->
+    <div class="section-group">
+      <h2>Player Tags</h2>
+      <p>
+        Tags are free-form string labels stored on a player's data. They can represent
+        any custom boolean state — visited locations, made choices, unlocked content, etc.
+        Adding a tag that already exists is a no-op (idempotent).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>addTag:tagName</td>
+              <td>Adds the tag to the player's tag list. No effect if already present.</td>
+            </tr>
+            <tr>
+              <td>removeTag:tagName</td>
+              <td>Removes the tag. If the tag is a tracking flag, also resets the associated counter (see Tracking Flags below).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Record that the player chose a path in branching dialogue</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"addTag:chose_merchant_path"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Remove a tag when a condition is no longer relevant</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"removeTag:pending_escort"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== TRACKING FLAGS ======================== -->
+    <div class="section-group">
+      <h2>Tracking Flags</h2>
+      <p>
+        Tracking flags are special tags with a reserved naming convention that enable
+        progress counters. Adding one of these tags tells QuestLines to start counting
+        a particular player action. Removing the tag stops counting <em>and resets
+        the counter to zero</em>.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Tag</th><th>Counter Type</th><th>Reset on Remove</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>addTag:tracking:kill:entityTypeId</td>
+              <td>Increments <code>kill:entityTypeId</code> counter on every entity kill.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:block:blockId</td>
+              <td>Increments <code>break:blockId</code> counter on every block break.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:place:blockId</td>
+              <td>Increments <code>place:blockId</code> counter on every block placement.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:killcitizen:citizenName</td>
+              <td>Increments <code>killcitizen:citizenName</code> counter when a HyCitizens NPC with that exact display name is killed.</td>
+              <td>Yes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">Always Remove Tracking Tags on Quest Completion</div>
+          <p>
+            Failing to remove a tracking tag means the player continues accumulating
+            the counter indefinitely after the quest ends. This can cause incorrect
+            requirement evaluations on future quests. Add <code>removeTag:tracking:kill:X</code>
+            (or equivalent) to the quest-complete response's actions.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Quest start — begin tracking goblin kills</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"addTag:tracking:kill:goblin"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Quest complete — stop tracking and reset counter</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questCompleted:goblin_hunt"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"removeTag:tracking:kill:goblin"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"item:gold_coin:20"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== COOLDOWN / TIMER ======================== -->
+    <div class="section-group">
+      <h2>Cooldown &amp; Timer</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>setTimestamp:key</td>
+              <td>Records the current server time under <em>key</em> in the player's timestamps. Used with the <code>cooldown:key:seconds</code> requirement.</td>
+            </tr>
+            <tr>
+              <td>timedStart:key</td>
+              <td>Records the current server time under <em>key</em>. Semantically identical to <code>setTimestamp:key</code> but clearer when used for timed quest countdowns.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">setTimestamp vs timedStart</div>
+          <p>
+            Both actions write to the same <code>timestamps</code> map. The names differ
+            only for readability: use <code>setTimestamp</code> for cooldown gates (reward
+            timers, NPC chat limits) and <code>timedStart</code> for countdown timers
+            (timed quests, races). Do not reuse the same key for both purposes.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Grant daily reward and reset the cooldown clock</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"item:daily_chest:1"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"setTimestamp:daily_reward"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Start a 5-minute countdown timer</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"timedStart:courier_timer"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== ITEMS ======================== -->
+    <div class="section-group">
+      <h2>Items</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>item:itemId:qty</td>
+              <td>Gives <em>qty</em> of the specified item to the player and shows an item-received notification.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Reward the player for completing a quest</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questCompleted:bounty_hunter"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"item:gold_coin:50"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"item:health_potion:3"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== COMMANDS ======================== -->
+    <div class="section-group">
+      <h2>Commands</h2>
+      <p>
+        Runs a server command either from the console or as the interacting player.
+        This allows bridging QuestLines with any other plugin that supports commands.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>command:commandText:server</td>
+              <td>Runs <em>commandText</em> as the server console (op-level permissions).</td>
+            </tr>
+            <tr>
+              <td>command:commandText:player</td>
+              <td>Runs <em>commandText</em> as the interacting player (player's permission level).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">No Colons in Command Text</div>
+          <p>
+            The command text is parsed by splitting on <code>:</code>. If your command
+            contains a colon (e.g. a plugin command like <code>myplugin:subcmd</code>),
+            the parser will break. Use an alias or a wrapper command instead.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Teleport the player via console command</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"command:tp Steve 100 64 -200:server"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Player runs a command (e.g. to join a minigame)</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"command:joinqueue arena:player"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== DIALOGUE NAVIGATION ======================== -->
+    <div class="section-group">
+      <h2>Dialogue Navigation</h2>
+      <p>
+        Immediately navigates the player to a different dialogue page without closing the
+        UI. This enables branching conversations, sub-menus, and multi-step dialogue trees
+        that don't require NPC re-interaction.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>page:pageId</td>
+              <td>Navigates the player's open dialogue to the specified page. Place this last in the actions list.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Use for Branching Dialogue</div>
+          <p>
+            Hub pages with no quest logic can use <code>page:pageId</code> exclusively
+            to route players to topic-specific sub-pages. The sub-pages can themselves
+            have actions or further navigation. See
+            <a href="progression.html#branching">Quest Patterns &rarr; Branching Dialogue</a>.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Hub page response routes to a lore sub-page</span>
+<span class="hl-key">"Response2"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Tell me about the ancient war."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:elder_lore_war"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <!-- ======================== NPC SPAWNING ======================== -->
+    <div class="section-group">
+      <h2>NPC Spawning</h2>
+      <p>
+        Spawn NPCs in the world as a result of player actions — useful for scripted events,
+        quest escorts, ambushes, and environmental storytelling. Spawned NPCs are
+        <strong>not persisted</strong> to disk; they exist only until the server restarts
+        or they are killed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>spawnCitizen:citizenName:x:y:z</td>
+              <td>Spawns a visual clone of the HyCitizens NPC with that display name at the given world coordinates. Copies model, skin, scale, and appearance. Spawns in the player's current world.</td>
+            </tr>
+            <tr>
+              <td>spawnCitizen:citizenName:x:y:z:delaySeconds</td>
+              <td>Same as above, but waits <em>delaySeconds</em> (integer) before spawning. Useful for dramatic timing.</td>
+            </tr>
+            <tr>
+              <td>spawn:npcRoleId:x:y:z</td>
+              <td>Spawns a standard Hytale NPC by role ID at the given coordinates. Default rotation (0, 0, 0).</td>
+            </tr>
+            <tr>
+              <td>spawn:npcRoleId:x:y:z:delaySeconds</td>
+              <td>Same as above with an optional spawn delay in seconds.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">spawnCitizen Lookup</div>
+          <p>
+            <code>spawnCitizen</code> matches by the <em>display name</em> of an existing
+            HyCitizens NPC. If multiple NPCs share the same display name, the first match
+            is used. The spawned copy has no quest linkage — it is purely visual.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Spawn a bandit immediately at a fixed position</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:ambush"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"spawnCitizen:Bandit Guard:120:64:-340"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Spawn after a 3-second dramatic pause</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:ambush"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"addTag:tracking:killcitizen:Bandit Guard"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"spawnCitizen:Bandit Guard:120:64:-340:3"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Spawn a standard Hytale NPC by role</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"spawn:goblin_warrior:200:70:100"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== QUICK REFERENCE ======================== -->
+    <h2>Quick Reference</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Category</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>questStarted:id</td><td>Quest State</td><td>Add to started quests + notification</td></tr>
+          <tr><td>questCompleted:id</td><td>Quest State</td><td>Move to completed + notification</td></tr>
+          <tr><td>questRemoved:id</td><td>Quest State</td><td>Remove from both lists</td></tr>
+          <tr><td>addTag:tagName</td><td>Tags</td><td>Add a tag (idempotent)</td></tr>
+          <tr><td>removeTag:tagName</td><td>Tags</td><td>Remove tag (resets counter if tracking flag)</td></tr>
+          <tr><td>addTag:tracking:kill:entityTypeId</td><td>Tracking</td><td>Start kill counting</td></tr>
+          <tr><td>addTag:tracking:block:blockId</td><td>Tracking</td><td>Start break counting</td></tr>
+          <tr><td>addTag:tracking:place:blockId</td><td>Tracking</td><td>Start place counting</td></tr>
+          <tr><td>addTag:tracking:killcitizen:name</td><td>Tracking</td><td>Start citizen kill counting</td></tr>
+          <tr><td>setTimestamp:key</td><td>Cooldown</td><td>Record time for cooldown gate</td></tr>
+          <tr><td>timedStart:key</td><td>Timer</td><td>Record time for countdown timer</td></tr>
+          <tr><td>item:itemId:qty</td><td>Items</td><td>Give item + notification</td></tr>
+          <tr><td>command:text:server</td><td>Commands</td><td>Run as server console</td></tr>
+          <tr><td>command:text:player</td><td>Commands</td><td>Run as player</td></tr>
+          <tr><td>page:pageId</td><td>Navigation</td><td>Navigate to another page</td></tr>
+          <tr><td>spawnCitizen:name:x:y:z[:delay]</td><td>Spawning</td><td>Clone HyCitizens NPC at position</td></tr>
+          <tr><td>spawn:npcRoleId:x:y:z[:delay]</td><td>Spawning</td><td>Spawn Hytale NPC by role ID</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Quest Patterns</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Extra styles for this guide-heavy page */
+    .pattern-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .pattern-number {
+      background: var(--accent-dim);
+      color: var(--accent-light);
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .pattern-section {
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      padding: 28px 28px 20px;
+      margin-bottom: 36px;
+      background: var(--bg-secondary);
+    }
+    .page-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .page-flow-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      font-size: 0.88rem;
+    }
+    .page-flow-arrow {
+      color: var(--accent);
+      font-size: 1.1rem;
+      text-align: center;
+      padding: 0 0 0 14px;
+    }
+    .page-flow-item code {
+      font-size: 0.8rem;
+    }
+    .page-flow-label {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-right: 6px;
+    }
+    .page-flow-req {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="index.html">
+      QuestLines
+      <span>Plugin Wiki</span>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section-label">Getting Started</div>
+    <a href="index.html">
+      <span class="nav-icon">&#9632;</span> Overview
+    </a>
+    <a href="npc-setup.html">
+      <span class="nav-icon">&#9651;</span> NPC Setup
+    </a>
+
+    <div class="sidebar-section-label">Reference</div>
+    <a href="requirements.html">
+      <span class="nav-icon">&#10003;</span> Requirements
+    </a>
+    <a href="actions.html">
+      <span class="nav-icon">&#9654;</span> Actions
+    </a>
+
+    <div class="sidebar-section-label">Guides</div>
+    <a href="progression.html" class="active">
+      <span class="nav-icon">&#9670;</span> Quest Patterns
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    QuestLines &mdash; Hytale Plugin
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Guides</div>
+      <h1 class="page-title">Quest Patterns</h1>
+      <p class="page-subtitle">
+        Complete worked examples for the most common quest structures. Each example includes
+        full JSON for all pages and explains the page ordering principle in context.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Page Ordering Principle</div>
+        <p>
+          QuestLines returns the <strong>first page whose requirements all pass</strong>.
+          This means more specific states (completed, in-progress with objectives met)
+          must appear <em>before</em> more general states (in-progress, not-started).
+          Every example here follows this rule — study the <strong>Pages</strong> array
+          order carefully.
+        </p>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         PATTERN 1: LINEAR KILL QUEST
+    ================================================================ -->
+    <div class="pattern-section" id="kill-quest">
+      <div class="pattern-header">
+        <div class="pattern-number">1</div>
+        <h2 style="margin:0; border:none; padding:0;">Linear Quest with Kill Objective</h2>
+      </div>
+      <p>
+        The classic "kill N enemies" quest. A blacksmith asks the player to defeat goblins.
+        The quest has four pages covering each stage of the lifecycle.
+      </p>
+
+      <h3>Page Flow</h3>
+      <div class="page-flow">
+        <div class="page-flow-item">
+          <div>
+            <span class="page-flow-label">goblin_hunt_complete</span>
+            <span class="page-flow-req">questCompleted:goblin_hunt</span>
+            <br><span style="color:var(--text-muted);font-size:0.82rem;">NPC thanks the player for completing the job.</span>
+          </div>
+        </div>
+        <div class="page-flow-arrow">&#8595;</div>
+        <div class="page-flow-item">
+          <div>
+            <span class="page-flow-label">goblin_hunt_turnin</span>
+            <span class="page-flow-req">questStarted:goblin_hunt &amp; kill:goblin:10</span>
+            <br><span style="color:var(--text-muted);font-size:0.82rem;">Turn-in page — all kills done, collect reward.</span>
+          </div>
+        </div>
+        <div class="page-flow-arrow">&#8595;</div>
+        <div class="page-flow-item">
+          <div>
+            <span class="page-flow-label">goblin_hunt_progress</span>
+            <span class="page-flow-req">questStarted:goblin_hunt &amp; not:kill:goblin:10</span>
+            <br><span style="color:var(--text-muted);font-size:0.82rem;">Progress check — quest active, still need more kills.</span>
+          </div>
+        </div>
+        <div class="page-flow-arrow">&#8595;</div>
+        <div class="page-flow-item">
+          <div>
+            <span class="page-flow-label">goblin_hunt_intro</span>
+            <span class="page-flow-req">questNotStarted:goblin_hunt</span>
+            <br><span style="color:var(--text-muted);font-size:0.82rem;">Offer page — player hasn't started yet.</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>Quest File</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// quests/goblin_hunt.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span>        <span class="hl-str">"Goblin Hunt"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Description"</span><span class="hl-punc">:</span> <span class="hl-str">"The blacksmith needs 10 goblins dealt with."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span>
+  <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[],</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"goblin_hunt_complete"</span><span class="hl-punc">,</span>   <span class="hl-cmt">// most specific first</span>
+    <span class="hl-str">"goblin_hunt_turnin"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"goblin_hunt_progress"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"goblin_hunt_intro"</span>         <span class="hl-cmt">// least specific last</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Page 1 — Intro</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/goblin_hunt_intro.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>    <span class="hl-str">"goblin_hunt_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"A Smith's Plea"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>  <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:goblin_hunt"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Those goblins are ransacking my supplies! Kill 10 of them and I'll make it worth your while, {username}."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I'll take care of it."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"addTag:tracking:kill:goblin"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"Response2"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Not now."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Page 2 — Progress</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/goblin_hunt_progress.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>    <span class="hl-str">"goblin_hunt_progress"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"Keep At It"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>  <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"not:kill:goblin:10"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Not done yet! You've killed {killprogress:goblin} out of 10 goblins. Keep going!"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Right, back to it."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Page 3 — Turn In</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/goblin_hunt_turnin.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>    <span class="hl-str">"goblin_hunt_turnin"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"Job Done!"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>  <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"kill:goblin:10"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've done it! All 10 goblins slain. Here's your reward, {username}."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Happy to help."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"questCompleted:goblin_hunt"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"removeTag:tracking:kill:goblin"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"item:gold_coin:25"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Page 4 — Completed</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/goblin_hunt_complete.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>    <span class="hl-str">"goblin_hunt_complete"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"A Hero's Thanks"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>  <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questCompleted:goblin_hunt"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Thanks to you, {username}, my forge is safe. I won't forget it."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Glad to help."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <!-- ================================================================
+         PATTERN 2: ITEM TURN-IN
+    ================================================================ -->
+    <div class="pattern-section" id="item-turnin">
+      <div class="pattern-header">
+        <div class="pattern-number">2</div>
+        <h2 style="margin:0; border:none; padding:0;">Item Turn-In Quest</h2>
+      </div>
+      <p>
+        The NPC asks the player to bring a specific item. The <code>item:...:true</code>
+        requirement on the turn-in response both gates the button and consumes the item
+        when clicked.
+      </p>
+
+      <h3>Quest File</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// quests/lost_relic.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"The Lost Relic"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"relic_complete"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"relic_turnin"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"relic_fetch"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"relic_intro"</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Intro Page</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/relic_intro.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>             <span class="hl-str">"relic_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>           <span class="hl-str">"Curator Voss"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span>   <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:lost_relic"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>         <span class="hl-str">"The museum's prized relic was stolen! Retrieve the {b}Sunstone Amulet{/} and bring it to me."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I'll find it."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:lost_relic"</span><span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Fetch Page (no item yet)</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/relic_fetch.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"relic_fetch"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Curator Voss"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:lost_relic"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"not:item:sunstone_amulet:1"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"You don't have the amulet yet. Try the old tomb to the east."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I'll keep searching."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Turn-In Page (has item — consumes it)</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/relic_turnin.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"relic_turnin"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Curator Voss"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:lost_relic"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"item:sunstone_amulet:1"</span>    <span class="hl-cmt">// no :true here — check only at page level</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"You found it! The Sunstone Amulet — please, hand it over and I'll reward you."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>         <span class="hl-str">"Here you go."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span>      <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"item:sunstone_amulet:1:true"</span><span class="hl-punc">],</span>  <span class="hl-cmt">// :true = consume on click</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[</span>
+      <span class="hl-str">"questCompleted:lost_relic"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"item:museum_pass:1"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Page vs. Response Requirement</div>
+          <p>
+            The page has <code>item:sunstone_amulet:1</code> (no consume) to select the
+            turn-in dialogue. The response has <code>item:sunstone_amulet:1:true</code>
+            to actually consume the item when the player clicks. This two-layer check
+            prevents the page being shown only to consume on an invisible button.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         PATTERN 3: BRANCHING DIALOGUE
+    ================================================================ -->
+    <div class="pattern-section" id="branching">
+      <div class="pattern-header">
+        <div class="pattern-number">3</div>
+        <h2 style="margin:0; border:none; padding:0;">Branching Dialogue</h2>
+      </div>
+      <p>
+        A hub page offers multiple topics. Each response uses <code>page:pageId</code>
+        to navigate without NPC re-interaction. Sub-pages can return to the hub or lead
+        deeper.
+      </p>
+
+      <h3>Hub Page</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/elder_hub.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"elder_hub"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Elder Maeris"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"Greetings, {username}. What would you like to know?"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Tell me about the ancient war."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:elder_lore_war"</span><span class="hl-punc">]</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"Response2"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"What can you tell me about the artifacts?"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:elder_lore_artifacts"</span><span class="hl-punc">]</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"Response3"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Goodbye."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Sub-Page A — War Lore</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/elder_lore_war.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"elder_lore_war"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Elder Maeris"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"A thousand years ago, the Sunken Kingdom fell in a war that shook the foundations of this world..."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Tell me more."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:elder_lore_war_2"</span><span class="hl-punc">]</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"Response2"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I have other questions."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:elder_hub"</span><span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Hub Sub-Pages Don't Need Quest Requirements</div>
+          <p>
+            Sub-pages used purely for lore or dialogue don't need requirements — they are
+            only reached via <code>page:</code> actions, never by the page resolution
+            algorithm. You can optionally add them to a "lore_quest" to keep them organised,
+            or leave them as standalone pages. If you add them to a quest's Pages list,
+            give them restrictive requirements so they don't fire on normal NPC interaction.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         PATTERN 4: DAILY REWARD
+    ================================================================ -->
+    <div class="pattern-section" id="daily">
+      <div class="pattern-header">
+        <div class="pattern-number">4</div>
+        <h2 style="margin:0; border:none; padding:0;">Daily Reward with Cooldown</h2>
+      </div>
+      <p>
+        Two pages on one NPC. The "ready" page shows when the cooldown has elapsed
+        (or never been set). The "waiting" page shows while the cooldown is active.
+        Because <code>cooldown:</code> returns true when never set, the ready page
+        <strong>must be listed first</strong>.
+      </p>
+
+      <h3>Quest File</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// quests/daily_reward.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"Daily Reward"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"daily_reward_ready"</span><span class="hl-punc">,</span>    <span class="hl-cmt">// cooldown elapsed OR never set — MUST be first</span>
+    <span class="hl-str">"daily_reward_waiting"</span>    <span class="hl-cmt">// cooldown still active</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Ready Page</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/daily_reward_ready.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"daily_reward_ready"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Innkeeper Brom"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"cooldown:daily_reward:86400"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"Welcome back, {username}! Your daily stipend is ready. Here, take it."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Thank you!"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"item:daily_stipend:1"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"setTimestamp:daily_reward"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Waiting Page</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/daily_reward_waiting.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"daily_reward_waiting"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Innkeeper Brom"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"not:cooldown:daily_reward:86400"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"You've already collected today. Come back in {cooldown:daily_reward:86400}."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Understood."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">{cooldown:key:totalSeconds} Variable</div>
+          <p>
+            The <code>{cooldown:daily_reward:86400}</code> variable in the dialog text
+            renders as a human-readable countdown like <em>"4 hours 23 minutes"</em>.
+            When the timer has elapsed it renders as <em>"ready"</em>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         PATTERN 5: TIMED QUEST
+    ================================================================ -->
+    <div class="pattern-section" id="timed">
+      <div class="pattern-header">
+        <div class="pattern-number">5</div>
+        <h2 style="margin:0; border:none; padding:0;">Timed Quest</h2>
+      </div>
+      <p>
+        A courier quest where the player must reach a destination within 5 minutes.
+        The timer starts when the quest is accepted. A failure page shows if time expires
+        before completion.
+      </p>
+
+      <h3>Page Order &amp; Why</h3>
+      <p>
+        Both <code>timedActive</code> and <code>timedExpired</code> return false before
+        <code>timedStart</code> is called. That means the intro page (requiring
+        <code>questNotStarted</code>) catches the player initially. Once started, the
+        expired page is evaluated before the active page — if the timer has run out,
+        the failure screen shows; otherwise the active tracking page shows.
+      </p>
+
+      <h3>Quest File</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// quests/courier_run.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"The Courier Run"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"courier_complete"</span><span class="hl-punc">,</span>    <span class="hl-cmt">// questCompleted — most specific</span>
+    <span class="hl-str">"courier_expired"</span><span class="hl-punc">,</span>     <span class="hl-cmt">// timedExpired — failure state, BEFORE active</span>
+    <span class="hl-str">"courier_active"</span><span class="hl-punc">,</span>      <span class="hl-cmt">// timedActive — quest in progress</span>
+    <span class="hl-str">"courier_intro"</span>        <span class="hl-cmt">// questNotStarted — least specific</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Intro Page (NPC A — Quest Giver)</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/courier_intro.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"courier_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Dispatch Master"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:courier_run"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"I need this package delivered to the docks in 5 minutes. Can you do it?"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I'll run it now."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"item:delivery_package:1"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"timedStart:courier_timer"</span>   <span class="hl-cmt">// start the 5-minute clock</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Active Page (NPC B — Dock Master)</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/courier_active.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"courier_active"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Dock Master"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"timedActive:courier_timer:300"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"A package for me? Excellent — you have {timeleft:courier_timer:300} left. Hand it over!"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>         <span class="hl-str">"Here's the delivery."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span>      <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"item:delivery_package:1:true"</span><span class="hl-punc">],</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[</span>
+      <span class="hl-str">"questCompleted:courier_run"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"item:gold_coin:30"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Expired Page</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/courier_expired.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"courier_expired"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Dock Master"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"timedExpired:courier_timer:300"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"You're too late — the shipment window has closed. Return to the dispatch office."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"My apologies."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"questRemoved:courier_run"</span>    <span class="hl-cmt">// reset so player can try again</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <!-- ================================================================
+         PATTERN 6: RANDOM QUEST POOL
+    ================================================================ -->
+    <div class="pattern-section" id="random-pool">
+      <div class="pattern-header">
+        <div class="pattern-number">6</div>
+        <h2 style="margin:0; border:none; padding:0;">Random Quest Pool Assignment</h2>
+      </div>
+      <p>
+        An NPC can be configured to randomly assign one quest per pool to each player on
+        first interaction. This is done via the <code>NpcRandomGroupMap</code> in
+        <code>npcs.json</code>. Players then see different quest content depending on
+        which variant was assigned.
+      </p>
+
+      <h3>NPC Config</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// npcs.json — RandomGroups for citizen_10</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"NpcRandomGroupMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_10"</span><span class="hl-punc">:</span> <span class="hl-str">"quest_hunt_wolves|quest_hunt_spiders;quest_gather_herbs|quest_gather_ore"</span>
+    <span class="hl-cmt">//                 ^--- pool 1 (pick one) ---------------^  ^--- pool 2 ---^</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <p>
+        On first interaction, QuestLines picks one quest from each pool and stores it as
+        a tag on the player: <code>assigned_quest:questId:citizenId</code>. Use
+        <code>hasTag:assigned_quest:quest_hunt_wolves:citizen_10</code> to show
+        quest-variant-specific content.
+      </p>
+
+      <h3>Variant-Specific Intro Pages</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/bounty_wolves_intro.json — only shown if wolves quest was assigned</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"bounty_wolves_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Bounty Master"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questNotStarted:quest_hunt_wolves"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"hasTag:assigned_quest:quest_hunt_wolves:citizen_10"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"Today's bounty: wolves are threatening the northern farms. Clear them out."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I'll handle it."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"questStarted:quest_hunt_wolves"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"addTag:tracking:kill:wolf"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span>
+
+<span class="hl-cmt">// pages/bounty_spiders_intro.json — shown if spiders quest was assigned</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"bounty_spiders_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Bounty Master"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questNotStarted:quest_hunt_spiders"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"hasTag:assigned_quest:quest_hunt_spiders:citizen_10"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"Cave spiders are blocking the mine shaft. Clear them for a reward."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Done deal."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"questStarted:quest_hunt_spiders"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"addTag:tracking:kill:cave_spider"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Assignment Tags are Permanent</div>
+          <p>
+            The <code>assigned_quest:questId:citizenId</code> tag is stored on the player
+            indefinitely. If you want a new assignment on the next cycle, remove the tag
+            via <code>removeTag:assigned_quest:quest_hunt_wolves:citizen_10</code> in the
+            quest completion actions. On the next interaction, QuestLines will assign a new
+            random quest.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         PATTERN 7: MULTI-NPC QUEST CHAIN
+    ================================================================ -->
+    <div class="pattern-section" id="multi-npc">
+      <div class="pattern-header">
+        <div class="pattern-number">7</div>
+        <h2 style="margin:0; border:none; padding:0;">Multi-NPC Quest Chain</h2>
+      </div>
+      <p>
+        A quest that progresses through interactions with several different NPCs in sequence.
+        Tags are used to track which step the player is on, since a single NPC cannot know
+        which step a player is at without explicit markers.
+      </p>
+
+      <h3>Quest Design</h3>
+      <p>
+        The quest has three stages: talk to the Blacksmith, then the Herbalist, then the
+        Sage. The <code>quest_chain</code> quest's pages are spread across three different
+        NPCs, each linked to the same quest in <code>npcs.json</code>.
+      </p>
+
+      <h3>NPC Config</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// All three NPCs share the same quest</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"NpcQuestMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_smith"</span><span class="hl-punc">:</span>     <span class="hl-str">"ancient_ritual"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_herbalist"</span><span class="hl-punc">:</span> <span class="hl-str">"ancient_ritual"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_sage"</span><span class="hl-punc">:</span>      <span class="hl-str">"ancient_ritual"</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Quest File</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// quests/ancient_ritual.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"The Ancient Ritual"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"ritual_complete"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"ritual_sage_meeting"</span><span class="hl-punc">,</span>       <span class="hl-cmt">// step 3: talk to sage</span>
+    <span class="hl-str">"ritual_herbalist_meeting"</span><span class="hl-punc">,</span>  <span class="hl-cmt">// step 2: talk to herbalist</span>
+    <span class="hl-str">"ritual_smith_intro"</span>          <span class="hl-cmt">// step 1: smith starts the quest</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Step 1 — Blacksmith (quest giver)</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/ritual_smith_intro.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"ritual_smith_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:ancient_ritual"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"I need your help with an ancient ritual. First, go speak with the Herbalist about the reagents."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I'll help."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"questStarted:ancient_ritual"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"addTag:ritual_step_herbalist"</span>    <span class="hl-cmt">// advance to step 2</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Step 2 — Herbalist</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/ritual_herbalist_meeting.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"ritual_herbalist_meeting"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Herbalist Lyra"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:ancient_ritual"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"hasTag:ritual_step_herbalist"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"notTag:ritual_step_sage"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"Aldric sent you? The reagents are ready. Take them to the Sage on the hill."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"I'll bring them to the Sage."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-str">"item:ritual_reagents:1"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"removeTag:ritual_step_herbalist"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"addTag:ritual_step_sage"</span>           <span class="hl-cmt">// advance to step 3</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Step 3 — Sage (final turn-in)</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// pages/ritual_sage_meeting.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"ritual_sage_meeting"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>         <span class="hl-str">"Sage Ondrel"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:ancient_ritual"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"hasTag:ritual_step_sage"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>       <span class="hl-str">"At last! The reagents. Hand them over and the ritual can begin."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Text"</span><span class="hl-punc">:</span>         <span class="hl-str">"Here they are."</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span>      <span class="hl-kw">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"item:ritual_reagents:1:true"</span><span class="hl-punc">],</span>
+    <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[</span>
+      <span class="hl-str">"questCompleted:ancient_ritual"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"removeTag:ritual_step_sage"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"item:ritual_reward:1"</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Clean Up Step Tags</div>
+          <p>
+            Remove step tags when transitioning to the next step (as shown above) rather
+            than accumulating them. This keeps player data tidy and prevents incorrect
+            page matches if the quest is ever reset and replayed.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
