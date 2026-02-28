@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — AI Generation</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="index.html">
+      QuestLines
+      <span>Plugin Wiki</span>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sidebar-section-label">Getting Started</div>
+    <a href="index.html">
+      <span class="nav-icon">&#9632;</span> Overview
+    </a>
+    <a href="npc-setup.html">
+      <span class="nav-icon">&#9651;</span> NPC Setup
+    </a>
+
+    <div class="sidebar-section-label">Reference</div>
+    <a href="requirements.html">
+      <span class="nav-icon">&#10003;</span> Requirements
+    </a>
+    <a href="actions.html">
+      <span class="nav-icon">&#9654;</span> Actions
+    </a>
+
+    <div class="sidebar-section-label">Guides</div>
+    <a href="progression.html">
+      <span class="nav-icon">&#9670;</span> Quest Patterns
+    </a>
+
+    <div class="sidebar-section-label">Tools</div>
+    <a href="ai-generation.html" class="active">
+      <span class="nav-icon">&#10024;</span> AI Generation
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    QuestLines &mdash; Hytale Plugin
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Tools</div>
+      <h1 class="page-title">AI Generation</h1>
+      <p class="page-subtitle">
+        QuestLines provides a self-contained system prompt that lets any AI assistant generate
+        valid quest JSON for you. Copy it from the <a href="#system-prompt">System Prompt</a>
+        section below, paste it into a new AI chat session, then describe the quest you want.
+        This page also covers how to write effective prompts and what to watch for when
+        reviewing AI output.
+      </p>
+    </div>
+
+    <!-- ======================== WHAT IS THE SYSTEM PROMPT ======================== -->
+    <h2>What Is the System Prompt</h2>
+    <p>
+      The QuestLines system prompt is a complete, self-contained specification of the plugin's
+      data model — written specifically to be pasted into an AI chat session as the first message.
+    </p>
+    <p>
+      It covers every requirement type, every action type, valid entity and item ID conventions,
+      page ordering rules, tracking tag requirements, timer format nuances, and worked examples
+      of common quest patterns. When an AI model has this context loaded it can produce
+      syntactically correct quest JSON without you needing to specify every rule manually.
+    </p>
+    <p>
+      The prompt works with any instruction-following language model — ChatGPT, Claude, Gemini,
+      or a locally running model. The larger and more capable the model, the better the output
+      quality for complex multi-page quests.
+    </p>
+
+    <!-- ======================== SYSTEM PROMPT ======================== -->
+    <h2 id="system-prompt">System Prompt</h2>
+    <p>
+      Copy the full block below and paste it as the first message in a new AI chat session.
+      The model will acknowledge the spec — then describe the quest you want in your next message.
+    </p>
+
+    <div class="prompt-toolbar">
+      <button class="copy-btn" onclick="(function(btn){
+        var text = document.getElementById('prompt-content').textContent;
+        navigator.clipboard.writeText(text).then(function(){
+          btn.textContent = 'Copied!';
+          setTimeout(function(){ btn.textContent = 'Copy to clipboard'; }, 2000);
+        });
+      })(this)">Copy to clipboard</button>
+    </div>
+    <div class="code-block prompt-block">
+      <pre id="prompt-content">You are helping design and write quest content for a Hytale server plugin called QuestLines.
+  Below is the complete technical reference for the plugin. Use it to answer questions, write
+  quest configs, and validate quest logic.
+
+  ═══════════════════════════════════════════════════════
+  OVERVIEW
+  ═══════════════════════════════════════════════════════
+
+  QuestLines ties NPC dialogue to quests. When a player interacts with an NPC (via HyCitizens),
+  the plugin finds the first quest page assigned to that NPC whose requirements all pass for
+  that player, then shows it as a dialogue screen with up to 4 response buttons. Each response
+  can have its own requirements and actions. This drives all quest progression.
+
+  ═══════════════════════════════════════════════════════
+  CONFIG FILES  (stored in the plugin data folder)
+  ═══════════════════════════════════════════════════════
+
+  quests/&lt;questId&gt;.json  — one file per quest  (e.g. quests/my_quest.json)
+  pages/&lt;pageId&gt;.json    — one file per page   (e.g. pages/my_quest_page1.json)
+  npcs.json              — NPC-to-quest assignments
+  players.json           — Per-player state (auto-managed)
+
+  The quests/ and pages/ directories are created automatically on first run.
+  Each file contains only the quest or page body — the ID is the filename, not a key.
+
+  All JSON keys are PascalCase.
+
+  ═══════════════════════════════════════════════════════
+  DATA MODEL
+  ═══════════════════════════════════════════════════════
+
+  ── Quest  (file: quests/my_quest.json) ────────────────
+  {
+    "Title":        "The Lost Sword",
+    "Description":  "Recover the blacksmith's stolen sword.",
+    "Requirements": ["questNotStarted:my_quest"],
+    "Actions":      [],
+    "Pages":        ["my_quest_page1", "my_quest_page2"]
+  }
+
+  The filename (without .json) is the quest ID. No outer wrapper key.
+  The Pages list is ordered — the first page whose requirements pass is shown to the player.
+
+  ── Page  (file: pages/my_quest_page1.json) ────────────
+  {
+    "Id":           "my_quest_page1",
+    "Title":        "my_quest_page1",
+    "Name":         "Blacksmith",
+    "Requirements": ["questNotStarted:my_quest"],
+    "Dialog":       "Adventurer! Someone stole my sword. Can you help?",
+    "Response1": { ... },
+    "Response2": { ... },
+    "Response3": { ... },
+    "Response4": { ... }
+  }
+
+  The filename (without .json) is the page ID. Page IDs must be unique across all pages.
+  Recommended convention: questId_pageN.
+
+  ── Response ───────────────────────────────────────────
+  {
+    "Text":         "I'll find it for you!",
+    "Enabled":      true,
+    "Requirements": ["questNotStarted:my_quest"],
+    "Actions":      ["questStarted:my_quest"]
+  }
+
+  A response with empty Text or Enabled: false is hidden.
+  All 4 response slots always exist; unused ones should have Enabled: false.
+
+  ── NpcConfig ──────────────────────────────────────────
+  {
+    "Npcs": {
+      "citizen_abc123": "my_quest,another_quest"
+    },
+    "RandomGroups": {
+      "citizen_abc123": "questA|questB;questC|questD"
+    }
+  }
+
+  The citizenId comes from HyCitizens. One NPC can serve multiple quests.
+
+  ═══════════════════════════════════════════════════════
+  PAGE RESOLUTION — HOW THE PLUGIN PICKS WHICH PAGE TO SHOW
+  ═══════════════════════════════════════════════════════
+
+  When a player interacts with an NPC, the plugin:
+  1. Gets all quest IDs assigned to that NPC (from Npcs map), in order.
+  2. For each quest, iterates Pages in order.
+  3. Returns the FIRST page whose Requirements all pass for this player.
+  4. If no page matches, no dialogue opens.
+
+  Page order matters enormously. Put the most specific/restrictive pages first
+  (e.g. the "quest completed" response), and the generic opener last.
+
+  ═══════════════════════════════════════════════════════
+  REQUIREMENTS  (colon-delimited strings)
+  ═══════════════════════════════════════════════════════
+
+  All requirements return true or false. A page or response shows only when ALL of its
+  requirements return true. An empty requirements list always passes.
+
+  Quest state:
+    questCompleted:questId        true if player has completed that quest
+    questNotCompleted:questId     true if player has NOT completed it
+    questStarted:questId          true if quest is in progress (started but not completed)
+    questNotStarted:questId       true if quest is not in the started list
+
+  Tags:
+    hasTag:tagName                true if player has this tag
+    notTag:tagName                true if player does NOT have this tag
+
+  Kill counting:  (requires tracking:kill:entityTypeId tag on the player first)
+    kill:entityTypeId:qty         true if player has killed &gt;= qty of that entity type
+
+  HyCitizen kill: (requires tracking:killcitizen:citizenName tag on the player first)
+    killCitizen:citizenName:qty   true if player has killed &gt;= qty citizens with that name
+
+  Block breaking: (requires tracking:block:blockId tag on the player first)
+    break:blockId:qty             true if player has broken &gt;= qty of that block
+
+  Block placing:  (requires tracking:place:blockId tag on the player first)
+    place:blockId:qty             true if player has placed &gt;= qty of that block
+
+  Inventory:
+    item:itemId:qty               true if player has &gt;= qty of that item in inventory
+    item:itemId:qty:true          same, AND consumes the items when the response is used
+
+  NPC talk count:
+    talk:citizenName:qty          true if player has talked to this NPC &gt;= qty times
+
+  Cooldown:
+    cooldown:key:seconds          true if &gt;= N seconds have passed since setTimestamp:key
+                                   ALSO true if setTimestamp:key was never called
+
+  Timed quest:
+    timedActive:key               true if timer is still running (uses duration from timedStart:key:N)
+    timedActive:key:seconds       same, but overrides the stored duration with an explicit value
+    timedExpired:key              true if timer has expired (uses duration from timedStart:key:N)
+    timedExpired:key:seconds      same, but overrides the stored duration with an explicit value
+                                   Both return FALSE if timedStart was never called for this key.
+
+  Position:
+    nearPosition:x:y:z:radius    true if player is within radius blocks of the coordinate
+
+  World time:
+    timeOfDay:morning             hour 6–11
+    timeOfDay:afternoon           hour 12–16
+    timeOfDay:evening             hour 17–20
+    timeOfDay:night               hour 21–5
+
+  Moon phase:
+    moonPhase:full                phase 0
+    moonPhase:waning              phases 1, 2, 3
+    moonPhase:new                 phase 4
+    moonPhase:waxing              phases 5, 6, 7
+    moonPhase:3                   exact numeric phase (0–7)
+
+  World:
+    world:worldName               true if player is in the named world
+
+  Logic operators:
+    any:req1|req2|req3            true if ANY of the pipe-separated requirements passes
+    not:type:value                negates any requirement
+
+  ═══════════════════════════════════════════════════════
+  ACTIONS  (colon-delimited strings)
+  ═══════════════════════════════════════════════════════
+
+  Actions run in order when a response is clicked.
+
+  Quest state:
+    questStarted:questId          adds questId to startedQuests, shows notification
+    questCompleted:questId        adds to completedQuests, removes from startedQuests
+    questRemoved:questId          removes from both startedQuests and completedQuests
+
+  Tags:
+    addTag:tagName                adds a tag to the player
+    removeTag:tagName             removes a tag; also resets the associated progress counter
+                                   for tracking:kill:X, tracking:block:X, tracking:place:X
+
+  Cooldown / Timer:
+    setTimestamp:key              records current time (for cooldown requirements)
+    timedStart:key:durationSeconds records current time AND stores the duration so
+                                   timedActive/timedExpired can use just "timedActive:key".
+                                   The :durationSeconds part is required.
+
+  Items:
+    item:itemId:qty               gives qty of itemId to the player
+
+  Commands:
+    command:commandText:server    runs the command as the server console
+    command:commandText:player    runs the command as the player
+    NOTE: commandText cannot itself contain colons.
+
+  Dialogue navigation:
+    page:pageId                   navigates to a different dialogue page (put this last)
+
+  NPC spawning:
+    spawnCitizen:citizenName:x:y:z[:delay]
+                                   Spawns a clone of an existing HyCitizens citizen at the
+                                   given coordinates. Clone is temporary — removed on death.
+    spawn:npcRoleId:x:y:z[:delay]  Spawns a standard Hytale NPC by role ID.
+
+  ═══════════════════════════════════════════════════════
+  TRACKING FLAGS  (special tags that enable counters)
+  ═══════════════════════════════════════════════════════
+
+  Kill and block progress only counts for players who have the relevant tracking tag.
+  Add the tag via an action before the player can accumulate progress.
+
+    addTag:tracking:kill:entityTypeId      starts counting kills of that entity type
+    addTag:tracking:killcitizen:citizenName starts counting citizen kills with that name
+    addTag:tracking:block:blockId          starts counting breaks of that block type
+    addTag:tracking:place:blockId          starts counting placements of that block type
+    removeTag:tracking:kill:entityTypeId   resets kill counter to 0 and stops counting
+    removeTag:tracking:block:blockId       resets break counter to 0 and stops counting
+    removeTag:tracking:place:blockId       resets place counter to 0 and stops counting
+
+  Talk progress tracks automatically — no tag needed.
+
+  ═══════════════════════════════════════════════════════
+  DIALOG TEXT — VARIABLES &amp; FORMATTING
+  ═══════════════════════════════════════════════════════
+
+  Variables (substituted at display time):
+    {username}                    player's username
+    {npcname}                     the page's Name field
+    {questname}                   title of the player's first started quest
+    {killprogress:entityTypeId}   current kill count for that entity type
+    {breakprogress:blockId}       current block break count
+    {placeprogress:blockId}       current block place count
+    {citizenkillprogress:name}    current kill count for HyCitizens NPCs with that name
+    {cooldown:key:totalSeconds}   remaining cooldown as human-readable string
+    {timeleft:key:totalSeconds}   remaining time on a timed quest
+
+  Inline formatting:
+    {b}bold{/}   {i}italic{/}   {m}monospace{/}   {#FF0000}red{/}
+
+  ═══════════════════════════════════════════════════════
+  RANDOM QUEST POOLS
+  ═══════════════════════════════════════════════════════
+
+  RandomGroups format:  "questA|questB;questC|questD"
+    "|"  separates quests within one pool  (one chosen at random)
+    ";"  separates pools                   (one quest chosen from EACH pool)
+
+  Assignment stored as tag: assigned_quest:questId:citizenId
+  Use hasTag:assigned_quest:questId:citizenId in requirements to gate content per-player.
+
+  ═══════════════════════════════════════════════════════
+  COMMON QUEST PATTERNS
+  ═══════════════════════════════════════════════════════
+
+  ── Linear quest with kill objective ───────────────────
+
+  Quest pages (in order):
+    1. intro    — Requirements: [questNotStarted:quest_id]
+         Response 1 "Accept": Actions: [questStarted:quest_id, addTag:tracking:kill:Zombie]
+    2. progress — Requirements: [questStarted:quest_id, not:kill:Zombie:10]
+         Dialog: "You've killed {killprogress:Zombie}/10 so far."
+    3. done     — Requirements: [questStarted:quest_id, kill:Zombie:10]
+         Response 1 "Claim": Actions: [questCompleted:quest_id,
+                                        removeTag:tracking:kill:Zombie, item:Reward_Item:1]
+    4. finished — Requirements: [questCompleted:quest_id]
+         Dialog: "Thanks again!"
+
+  ── Cooldown gate ──────────────────────────────────────
+
+  Page "daily_ready"  — Requirements: [cooldown:daily_key:86400]
+    Response 1 "Claim": Actions: [item:Reward:1, setTimestamp:daily_key]
+
+  Page "daily_wait"   — Requirements: [not:cooldown:daily_key:86400]
+    Dialog: "Come back later. {cooldown:daily_key:86400}"
+
+  (Put daily_ready BEFORE daily_wait in the quest pages list.)
+
+  ── Timed quest ────────────────────────────────────────
+
+  Quest pages (in order):
+    1. complete  — Requirements: [questCompleted:quest_id]
+    2. expired   — Requirements: [questStarted:quest_id, timedExpired:arena_timer]
+    3. active    — Requirements: [questStarted:quest_id, timedActive:arena_timer]
+    4. intro     — Requirements: [questNotStarted:quest_id]
+         Accept response: Actions: [questStarted:quest_id, timedStart:arena_timer:60]
+
+  ── Item turn-in ───────────────────────────────────────
+
+  Page "turn_in" — Requirements: [questStarted:my_quest]
+    Response 1 "Hand over":
+      Requirements: [item:Ore_Iron:5:true]    ← :true consumes the items
+      Actions: [questCompleted:my_quest, item:Reward_Item:1]
+
+  ═══════════════════════════════════════════════════════
+  RULES &amp; GOTCHAS
+  ═══════════════════════════════════════════════════════
+
+  1. Page order is critical. completed → in-progress → not-started (most specific first).
+  2. removeTag:tracking:kill:X resets the kill counter. Remove then re-add to reset progress.
+  3. cooldown returns TRUE if setTimestamp was never called. Plan page order accordingly.
+  4. item:qty:true consumes items; item:qty alone only checks inventory.
+  5. Tags can contain colons: hasTag:tracking:kill:Zombie is valid.
+  6. command:text — commandText is parts[1] only; commands with colons need a wrapper command.
+  7. page: navigation action should always be last in the Actions list.
+  8. timedStart:key:N stores the duration. timedActive:key and timedExpired:key read it back.
+  9. Multiple quests on one NPC are evaluated in the order listed in the Npcs map value.</pre>
+    </div>
+
+    <!-- ======================== GETTING STARTED ======================== -->
+    <h2>Getting Started</h2>
+    <p>
+      Using prompt.txt with an AI assistant takes only a few steps.
+    </p>
+
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Copy the system prompt.</strong>
+          <p>
+            Scroll up to the <a href="#system-prompt">System Prompt</a> section and click
+            <em>Copy to clipboard</em>. This copies the full QuestLines specification,
+            ready to paste into any AI assistant.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Paste it as the first message in a new AI chat session.</strong>
+          <p>
+            Start a fresh conversation with your preferred AI assistant. Paste the copied
+            text as your first message and send it. The model will acknowledge the spec —
+            you don't need to do anything special here.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Write your quest request in the next message.</strong>
+          <p>
+            Describe what you want the quest to do. Be specific about NPC names, quest IDs,
+            objectives, and rewards. The model will generate the quest JSON, page JSON files,
+            and any npcs.json changes needed.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Copy the generated JSON into your server files.</strong>
+          <p>
+            Save each generated file to the appropriate location on your server — quest files
+            to <code>quests/</code>, page files to <code>pages/</code>, and update
+            <code>npcs.json</code> if the AI provided changes for it.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Validate before deploying.</strong>
+          <p>
+            Review the output against the checklist in the
+            <a href="#validating-ai-output">Validating AI Output</a> section below before
+            testing in-game.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Keep the session open</div>
+        <p>
+          Once prompt.txt is loaded, you can request multiple quests in the same session
+          without repasting it. Ask for revisions, additional pages, or variant quests
+          and the model will maintain context across messages.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== WRITING GOOD QUEST PROMPTS ======================== -->
+    <h2>Writing Good Quest Prompts</h2>
+    <p>
+      The quality of the AI output depends heavily on how precisely you describe the quest.
+      Vague prompts produce generic quests; specific prompts with named objectives produce
+      production-ready JSON. Here are the most effective strategies.
+    </p>
+
+    <h3>Specify the quest ID and NPC name</h3>
+    <p>
+      Always provide the quest ID you want to use and the NPC's display name. The AI uses
+      these to generate consistent page IDs and to populate the <code>Name</code> field on
+      each page.
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Good — specific IDs provided</span>
+Create a kill quest for an NPC named "Guard Captain".
+Quest ID: bandit_patrol
+
+<span class="hl-cmt">// Less good — AI must invent IDs that may conflict with existing content</span>
+Create a kill quest for a guard NPC.</code></pre>
+
+    <h3>Name every objective with exact IDs</h3>
+    <p>
+      Entity IDs in QuestLines are PascalCase with no namespace prefix (e.g. <code>Zombie</code>,
+      not <code>zombie</code> or <code>hytale:zombie</code>). Item IDs use PascalCase with
+      underscores (e.g. <code>Weapon_Sword_Iron</code>, not <code>iron_sword</code>). Providing
+      the correct IDs in your prompt avoids the most common AI error.
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Good — exact IDs specified</span>
+The player must kill 5 Zombie mobs and 3 Goblin mobs.
+Reward: 1 Weapon_Sword_Iron.
+
+<span class="hl-cmt">// Risky — AI may invent IDs in the wrong format</span>
+Kill some zombies and goblins. Give a sword as a reward.</code></pre>
+
+    <h3>Describe the full quest flow, not just the objective</h3>
+    <p>
+      Tell the AI how many pages the quest should have and what each state should show. At
+      minimum, describe the intro state, the in-progress state, and the completion state.
+      If you want a turn-in NPC or a separate completion NPC, say so explicitly.
+    </p>
+    <pre class="code-block"><code>The quest has three pages:
+1. Intro: NPC asks the player to clear out bandits. Player can accept or decline.
+2. Progress: NPC tells the player how many bandits remain. Shows current kill count.
+3. Complete: NPC thanks the player and gives the reward.</code></pre>
+
+    <h3>State any special requirements</h3>
+    <p>
+      If the quest should only be available at a certain time of day, require a previous quest
+      to be completed, have a cooldown, or use a timed objective, include that in the prompt.
+      Do not assume the AI will infer these from context.
+    </p>
+    <pre class="code-block"><code>The quest requires the player to have completed "goblin_intro" first.
+The reward NPC gives a daily chest with a 24-hour cooldown (86400 seconds).
+Use the cooldown key "guard_daily".</code></pre>
+
+    <h3>Ask for npcs.json changes too</h3>
+    <p>
+      If you want the AI to also generate the <code>npcs.json</code> entry that links the
+      new quest to an NPC, ask for it explicitly. Otherwise you will need to add the mapping
+      manually or use <code>/ql wand</code>.
+    </p>
+    <pre class="code-block"><code>Also provide the npcs.json entry to link this quest to citizen ID "citizen_15".</code></pre>
+
+    <!-- ======================== EXAMPLE AI PROMPTS ======================== -->
+    <h2>Example AI Prompts</h2>
+    <p>
+      These ready-to-use prompts can be pasted directly after loading prompt.txt. Each covers
+      a different quest pattern. Adjust IDs, names, and quantities to match your server.
+    </p>
+
+    <h3>Kill Quest</h3>
+    <pre class="code-block"><code>Create a kill quest for an NPC named "Guard Captain".
+The player must kill 5 Zombie mobs and 3 Goblin mobs.
+Reward: 1 Weapon_Sword_Iron.
+Quest ID: bandit_patrol
+NPC citizen ID: citizen_15
+
+Generate the quest file, all page files, and the npcs.json entry.</code></pre>
+
+    <h3>Gather / Item Turn-In Quest</h3>
+    <pre class="code-block"><code>Create an item turn-in quest for an NPC named "Aldric the Smith".
+The player must deliver 5 Ore_Iron to the NPC.
+The items should be consumed on turn-in.
+Reward: 1 Ingredient_Bar_Gold and 1 Weapon_Sword_Iron.
+Quest ID: smiths_request
+NPC citizen ID: citizen_08
+
+The quest has three pages: intro (accept/decline), waiting (not enough iron ore yet),
+and turn-in (player has 5+ ore and can hand them over).</code></pre>
+
+    <h3>Daily Reward Quest</h3>
+    <pre class="code-block"><code>Create a daily reward quest for an NPC named "Town Crier".
+The NPC gives the player 1 Item_Chest_Daily once per day (86400 second cooldown).
+Use cooldown key "town_crier_daily".
+Quest ID: daily_bounty
+NPC citizen ID: citizen_03
+
+The quest has two pages:
+- Ready page: cooldown has elapsed or never been set. Player clicks to claim reward.
+- Waiting page: cooldown is still active. Show remaining time in the dialog using the
+  {cooldown:town_crier_daily:86400} variable.</code></pre>
+
+    <h3>Timed Delivery Quest</h3>
+    <pre class="code-block"><code>Create a timed quest for an NPC named "Merchant Relay".
+The player must talk to a second NPC named "Warehouse Keeper" within 3 minutes (180 seconds)
+of accepting the quest.
+Use timer key "relay_timer".
+Quest ID: courier_run
+Starting NPC citizen ID: citizen_22
+Ending NPC citizen ID: citizen_31
+
+Pages needed:
+- Intro (at citizen_22): accept the quest and start the timer.
+- Active (at citizen_22): player has started but not yet delivered.
+- Expired (at citizen_22): timer ran out. Quest fails and is removed.
+- Delivery (at citizen_31): timer is still active. Player talks to the warehouse to complete.
+- Already done (at citizen_31): quest is completed, friendly thanks.</code></pre>
+
+    <h3>Branching Dialogue Quest</h3>
+    <pre class="code-block"><code>Create a branching dialogue quest for an NPC named "Elder Maren".
+The player is given a choice: help the merchants (tag: chose_merchants) or help the
+rebels (tag: chose_rebels). Each path leads to a different follow-up page.
+Quest ID: elder_choice
+NPC citizen ID: citizen_07
+
+The quest has five pages:
+1. Intro: player picks a side (two response buttons). Each response adds the
+   appropriate tag and navigates to the matching follow-up page.
+2. Merchants path page: explains the merchant task.
+3. Rebels path page: explains the rebel task.
+4. Both paths resolved: if player has both tags (both tasks done), show a final
+   thanks page and complete the quest.
+5. Completed: quest is done, short acknowledgement.</code></pre>
+
+    <!-- ======================== VALIDATING AI OUTPUT ======================== -->
+    <h2>Validating AI Output</h2>
+    <p>
+      AI models occasionally make systematic errors with QuestLines syntax. Before deploying
+      AI-generated JSON, run through this checklist.
+    </p>
+
+    <h3>Page ordering</h3>
+    <p>
+      The most common structural mistake is pages listed in the wrong order. The rule is:
+      <strong>most specific requirements first</strong>. The correct ordering is:
+    </p>
+    <ul>
+      <li><strong>Completed state</strong> (<code>questCompleted:id</code>) — listed first.</li>
+      <li><strong>In-progress / success state</strong> (<code>questStarted:id</code> + completion check) — listed second.</li>
+      <li><strong>Intro / not-started state</strong> (<code>questNotStarted:id</code>) — listed last.</li>
+    </ul>
+    <p>
+      For timed quests, the expired page must come before the active page, since both require
+      <code>questStarted</code>. Check that the AI has put expired before active in the
+      <code>Pages</code> array.
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Correct page order in a quest file</span>
+<span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"patrol_complete"</span><span class="hl-punc">,</span>    <span class="hl-cmt">// questCompleted — most specific, checked first</span>
+  <span class="hl-str">"patrol_progress"</span><span class="hl-punc">,</span>    <span class="hl-cmt">// questStarted — in-progress</span>
+  <span class="hl-str">"patrol_intro"</span>          <span class="hl-cmt">// questNotStarted — least specific, checked last</span>
+<span class="hl-punc">]</span></code></pre>
+
+    <h3>Tracking tags in quest-start actions</h3>
+    <p>
+      Any quest that uses <code>kill:entityId:qty</code>, <code>break:blockId:qty</code>,
+      <code>place:blockId:qty</code>, or <code>killCitizen:name:qty</code> requirements
+      <strong>must</strong> have the corresponding tracking tag added in the quest-start
+      response's actions. Check that the intro page's accept-response includes the tag.
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Correct — tracking tag added on accept</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:bandit_patrol"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"addTag:tracking:kill:Zombie"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"addTag:tracking:kill:Goblin"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Also correct — tracking tags removed on quest completion</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questCompleted:bandit_patrol"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"removeTag:tracking:kill:Zombie"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"removeTag:tracking:kill:Goblin"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"item:Weapon_Sword_Iron:1"</span>
+<span class="hl-punc">]</span></code></pre>
+
+    <h3>timedStart format</h3>
+    <p>
+      The <code>timedStart</code> action in the plugin stores both the start time and the
+      duration together. The correct format is <code>timedStart:key:durationSeconds</code>
+      with the duration attached to the action, not split across the action and requirement.
+      Verify the AI has used this three-segment form.
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Correct — duration included in the action</span>
+<span class="hl-str">"timedStart:courier_timer:180"</span>
+
+<span class="hl-cmt">// Correct — requirement uses the key only (no seconds needed here)</span>
+<span class="hl-str">"timedActive:courier_timer"</span>
+<span class="hl-str">"timedExpired:courier_timer"</span>
+
+<span class="hl-cmt">// Wrong — AI sometimes omits the duration from the action</span>
+<span class="hl-str">"timedStart:courier_timer"</span>   <span class="hl-cmt">// missing :180</span></code></pre>
+
+    <h3>Item and entity ID casing</h3>
+    <p>
+      QuestLines resolves IDs case-sensitively. An incorrect case will silently fail — the
+      kill counter will never increment, or the item will never be given.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>ID Type</th><th>Correct Format</th><th>Wrong Format</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Entity (mob) IDs</td>
+            <td><code>Zombie</code>, <code>Goblin</code>, <code>Skeleton</code></td>
+            <td><code>zombie</code>, <code>hytale:goblin</code>, <code>SKELETON</code></td>
+          </tr>
+          <tr>
+            <td>Item IDs</td>
+            <td><code>Ore_Iron</code>, <code>Weapon_Sword_Iron</code></td>
+            <td><code>ore_iron</code>, <code>iron_sword</code>, <code>OreIron</code></td>
+          </tr>
+          <tr>
+            <td>Block IDs</td>
+            <td><code>Stone_Brick</code>, <code>Wood_Oak</code></td>
+            <td><code>stone_brick</code>, <code>stoneBrick</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>JSON key casing</h3>
+    <p>
+      All QuestLines codec keys are <strong>PascalCase</strong>. If the AI outputs
+      camelCase or lowercase keys (<code>"requirements"</code> instead of
+      <code>"Requirements"</code>), the plugin will not load the values and the page will
+      behave as if the fields are empty.
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Correct — PascalCase keys</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:bandit_patrol"</span><span class="hl-punc">]</span>
+<span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"Accept"</span><span class="hl-punc">,</span> <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span> <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span> <span class="hl-punc">}</span>
+
+<span class="hl-cmt">// Wrong — camelCase keys will be silently ignored</span>
+<span class="hl-key">"requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:bandit_patrol"</span><span class="hl-punc">]</span>
+<span class="hl-key">"response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"text"</span><span class="hl-punc">:</span> <span class="hl-str">"Accept"</span> <span class="hl-punc">}</span></code></pre>
+
+    <!-- ======================== COMMON MISTAKES ======================== -->
+    <h2>Common Mistakes</h2>
+    <p>
+      These are the most frequent errors seen in AI-generated quest content. Knowing them in
+      advance lets you spot and fix them in seconds.
+    </p>
+
+    <h3>Wrong page order — intro before in-progress</h3>
+    <p>
+      The AI sometimes lists intro pages first because that matches narrative order. In
+      QuestLines, this is incorrect — the intro page has the least specific requirements
+      (<code>questNotStarted</code>) and must be last, otherwise it matches every player
+      who has not yet started the quest, including players who are in-progress or done.
+    </p>
+    <div class="callout warning">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Always verify page order</div>
+        <p>
+          Open the quest's <code>Pages</code> array and read requirements top-to-bottom.
+          Each page should have <em>more</em> requirements or <em>more specific</em>
+          requirements than the page below it. A page with <code>questNotStarted</code> should
+          be the last entry.
+        </p>
+      </div>
+    </div>
+
+    <h3>Missing tracking tags on quest accept</h3>
+    <p>
+      The AI generates the <code>kill:Zombie:5</code> requirement correctly but forgets to
+      add <code>addTag:tracking:kill:Zombie</code> to the accept response. Without the tracking
+      tag, the kill counter never increments and the requirement can never pass. Always check
+      that the intro page's accept response includes every required tracking tag.
+    </p>
+
+    <h3>Tracking tags not removed on completion</h3>
+    <p>
+      Tracking tags left on a player after quest completion cause kill/break/place counters
+      to accumulate indefinitely. If the player later does another quest that checks the same
+      entity type, the counter value will be incorrect. The completion response should always
+      include <code>removeTag:tracking:kill:X</code> (or the relevant variant) for every
+      tracking tag that was added.
+    </p>
+
+    <h3>timedStart missing the duration segment</h3>
+    <p>
+      A common error is writing <code>"timedStart:my_timer"</code> without the duration.
+      The action requires three segments: <code>timedStart:key:durationSeconds</code>.
+      The <code>timedActive</code> and <code>timedExpired</code> requirements, however,
+      take only the key — they retrieve the stored duration automatically. Make sure the
+      duration is on the action, not the requirements.
+    </p>
+
+    <h3>Lowercase or wrong-format entity / item IDs</h3>
+    <p>
+      AI models trained on general Minecraft content often produce Minecraft-style IDs
+      (<code>iron_ore</code>, <code>zombie</code>) rather than Hytale-style IDs
+      (<code>Ore_Iron</code>, <code>Zombie</code>). These will silently fail. Check every
+      entity and item ID against your server's entity and item registries before deploying.
+    </p>
+
+    <h3>Timed quest page ordering</h3>
+    <p>
+      For timed quests, the expired page must come before the active page in the
+      <code>Pages</code> array. The AI sometimes reverses these because "active" feels
+      more natural first. If the active page is listed first, an expired player will still
+      see the "timer running" message instead of the failure/retry screen.
+    </p>
+    <pre class="code-block"><code><span class="hl-cmt">// Correct timed quest page order</span>
+<span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"courier_complete"</span><span class="hl-punc">,</span>   <span class="hl-cmt">// questCompleted — first</span>
+  <span class="hl-str">"courier_expired"</span><span class="hl-punc">,</span>    <span class="hl-cmt">// questStarted + timedExpired — before active</span>
+  <span class="hl-str">"courier_active"</span><span class="hl-punc">,</span>     <span class="hl-cmt">// questStarted + timedActive — after expired</span>
+  <span class="hl-str">"courier_intro"</span>       <span class="hl-cmt">// questNotStarted — last</span>
+<span class="hl-punc">]</span></code></pre>
+
+    <h3>page: navigation action not last in the list</h3>
+    <p>
+      When a response uses <code>page:pageId</code> to navigate to another dialogue page,
+      this action should be the last entry in the <code>Actions</code> list. If the AI
+      places other actions after the <code>page:</code> action, those actions will still
+      execute — but since dialogue has already navigated away, this can cause confusing
+      double-execution or state mutations the player never sees confirmation of.
+    </p>
+
+  </div>
+</div>
+<script src="toc.js"></script>
+</body>
+</html>

@@ -37,6 +37,11 @@
     <a href="progression.html">
       <span class="nav-icon">&#9670;</span> Quest Patterns
     </a>
+
+    <div class="sidebar-section-label">Tools</div>
+    <a href="ai-generation.html">
+      <span class="nav-icon">&#10024;</span> AI Generation
+    </a>
   </div>
   <div class="sidebar-footer">
     QuestLines &mdash; Hytale Plugin
@@ -349,8 +354,8 @@
           </thead>
           <tbody>
             <tr>
-              <td>talk:citizenId:qty</td>
-              <td>True if the player has talked to this NPC &ge; <em>qty</em> times.</td>
+              <td>talk:citizenName:qty</td>
+              <td>True if the player has talked to this NPC &ge; <em>qty</em> times. Use the NPC display name (e.g. <code>talk:Elder Maren:3</code>).</td>
             </tr>
           </tbody>
         </table>
@@ -669,7 +674,7 @@
           <tr><td>place:blockId:qty</td><td>Block Place</td><td>Block place threshold (requires tracking tag)</td></tr>
           <tr><td>item:itemId:qty</td><td>Inventory</td><td>Has item (no consume)</td></tr>
           <tr><td>item:itemId:qty:true</td><td>Inventory</td><td>Has item (consume on use)</td></tr>
-          <tr><td>talk:citizenId:qty</td><td>NPC Talk</td><td>Talk count threshold (auto-tracked)</td></tr>
+          <tr><td>talk:citizenName:qty</td><td>NPC Talk</td><td>Talk count threshold (auto-tracked, uses display name)</td></tr>
           <tr><td>cooldown:key:seconds</td><td>Cooldown</td><td>Elapsed since setTimestamp (true if never set)</td></tr>
           <tr><td>timedActive:key:seconds</td><td>Timer</td><td>Timer running and not yet expired</td></tr>
           <tr><td>timedExpired:key:seconds</td><td>Timer</td><td>Timer started and expired</td></tr>
@@ -685,5 +690,6 @@
 
   </div>
 </div>
+<script src="toc.js"></script>
 </body>
 </html>

@@ -37,6 +37,11 @@
     <a href="progression.html">
       <span class="nav-icon">&#9670;</span> Quest Patterns
     </a>
+
+    <div class="sidebar-section-label">Tools</div>
+    <a href="ai-generation.html">
+      <span class="nav-icon">&#10024;</span> AI Generation
+    </a>
   </div>
   <div class="sidebar-footer">
     QuestLines &mdash; Hytale Plugin
@@ -273,14 +278,15 @@
     </p>
 
     <p>
-      Use the <code>talk:citizenId:qty</code> requirement to gate content on visit count:
+      Use the <code>talk:citizenName:qty</code> requirement to gate content on visit count.
+      Use the NPC's display name — the same name shown above their head (e.g. <code>Elder Maren</code>):
     </p>
 
     <pre class="code-block"><code><span class="hl-cmt">// This page only shows after the player's third visit</span>
-<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:citizen_42:3"</span><span class="hl-punc">]</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:Elder Maren:3"</span><span class="hl-punc">]</span>
 
 <span class="hl-cmt">// A "returning visitor" page for visits 2+</span>
-<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:citizen_42:2"</span><span class="hl-punc">]</span></code></pre>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:Elder Maren:2"</span><span class="hl-punc">]</span></code></pre>
 
     <!-- ======================== TEXT VARIABLES ======================== -->
     <h2 id="variables">Text Variables</h2>
@@ -419,5 +425,6 @@
 
   </div>
 </div>
+<script src="toc.js"></script>
 </body>
 </html>
