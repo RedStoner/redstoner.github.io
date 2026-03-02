@@ -337,19 +337,26 @@
             <td>{timeleft:key:totalSeconds}</td>
             <td>Remaining time on a countdown timer as a human-readable string. Renders as "expired" when time is up.</td>
           </tr>
+          <tr>
+            <td>{variable:name}</td>
+            <td>The current value of a named numeric variable. Whole numbers are shown without a decimal point (e.g. <code>3</code> not <code>3.0</code>). Defaults to <code>0</code> if never set.</td>
+          </tr>
         </tbody>
       </table>
     </div>
 
     <h3>Example Usage</h3>
     <pre class="code-block"><code><span class="hl-cmt">// In a kill quest progress page</span>
-<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've slain {killprogress:goblin} of 10 goblins. Keep going, {username}!"</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've slain {killprogress:Goblin} of 10 goblins. Keep going, {username}!"</span>
 
 <span class="hl-cmt">// In a cooldown waiting page</span>
 <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've already claimed your reward. Come back in {cooldown:daily_reward:86400}."</span>
 
 <span class="hl-cmt">// In a timed quest active page</span>
-<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Hurry! You have {timeleft:courier_timer:300} to make the delivery."</span></code></pre>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Hurry! You have {timeleft:courier_timer:300} to make the delivery."</span>
+
+<span class="hl-cmt">// Showing a named variable</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Your score is {variable:score}. Reach 5 to complete the challenge!"</span></code></pre>
 
     <!-- ======================== INLINE FORMATTING ======================== -->
     <h2>Inline Text Formatting</h2>

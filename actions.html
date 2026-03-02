@@ -105,13 +105,13 @@
       <pre class="code-block"><code><span class="hl-cmt">// Accept the quest and begin tracking kills</span>
 <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"addTag:tracking:kill:goblin"</span>
+  <span class="hl-str">"addTag:tracking:kill:Goblin"</span>
 <span class="hl-punc">]</span>
 
 <span class="hl-cmt">// Complete the quest and tear down tracking</span>
 <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questCompleted:lost_sword"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"removeTag:tracking:kill:goblin"</span>
+  <span class="hl-str">"removeTag:tracking:kill:Goblin"</span>
 <span class="hl-punc">]</span></code></pre>
     </div>
 
@@ -172,8 +172,18 @@
               <td>Yes</td>
             </tr>
             <tr>
+              <td>addTag:tracking:kill:entityTypeId:x:y:z:radius</td>
+              <td>Same as above, but only counts kills made while the player is within <em>radius</em> blocks of (x, y, z).</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
               <td>addTag:tracking:block:blockId</td>
               <td>Increments <code>break:blockId</code> counter on every block break.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:block:blockId:x:y:z:radius</td>
+              <td>Same as above, but only counts breaks made within <em>radius</em> blocks of (x, y, z).</td>
               <td>Yes</td>
             </tr>
             <tr>
@@ -182,8 +192,33 @@
               <td>Yes</td>
             </tr>
             <tr>
+              <td>addTag:tracking:place:blockId:x:y:z:radius</td>
+              <td>Same as above, but only counts placements made within <em>radius</em> blocks of (x, y, z).</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
               <td>addTag:tracking:killcitizen:citizenName</td>
               <td>Increments <code>killcitizen:citizenName</code> counter when a HyCitizens NPC with that exact display name is killed.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:regionKillCitizen:citizenName:regionName</td>
+              <td>Increments <code>killcitizen:citizenName</code> counter only when the player is inside the named OrbisGuard region. Remove with the full string including regionName: <code>removeTag:tracking:regionKillCitizen:citizenName:regionName</code>.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:regionKill:entityTypeId:regionName</td>
+              <td>Increments <code>kill:entityTypeId</code> counter only when the player is inside the named OrbisGuard region.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:regionBlock:blockId:regionName</td>
+              <td>Increments <code>break:blockId</code> counter only when the player is inside the named OrbisGuard region.</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>addTag:tracking:regionPlace:blockId:regionName</td>
+              <td>Increments <code>place:blockId</code> counter only when the player is inside the named OrbisGuard region.</td>
               <td>Yes</td>
             </tr>
           </tbody>
@@ -204,18 +239,56 @@
       </div>
 
       <h4>Example</h4>
-      <pre class="code-block"><code><span class="hl-cmt">// Quest start — begin tracking goblin kills</span>
+      <pre class="code-block"><code><span class="hl-cmt">// Quest start — begin tracking Goblin kills</span>
 <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"addTag:tracking:kill:goblin"</span>
+  <span class="hl-str">"addTag:tracking:kill:Goblin"</span>
 <span class="hl-punc">]</span>
 
 <span class="hl-cmt">// Quest complete — stop tracking and reset counter</span>
 <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questCompleted:goblin_hunt"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"removeTag:tracking:kill:goblin"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"removeTag:tracking:kill:Goblin"</span><span class="hl-punc">,</span>
   <span class="hl-str">"item:gold_coin:20"</span>
 <span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== JOURNAL LOG TAG ======================== -->
+    <div class="section-group">
+      <h2>Journal Log Tag</h2>
+      <p>
+        QuestLines automatically maintains a <code>log:questId:pageId</code> tag for every
+        quest a player has interacted with. It records the <strong>last dialogue page the
+        player actually saw</strong> for that quest and is the data source that powers the
+        Quest Journal (<code>/ql journal</code>).
+      </p>
+      <p>
+        <strong>You never write this tag yourself.</strong> The engine writes it in two places:
+      </p>
+      <ul>
+        <li>When a player opens NPC dialogue — the resolved page is logged immediately.</li>
+        <li>When a <code>page:pageId</code> response navigates to a new page — the target page
+            is logged before its load actions run.</li>
+      </ul>
+      <p>
+        At most one <code>log:questId:*</code> tag exists per quest per player at any time;
+        the old entry is replaced automatically. The tag persists after quest completion so the
+        Journal can show the final dialogue for completed quests.
+      </p>
+
+      <div class="callout info">
+        <span class="callout-icon">&#9432;</span>
+        <div class="callout-body">
+          <div class="callout-title">No Action Required</div>
+          <p>
+            Do <strong>not</strong> add <code>addTag:log:…</code> to your
+            <code>LoadActions</code> or response <code>Actions</code>. The engine handles
+            this automatically. If you see a stale <code>log:</code> tag in player data
+            during debugging, it is always safe to remove it manually via
+            <code>/ql player &lt;name&gt;</code> in the admin UI.
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- ======================== COOLDOWN / TIMER ======================== -->
@@ -385,6 +458,57 @@
 <span class="hl-punc">}</span></code></pre>
     </div>
 
+    <!-- ======================== LOAD ACTIONS ======================== -->
+    <div class="section-group">
+      <h2>Load Actions</h2>
+      <p>
+        In addition to response <code>Actions</code>, every Page has a
+        <code>LoadActions</code> field — a list of action strings that run
+        <strong>automatically</strong> whenever that page is displayed. This happens both
+        on the initial NPC interaction and whenever a <code>page:pageId</code> response
+        navigates to the page. Load actions fire before the player sees any response
+        buttons and regardless of which button they eventually click.
+      </p>
+      <p>
+        Use <code>LoadActions</code> for side-effects that should happen once per page
+        view, not once per response click — for example, setting a tag, recording a
+        timestamp, or running a server command that logs the visit.
+      </p>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Old Configs</div>
+          <p>
+            <code>LoadActions</code> defaults to an empty list if omitted. Existing page
+            configs that predate this field work without any changes.
+          </p>
+        </div>
+      </div>
+
+      <h4>JSON field</h4>
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"my_quest_hub"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span>  <span class="hl-punc">[</span><span class="hl-str">"setTimestamp:last_visit_hub"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>      <span class="hl-str">"Welcome back, {username}."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-str">"..."</span> <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Supported Actions</div>
+          <p>
+            Any action string that works in a response <code>Actions</code> list also works
+            in <code>LoadActions</code>. The same execution rules apply: actions run in
+            order, and <code>page:pageId</code> navigation is supported but should be placed
+            last.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- ======================== NPC SPAWNING ======================== -->
     <div class="section-group">
       <h2>NPC Spawning</h2>
@@ -410,12 +534,20 @@
               <td>Same as above, but waits <em>delaySeconds</em> (integer) before spawning. Useful for dramatic timing.</td>
             </tr>
             <tr>
+              <td>spawnCitizen:citizenName:x:y:z:delaySeconds:quantity</td>
+              <td>Spawns <em>quantity</em> clones simultaneously (minimum 1). Combine with a delay as needed.</td>
+            </tr>
+            <tr>
               <td>spawn:npcRoleId:x:y:z</td>
               <td>Spawns a standard Hytale NPC by role ID at the given coordinates. Default rotation (0, 0, 0).</td>
             </tr>
             <tr>
               <td>spawn:npcRoleId:x:y:z:delaySeconds</td>
               <td>Same as above with an optional spawn delay in seconds.</td>
+            </tr>
+            <tr>
+              <td>spawn:npcRoleId:x:y:z:delaySeconds:quantity</td>
+              <td>Spawns <em>quantity</em> NPCs simultaneously. Combine with a delay as needed.</td>
             </tr>
           </tbody>
         </table>
@@ -430,6 +562,21 @@
             HyCitizens NPC. If multiple NPCs share the same display name, the first match
             is used. The spawned copy has no quest linkage — it is purely visual.
           </p>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Relative Coordinates</div>
+          <p>
+            Coordinates for both <code>spawnCitizen</code> and <code>spawn</code> support
+            a <code>~</code> prefix to specify a position <em>relative to the player</em>.
+            For example, <code>~5</code> means 5 units ahead on that axis, and <code>~</code>
+            or <code>~0</code> means exactly at the player's position on that axis.
+          </p>
+          <pre style="margin:6px 0 0;font-size:0.82rem"><code><span class="hl-cmt">// Spawn 3 units in front of and 1 unit above the player</span>
+<span class="hl-str">"spawnCitizen:Bandit Guard:~3:~1:~0"</span></code></pre>
         </div>
       </div>
 
@@ -451,6 +598,81 @@
 <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"spawn:goblin_warrior:200:70:100"</span><span class="hl-punc">]</span></code></pre>
     </div>
 
+    <!-- ======================== NAMED VARIABLES ======================== -->
+    <div class="section-group">
+      <h2>Named Variables</h2>
+      <p>
+        Named variables are numeric values stored per-player. They can be used to track
+        arbitrary numeric state — scores, choices, counters, or anything that doesn't fit
+        a kill/break counter. Variables default to <strong>0</strong> if never set.
+        Fractional values are supported.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>variable:name:set:value</td>
+              <td>Sets the variable to <em>value</em> exactly. Use this to initialise a variable at quest start.</td>
+            </tr>
+            <tr>
+              <td>variable:name:add:value</td>
+              <td>Adds <em>value</em> to the variable.</td>
+            </tr>
+            <tr>
+              <td>variable:name:subtract:value</td>
+              <td>Subtracts <em>value</em> from the variable.</td>
+            </tr>
+            <tr>
+              <td>variable:name:multiply:value</td>
+              <td>Multiplies the variable by <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:divide:value</td>
+              <td>Divides the variable by <em>value</em>. Division by zero is ignored.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Initialise Before Use</div>
+          <p>
+            Always use <code>variable:name:set:0</code> (or another initial value) in your
+            quest-start actions before any <code>add</code>, <code>subtract</code>, or
+            <code>multiply</code> operations. While variables default to 0, being explicit
+            avoids surprises if a player repeats a quest.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Quest start — initialise a score variable</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"variable:score:set:0"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Response that increments the counter</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"variable:score:add:1"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Response that doubles it</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"variable:score:multiply:2"</span><span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use <code>{variable:name}</code> in dialog text to show the current value to the
+        player. Use <code>variable:name:comparison:value</code> requirements to gate pages
+        or responses on the variable's value. See
+        <a href="requirements.html">Requirements &rarr; Named Variables</a> and
+        <a href="npc-setup.html#variables">Text Variables</a>.
+      </p>
+    </div>
+
     <!-- ======================== QUICK REFERENCE ======================== -->
     <h2>Quick Reference</h2>
     <div class="table-wrapper">
@@ -464,18 +686,32 @@
           <tr><td>questRemoved:id</td><td>Quest State</td><td>Remove from both lists</td></tr>
           <tr><td>addTag:tagName</td><td>Tags</td><td>Add a tag (idempotent)</td></tr>
           <tr><td>removeTag:tagName</td><td>Tags</td><td>Remove tag (resets counter if tracking flag)</td></tr>
-          <tr><td>addTag:tracking:kill:entityTypeId</td><td>Tracking</td><td>Start kill counting</td></tr>
-          <tr><td>addTag:tracking:block:blockId</td><td>Tracking</td><td>Start break counting</td></tr>
-          <tr><td>addTag:tracking:place:blockId</td><td>Tracking</td><td>Start place counting</td></tr>
+          <tr><td>addTag:tracking:kill:entityTypeId</td><td>Tracking</td><td>Start kill counting (anywhere)</td></tr>
+          <tr><td>addTag:tracking:kill:entityTypeId:x:y:z:radius</td><td>Tracking</td><td>Start kill counting within radius of point</td></tr>
+          <tr><td>addTag:tracking:block:blockId</td><td>Tracking</td><td>Start break counting (anywhere)</td></tr>
+          <tr><td>addTag:tracking:block:blockId:x:y:z:radius</td><td>Tracking</td><td>Start break counting within radius of point</td></tr>
+          <tr><td>addTag:tracking:place:blockId</td><td>Tracking</td><td>Start place counting (anywhere)</td></tr>
+          <tr><td>addTag:tracking:place:blockId:x:y:z:radius</td><td>Tracking</td><td>Start place counting within radius of point</td></tr>
           <tr><td>addTag:tracking:killcitizen:name</td><td>Tracking</td><td>Start citizen kill counting</td></tr>
+          <tr><td>addTag:tracking:regionKillCitizen:citizenName:regionName</td><td>Tracking</td><td>Start citizen kill counting inside OrbisGuard region</td></tr>
+          <tr><td>addTag:tracking:regionKill:entityTypeId:regionName</td><td>Tracking</td><td>Start kill counting inside OrbisGuard region</td></tr>
+          <tr><td>addTag:tracking:regionBlock:blockId:regionName</td><td>Tracking</td><td>Start break counting inside OrbisGuard region</td></tr>
+          <tr><td>addTag:tracking:regionPlace:blockId:regionName</td><td>Tracking</td><td>Start place counting inside OrbisGuard region</td></tr>
           <tr><td>setTimestamp:key</td><td>Cooldown</td><td>Record time for cooldown gate</td></tr>
           <tr><td>timedStart:key</td><td>Timer</td><td>Record time for countdown timer</td></tr>
           <tr><td>item:itemId:qty</td><td>Items</td><td>Give item + notification</td></tr>
           <tr><td>command:text:server</td><td>Commands</td><td>Run as server console</td></tr>
           <tr><td>command:text:player</td><td>Commands</td><td>Run as player</td></tr>
           <tr><td>page:pageId</td><td>Navigation</td><td>Navigate to another page</td></tr>
-          <tr><td>spawnCitizen:name:x:y:z[:delay]</td><td>Spawning</td><td>Clone HyCitizens NPC at position</td></tr>
-          <tr><td>spawn:npcRoleId:x:y:z[:delay]</td><td>Spawning</td><td>Spawn Hytale NPC by role ID</td></tr>
+          <tr><td>spawnCitizen:name:x:y:z[:delay[:qty]]</td><td>Spawning</td><td>Clone HyCitizens NPC at position (coords may use <code>~</code>)</td></tr>
+          <tr><td>spawn:npcRoleId:x:y:z[:delay[:qty]]</td><td>Spawning</td><td>Spawn Hytale NPC by role ID (coords may use <code>~</code>)</td></tr>
+          <tr><td>variable:name:set:value</td><td>Variable</td><td>Set named variable to value</td></tr>
+          <tr><td>variable:name:add:value</td><td>Variable</td><td>Add to named variable</td></tr>
+          <tr><td>variable:name:subtract:value</td><td>Variable</td><td>Subtract from named variable</td></tr>
+          <tr><td>variable:name:multiply:value</td><td>Variable</td><td>Multiply named variable</td></tr>
+          <tr><td>variable:name:divide:value</td><td>Variable</td><td>Divide named variable</td></tr>
+          <tr><td colspan="3" style="font-style:italic;color:var(--text-muted);font-size:0.85rem;">The actions above work in both <code>Response.Actions</code> and <code>Page.LoadActions</code>. Load actions fire automatically when the page is shown, before the player clicks any button.</td></tr>
+          <tr><td>log:questId:pageId</td><td>System (auto)</td><td>Last-seen page tag — written automatically by the engine; powers the Quest Journal. Do not write manually.</td></tr>
         </tbody>
       </table>
     </div>

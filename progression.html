@@ -164,7 +164,7 @@
         <div class="page-flow-item">
           <div>
             <span class="page-flow-label">goblin_hunt_turnin</span>
-            <span class="page-flow-req">questStarted:goblin_hunt &amp; kill:goblin:10</span>
+            <span class="page-flow-req">questStarted:goblin_hunt &amp; kill:Goblin:10</span>
             <br><span style="color:var(--text-muted);font-size:0.82rem;">Turn-in page — all kills done, collect reward.</span>
           </div>
         </div>
@@ -172,7 +172,7 @@
         <div class="page-flow-item">
           <div>
             <span class="page-flow-label">goblin_hunt_progress</span>
-            <span class="page-flow-req">questStarted:goblin_hunt &amp; not:kill:goblin:10</span>
+            <span class="page-flow-req">questStarted:goblin_hunt &amp; not:kill:Goblin:10</span>
             <br><span style="color:var(--text-muted);font-size:0.82rem;">Progress check — quest active, still need more kills.</span>
           </div>
         </div>
@@ -214,7 +214,7 @@
     <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
     <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
       <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
-      <span class="hl-str">"addTag:tracking:kill:goblin"</span>
+      <span class="hl-str">"addTag:tracking:kill:Goblin"</span>
     <span class="hl-punc">]</span>
   <span class="hl-punc">},</span>
   <span class="hl-key">"Response2"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
@@ -232,9 +232,9 @@
   <span class="hl-key">"Name"</span><span class="hl-punc">:</span>  <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>
   <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
     <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
-    <span class="hl-str">"not:kill:goblin:10"</span>
+    <span class="hl-str">"not:kill:Goblin:10"</span>
   <span class="hl-punc">],</span>
-  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Not done yet! You've killed {killprogress:goblin} out of 10 goblins. Keep going!"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Not done yet! You've killed {killprogress:Goblin} out of 10 goblins. Keep going!"</span><span class="hl-punc">,</span>
   <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
     <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Right, back to it."</span><span class="hl-punc">,</span>
     <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
@@ -250,7 +250,7 @@
   <span class="hl-key">"Name"</span><span class="hl-punc">:</span>  <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>
   <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
     <span class="hl-str">"questStarted:goblin_hunt"</span><span class="hl-punc">,</span>
-    <span class="hl-str">"kill:goblin:10"</span>
+    <span class="hl-str">"kill:Goblin:10"</span>
   <span class="hl-punc">],</span>
   <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've done it! All 10 goblins slain. Here's your reward, {username}."</span><span class="hl-punc">,</span>
   <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
@@ -258,7 +258,7 @@
     <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
     <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
       <span class="hl-str">"questCompleted:goblin_hunt"</span><span class="hl-punc">,</span>
-      <span class="hl-str">"removeTag:tracking:kill:goblin"</span><span class="hl-punc">,</span>
+      <span class="hl-str">"removeTag:tracking:kill:Goblin"</span><span class="hl-punc">,</span>
       <span class="hl-str">"item:gold_coin:25"</span>
     <span class="hl-punc">]</span>
   <span class="hl-punc">}</span>
@@ -653,7 +653,7 @@
     <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
     <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
       <span class="hl-str">"questStarted:quest_hunt_wolves"</span><span class="hl-punc">,</span>
-      <span class="hl-str">"addTag:tracking:kill:wolf"</span>
+      <span class="hl-str">"addTag:tracking:kill:Wolf_Black"</span>
     <span class="hl-punc">]</span>
   <span class="hl-punc">}</span>
 <span class="hl-punc">}</span>
@@ -672,7 +672,7 @@
     <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
     <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
       <span class="hl-str">"questStarted:quest_hunt_spiders"</span><span class="hl-punc">,</span>
-      <span class="hl-str">"addTag:tracking:kill:cave_spider"</span>
+      <span class="hl-str">"addTag:tracking:kill:Spider_Cave"</span>
     <span class="hl-punc">]</span>
   <span class="hl-punc">}</span>
 <span class="hl-punc">}</span></code></pre>

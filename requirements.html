@@ -189,7 +189,7 @@
       <pre class="code-block"><code><span class="hl-cmt">// Require 10 goblin kills</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"kill:goblin:10"</span>
+  <span class="hl-str">"kill:Goblin:10"</span>
 <span class="hl-punc">]</span></code></pre>
 
       <p>
@@ -202,8 +202,10 @@
     <div class="section-group">
       <h2>HyCitizen Kill Counting</h2>
       <p>
-        For killing named HyCitizens NPCs (rather than mob entity types). Requires the
-        tracking tag <code>tracking:killcitizen:citizenName</code> to be set first.
+        For killing named HyCitizens NPCs (rather than mob entity types). Requires either
+        <code>tracking:killcitizen:citizenName</code> (counts anywhere) or
+        <code>tracking:regionKillCitizen:citizenName:regionName</code> (counts only inside the
+        named OrbisGuard region) to be set first.
         The name match is <strong>case-sensitive</strong> and matches the NPC's exact
         display name.
       </p>
@@ -257,7 +259,7 @@
       <pre class="code-block"><code><span class="hl-cmt">// Require mining 20 iron ore</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:miners_task"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"break:iron_ore:20"</span>
+  <span class="hl-str">"break:Ore_Iron_Stone:20"</span>
 <span class="hl-punc">]</span></code></pre>
     </div>
 
@@ -287,7 +289,7 @@
       <pre class="code-block"><code><span class="hl-cmt">// Require placing 10 stone bricks</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:build_the_wall"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"place:stone_brick:10"</span>
+  <span class="hl-str">"place:Rock_Stone_Brick:10"</span>
 <span class="hl-punc">]</span></code></pre>
     </div>
 
@@ -654,6 +656,78 @@
 <span class="hl-punc">]</span></code></pre>
     </div>
 
+    <!-- ======================== NAMED VARIABLES ======================== -->
+    <div class="section-group">
+      <h2>Named Variables</h2>
+      <p>
+        Named variables are numeric values stored per-player. They are set and mutated via the
+        <code>variable:</code> action and compared here as a requirement. Values default to
+        <strong>0</strong> if never set. Comparisons use standard numeric rules; fractional
+        values are supported.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>variable:name:equal:value</td>
+              <td>True if the variable equals <em>value</em> exactly.</td>
+            </tr>
+            <tr>
+              <td>variable:name:greater:value</td>
+              <td>True if the variable is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:less:value</td>
+              <td>True if the variable is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:greaterOrEqual:value</td>
+              <td>True if the variable is greater than or equal to <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:lessOrEqual:value</td>
+              <td>True if the variable is less than or equal to <em>value</em>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Page Ordering with Variables</div>
+          <p>
+            Put the most-specific variable page first. For example, place the
+            <em>threshold-met</em> page (using <code>greaterOrEqual</code>) before the
+            <em>in-progress</em> page (using <code>less</code>) in the quest's
+            <code>Pages</code> list so the completion page is checked first.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Complete page — shown once counter reaches 5</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"variable:counter:greaterOrEqual:5"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Progress page — shown while counter is still below 5</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"variable:counter:less:5"</span>
+<span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use <code>{variable:name}</code> in dialog text to display the current value to the
+        player. See <a href="npc-setup.html#variables">Text Variables</a>.
+      </p>
+    </div>
+
     <!-- ======================== QUICK REFERENCE ======================== -->
     <h2>Quick Reference</h2>
     <div class="table-wrapper">
@@ -684,6 +758,11 @@
           <tr><td>world:worldName</td><td>World</td><td>Current world</td></tr>
           <tr><td>any:req1|req2|...</td><td>Logic</td><td>OR across sub-requirements</td></tr>
           <tr><td>not:requirement</td><td>Logic</td><td>Negate any requirement</td></tr>
+          <tr><td>variable:name:equal:value</td><td>Variable</td><td>Named variable equals value</td></tr>
+          <tr><td>variable:name:greater:value</td><td>Variable</td><td>Named variable &gt; value</td></tr>
+          <tr><td>variable:name:less:value</td><td>Variable</td><td>Named variable &lt; value</td></tr>
+          <tr><td>variable:name:greaterOrEqual:value</td><td>Variable</td><td>Named variable &ge; value</td></tr>
+          <tr><td>variable:name:lessOrEqual:value</td><td>Variable</td><td>Named variable &le; value</td></tr>
         </tbody>
       </table>
     </div>

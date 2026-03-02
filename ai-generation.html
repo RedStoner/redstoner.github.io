@@ -148,6 +148,7 @@
     "Title":        "my_quest_page1",
     "Name":         "Blacksmith",
     "Requirements": ["questNotStarted:my_quest"],
+    "LoadActions":  [],
     "Dialog":       "Adventurer! Someone stole my sword. Can you help?",
     "Response1": { ... },
     "Response2": { ... },
@@ -260,6 +261,13 @@
   World:
     world:worldName               true if player is in the named world
 
+  Named variables:
+    variable:name:greater:value        true if the variable's value &gt; value
+    variable:name:less:value           true if the variable's value &lt; value
+    variable:name:equal:value          true if the variable's value == value
+    variable:name:greaterOrEqual:value true if the variable's value &gt;= value
+    variable:name:lessOrEqual:value    true if the variable's value &lt;= value
+
   Logic operators:
     any:req1|req2|req3            true if ANY of the pipe-separated requirements passes
     not:type:value                negates any requirement
@@ -297,11 +305,24 @@
   Dialogue navigation:
     page:pageId                   navigates to a different dialogue page (put this last)
 
+  Named variables:
+    variable:name:set:value         sets a named numeric variable to value
+    variable:name:add:value         adds value to the variable
+    variable:name:subtract:value    subtracts value from the variable
+    variable:name:multiply:value    multiplies the variable by value
+    variable:name:divide:value      divides the variable by value
+
   NPC spawning:
-    spawnCitizen:citizenName:x:y:z[:delay]
+    spawnCitizen:citizenName:x:y:z[:delay[:quantity]]
                                    Spawns a clone of an existing HyCitizens citizen at the
                                    given coordinates. Clone is temporary — removed on death.
-    spawn:npcRoleId:x:y:z[:delay]  Spawns a standard Hytale NPC by role ID.
+                                   Optional quantity spawns multiple clones. Coordinates support
+                                   ~ prefix for player-relative positioning (e.g. ~5 = player + 5).
+                                   e.g. spawnCitizen:Dark Knight:~0:~2:~5:3:1
+    spawn:npcRoleId:x:y:z[:delay[:quantity]]
+                                   Spawns a standard Hytale NPC by role ID.
+                                   Optional quantity. Coordinates support ~ prefix.
+                                   e.g. spawn:village_guard:~0:64:~5:3:2
 
   ═══════════════════════════════════════════════════════
   TRACKING FLAGS  (special tags that enable counters)
@@ -310,13 +331,24 @@
   Kill and block progress only counts for players who have the relevant tracking tag.
   Add the tag via an action before the player can accumulate progress.
 
+  Standard (global) tracking — counts events anywhere in the world:
     addTag:tracking:kill:entityTypeId      starts counting kills of that entity type
     addTag:tracking:killcitizen:citizenName starts counting citizen kills with that name
     addTag:tracking:block:blockId          starts counting breaks of that block type
     addTag:tracking:place:blockId          starts counting placements of that block type
-    removeTag:tracking:kill:entityTypeId   resets kill counter to 0 and stops counting
-    removeTag:tracking:block:blockId       resets break counter to 0 and stops counting
-    removeTag:tracking:place:blockId       resets place counter to 0 and stops counting
+    removeTag:&lt;same tag string&gt;            resets the counter to 0 and stops counting
+
+  Location-gated tracking — only counts events within radius blocks of a fixed coordinate:
+    addTag:tracking:kill:entityTypeId:x:y:z:radius
+    addTag:tracking:block:blockId:x:y:z:radius
+    addTag:tracking:place:blockId:x:y:z:radius
+    removeTag:&lt;same full tag string&gt;       resets and stops (must match the full tag exactly)
+
+  Region-gated tracking (OrbisGuard integration) — only counts events inside a named guard zone:
+    addTag:tracking:regionKill:entityTypeId:regionName
+    addTag:tracking:regionBlock:blockId:regionName
+    addTag:tracking:regionPlace:blockId:regionName
+    removeTag:&lt;same full tag string&gt;       resets and stops
 
   Talk progress tracks automatically — no tag needed.
 
@@ -334,6 +366,7 @@
     {citizenkillprogress:name}    current kill count for HyCitizens NPCs with that name
     {cooldown:key:totalSeconds}   remaining cooldown as human-readable string
     {timeleft:key:totalSeconds}   remaining time on a timed quest
+    {variable:name}               current value of a named variable (whole numbers without decimal)
 
   Inline formatting:
     {b}bold{/}   {i}italic{/}   {m}monospace{/}   {#FF0000}red{/}
@@ -404,7 +437,10 @@
   6. command:text — commandText is parts[1] only; commands with colons need a wrapper command.
   7. page: navigation action should always be last in the Actions list.
   8. timedStart:key:N stores the duration. timedActive:key and timedExpired:key read it back.
-  9. Multiple quests on one NPC are evaluated in the order listed in the Npcs map value.</pre>
+  9. Multiple quests on one NPC are evaluated in the order listed in the Npcs map value.
+  10. LoadActions fire automatically when a page is shown (on first open AND on page: navigation),
+      before the player clicks any button. Use them for per-view side effects. All action types
+      that work in Response.Actions also work in LoadActions.</pre>
     </div>
 
     <!-- ======================== GETTING STARTED ======================== -->
@@ -704,7 +740,7 @@ The quest has five pages:
           </tr>
           <tr>
             <td>Block IDs</td>
-            <td><code>Stone_Brick</code>, <code>Wood_Oak</code></td>
+            <td><code>Rock_Stone_Brick</code>, <code>Wood_Oak_Trunk</code></td>
             <td><code>stone_brick</code>, <code>stoneBrick</code></td>
           </tr>
         </tbody>
