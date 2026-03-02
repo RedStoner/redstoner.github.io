@@ -72,7 +72,7 @@
     </p>
     <p>
       Each NPC in HyCitizens has a unique <strong>citizen ID</strong> (e.g.
-      <code>citizen_42</code>). This ID is used as the key in QuestLines'
+      <code>f48f7eaa-512e-415d-bfdb-f53d2ea0b991</code>). This ID is used as the key in QuestLines'
       <code>npcs.json</code> to map that NPC to one or more quests. You don't need
       to configure anything in HyCitizens itself — all the linkage lives in QuestLines.
     </p>
@@ -84,8 +84,7 @@
         <p>
           Use <code>/ql wand &lt;questId&gt;</code> and punch an NPC. The wand mode
           reads the NPC's citizen ID automatically and stores it in <code>npcs.json</code>.
-          You can also look up citizen IDs in the QuestLines editor UI (<code>/ql ui</code>
-          &rarr; NPC tab).
+          You can also look up citizen IDs in the HyCitizen UI (<code>/citizens</code>).
         </p>
       </div>
     </div>
@@ -124,31 +123,31 @@
     <h3>Method 2 — Editor UI</h3>
     <p>
       Open the editor with <code>/ql ui</code> and navigate to the <strong>NPC</strong>
-      tab. From there you can browse all citizen IDs and manually assign quests to them.
+      tab. From there you can manually type the citizen id in.
     </p>
 
     <!-- ======================== NPCS.JSON FORMAT ======================== -->
     <h2>npcs.json Format</h2>
     <p>
       The <code>npcs.json</code> file is the source of truth for NPC-to-quest mappings.
-      It has two top-level maps: <code>NpcQuestMap</code> for direct quest assignments
-      and <code>NpcRandomGroupMap</code> for random quest pools.
+      It has two top-level maps: <code>Npcs</code> for direct quest assignments
+      and <code>RandomGroups</code> for random quest pools.
     </p>
 
     <pre class="code-block"><code><span class="hl-cmt">// npcs.json</span>
 <span class="hl-punc">{</span>
-  <span class="hl-key">"NpcQuestMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Npcs"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
     <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-str">"lost_sword,daily_reward"</span><span class="hl-punc">,</span>
     <span class="hl-key">"citizen_07"</span><span class="hl-punc">:</span> <span class="hl-str">"goblin_king"</span>
   <span class="hl-punc">},</span>
-  <span class="hl-key">"NpcRandomGroupMap"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"RandomGroups"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
     <span class="hl-key">"citizen_10"</span><span class="hl-punc">:</span> <span class="hl-str">"questA|questB;questC|questD"</span>
   <span class="hl-punc">}</span>
 <span class="hl-punc">}</span></code></pre>
 
     <h3>Multiple Quests on One NPC</h3>
     <p>
-      The value in <code>NpcQuestMap</code> is a <strong>comma-separated</strong> list of
+      The value in <code>Npcs</code> is a <strong>comma-separated</strong> list of
       quest IDs. When a player interacts with that NPC, QuestLines evaluates the quests
       in this order — first quest first. The page resolution algorithm stops as soon as a
       matching page is found, across all quests and their pages.
@@ -172,7 +171,7 @@
     <!-- ======================== RANDOM QUEST POOLS ======================== -->
     <h2>Random Quest Pools</h2>
     <p>
-      The <code>NpcRandomGroupMap</code> assigns quests randomly per player. This is
+      The <code>RandomGroups</code> assigns quests randomly per player. This is
       used to create variety — different players get different bounties, tasks, or story
       paths from the same NPC.
     </p>
@@ -253,7 +252,7 @@
     </p>
     <ol>
       <li>Read the NPC's citizen ID.</li>
-      <li>Append the quest ID to that NPC's entry in <code>NpcQuestMap</code>.</li>
+      <li>Append the quest ID to that NPC's entry in <code>Npcs</code>.</li>
       <li>Save <code>npcs.json</code> to disk.</li>
       <li>Exit wand mode and confirm the link in chat.</li>
     </ol>
