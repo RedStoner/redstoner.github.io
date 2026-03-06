@@ -56,9 +56,10 @@
       <div class="page-eyebrow">Getting Started</div>
       <h1 class="page-title">QuestLines Overview</h1>
       <p class="page-subtitle">
-        QuestLines is a Hytale server plugin that ties HyCitizens NPC dialogue to a quest system.
-        Players interact with NPCs to trigger branching dialogue — each response can have
-        requirements that control visibility and actions that drive quest state forward.
+        QuestLines is a Hytale server plugin that ties NPC dialogue to a quest system.
+        Players interact with NPCs — both HyCitizens NPCs and standard Hytale NPCs — to trigger
+        branching dialogue. Each response can have requirements that control visibility and
+        actions that drive quest state forward.
       </p>
     </div>
 
@@ -70,6 +71,13 @@
       pass</strong> is displayed as a dialogue screen. The player sees the NPC's text and up
       to four response buttons. Choosing a response executes its actions — updating quest state,
       giving items, running commands, or navigating to another page.
+    </p>
+    <p>
+      QuestLines supports two NPC types: <strong>HyCitizens NPCs</strong> (identified by citizen
+      ID) and <strong>standard Hytale NPCs</strong> (identified by entity UUID). Both use the
+      same <code>npcs.json</code> mapping and identical quest logic. Players can also track active
+      quests from the <strong>Quest Journal</strong> (<code>/journal</code>), and a heads-up
+      display overlay shows goal text for tracked quests at the top of the screen.
     </p>
 
     <div class="cards-grid">
@@ -109,9 +117,9 @@
     <p>
       A Page represents one screen of dialogue. It has its own requirements (which must pass
       for the page to be selected), NPC display name, dialogue text, optional load actions,
-      and up to four responses. <strong>Load actions</strong> run automatically whenever the
-      page is shown — on initial NPC interaction and on any <code>page:</code> navigation —
-      regardless of which response the player clicks.
+      optional goal text, and up to four responses. <strong>Load actions</strong> run
+      automatically whenever the page is shown. <strong>Goal text</strong> is displayed in the
+      Quest Goal HUD when the player is tracking that quest and this is their current page.
     </p>
 
     <h3>Response</h3>
@@ -123,7 +131,8 @@
     <h3>PlayerData</h3>
     <p>
       Each player has a persistent data record tracking: started quests, completed quests,
-      custom tags, kill/break/place progress counters, and timestamps for cooldown checks.
+      tracked quests (shown on the Quest Goal HUD), custom tags, named numeric variables,
+      kill/break/place progress counters, and timestamps for cooldown and timer checks.
       This data is stored in <code>players.json</code> and managed automatically.
     </p>
 
@@ -134,6 +143,11 @@
     </p>
 
     <h3>Quest File &mdash; <code>quests/&lt;id&gt;.json</code></h3>
+    <p>
+      Pages are embedded directly inside the quest file under a <code>PageData</code> map.
+      The separate <code>pages/</code> directory is legacy and only read on load for
+      migration — all saves write the embedded format.
+    </p>
     <pre class="code-block"><code><span class="hl-punc">{</span>
   <span class="hl-key">"Title"</span><span class="hl-punc">:</span>        <span class="hl-str">"The Lost Sword"</span><span class="hl-punc">,</span>
   <span class="hl-key">"Description"</span><span class="hl-punc">:</span> <span class="hl-str">"Help the blacksmith retrieve his stolen blade."</span><span class="hl-punc">,</span>
@@ -144,16 +158,23 @@
     <span class="hl-str">"lost_sword_progress"</span><span class="hl-punc">,</span>
     <span class="hl-str">"lost_sword_turnin"</span><span class="hl-punc">,</span>
     <span class="hl-str">"lost_sword_complete"</span>
-  <span class="hl-punc">]</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"PageData"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"lost_sword_intro"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-cmt">/* page object */</span> <span class="hl-punc">},</span>
+    <span class="hl-key">"lost_sword_progress"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-cmt">/* page object */</span> <span class="hl-punc">},</span>
+    <span class="hl-key">"lost_sword_turnin"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-cmt">/* page object */</span> <span class="hl-punc">},</span>
+    <span class="hl-key">"lost_sword_complete"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-cmt">/* page object */</span> <span class="hl-punc">}</span>
+  <span class="hl-punc">}</span>
 <span class="hl-punc">}</span></code></pre>
 
-    <h3>Page File &mdash; <code>pages/&lt;id&gt;.json</code></h3>
+    <h3>Page Object (embedded in quest <code>PageData</code>)</h3>
     <pre class="code-block"><code><span class="hl-punc">{</span>
   <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"lost_sword_intro"</span><span class="hl-punc">,</span>
   <span class="hl-key">"Title"</span><span class="hl-punc">:</span>       <span class="hl-str">"A Favour to Ask"</span><span class="hl-punc">,</span>
   <span class="hl-key">"Name"</span><span class="hl-punc">:</span>        <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>  <span class="hl-cmt">// NPC display name on this page</span>
   <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:lost_sword"</span><span class="hl-punc">],</span>
-  <span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span>  <span class="hl-punc">[],</span>  <span class="hl-cmt">// actions run automatically when this page is shown</span>
+  <span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span>  <span class="hl-punc">[],</span>  <span class="hl-cmt">// run automatically when the page is shown</span>
+  <span class="hl-key">"GoalText"</span><span class="hl-punc">:</span>     <span class="hl-str">"Talk to Aldric the Smith"</span><span class="hl-punc">,</span>  <span class="hl-cmt">// shown in Quest Goal HUD when tracked</span>
   <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>      <span class="hl-str">"Ah, {username}! My sword was stolen by goblins. Will you help?"</span><span class="hl-punc">,</span>
   <span class="hl-key">"Response1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
     <span class="hl-key">"Text"</span><span class="hl-punc">:</span>         <span class="hl-str">"I'll find it for you."</span><span class="hl-punc">,</span>
@@ -170,6 +191,10 @@
 <span class="hl-punc">}</span></code></pre>
 
     <h3>NPC Config &mdash; <code>npcs.json</code></h3>
+    <p>
+      Both HyCitizens NPCs (citizen ID) and standard Hytale NPCs (entity UUID) are supported.
+      The key format is the same — just use the appropriate ID for each NPC type.
+    </p>
     <pre class="code-block"><code><span class="hl-punc">{</span>
   <span class="hl-key">"Npcs"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
     <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-str">"lost_sword,daily_reward"</span><span class="hl-punc">,</span>
@@ -330,11 +355,24 @@
         </thead>
         <tbody>
           <tr>
-            <td>/ql journal</td>
-            <td>Open the Quest Journal — shows active and completed quests with the last dialogue the player saw for each.</td>
+            <td>/journal &nbsp;<span style="opacity:0.6;font-size:0.85em">(aliases: /j, /log)</span></td>
+            <td>Open the Quest Journal — shows active and completed quests with the last dialogue the player saw for each. Players can also toggle quest tracking from the journal to show goal text in the HUD.</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Quest Goal HUD</div>
+        <p>
+          When a player tracks a quest from the journal, a compact overlay appears in the
+          top-right corner of the screen showing the <code>GoalText</code> of their current
+          page for each tracked quest. Quests are also automatically added to the tracked list
+          when a <code>questStarted:</code> action fires.
+        </p>
+      </div>
     </div>
 
     <!-- What's Next -->

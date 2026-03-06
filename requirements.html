@@ -232,13 +232,12 @@
 <span class="hl-punc">]</span></code></pre>
     </div>
 
-    <!-- ======================== BLOCK BREAKING ======================== -->
+    <!-- ======================== BLOCK INTERACTIONS ======================== -->
     <div class="section-group">
-      <h2>Block Breaking</h2>
+      <h2>Block Interactions</h2>
       <p>
-        Counts how many times a player has broken a specific block type. Requires the
-        tracking tag <code>tracking:block:blockId</code> to be active.
-        Removing the tracking tag resets the counter.
+        Counts block breaks and placements. Each type requires its respective tracking tag to
+        be added to the player first. Removing the tracking tag resets the counter.
       </p>
 
       <div class="table-wrapper">
@@ -249,7 +248,11 @@
           <tbody>
             <tr>
               <td>break:blockId:qty</td>
-              <td>True if the player has broken &ge; <em>qty</em> of the specified block type.</td>
+              <td>True if the player has broken &ge; <em>qty</em> of the specified block type. Requires <code>tracking:block:blockId</code> tag.</td>
+            </tr>
+            <tr>
+              <td>place:blockId:qty</td>
+              <td>True if the player has placed &ge; <em>qty</em> of the specified block type. Requires <code>tracking:place:blockId</code> tag.</td>
             </tr>
           </tbody>
         </table>
@@ -260,33 +263,9 @@
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:miners_task"</span><span class="hl-punc">,</span>
   <span class="hl-str">"break:Ore_Iron_Stone:20"</span>
-<span class="hl-punc">]</span></code></pre>
-    </div>
+<span class="hl-punc">]</span>
 
-    <!-- ======================== BLOCK PLACING ======================== -->
-    <div class="section-group">
-      <h2>Block Placing</h2>
-      <p>
-        Counts block placements. Requires the tracking tag <code>tracking:place:blockId</code>.
-        Removing the tracking tag resets the counter.
-      </p>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr><th>Format</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>place:blockId:qty</td>
-              <td>True if the player has placed &ge; <em>qty</em> of the specified block type.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h4>Example</h4>
-      <pre class="code-block"><code><span class="hl-cmt">// Require placing 10 stone bricks</span>
+<span class="hl-cmt">// Require placing 10 stone bricks</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:build_the_wall"</span><span class="hl-punc">,</span>
   <span class="hl-str">"place:Rock_Stone_Brick:10"</span>
@@ -420,11 +399,16 @@
 
     <!-- ======================== TIMED QUEST ======================== -->
     <div class="section-group">
-      <h2>Timed Quest</h2>
+      <h2>Timed Quests</h2>
       <p>
         Timed requirements check whether an active countdown is still running or has expired.
         The timer is started via the <code>timedStart:key</code> action. Both requirements
         return <strong>false</strong> if the timer was never started.
+      </p>
+      <p>
+        By default, the duration is read from what was stored by <code>timedStart:key</code>.
+        You can optionally override it by appending <code>:seconds</code> directly on the
+        requirement.
       </p>
 
       <div class="table-wrapper">
@@ -434,12 +418,20 @@
           </thead>
           <tbody>
             <tr>
+              <td>timedActive:key</td>
+              <td>True if <code>timedStart:key</code> was called AND the stored timer is still running.</td>
+            </tr>
+            <tr>
               <td>timedActive:key:seconds</td>
-              <td>True if <code>timedStart:key</code> was called AND fewer than <em>seconds</em> have elapsed. Timer is still running.</td>
+              <td>Same, but overrides the stored duration with an explicit value.</td>
+            </tr>
+            <tr>
+              <td>timedExpired:key</td>
+              <td>True if <code>timedStart:key</code> was called AND the stored timer has elapsed.</td>
             </tr>
             <tr>
               <td>timedExpired:key:seconds</td>
-              <td>True if <code>timedStart:key</code> was called AND &ge; <em>seconds</em> have elapsed. Time is up.</td>
+              <td>Same, but overrides the stored duration with an explicit value.</td>
             </tr>
           </tbody>
         </table>
@@ -454,7 +446,7 @@
             Both return false when never started, so the intro page (with
             <code>questNotStarted</code>) catches those players. Once started, the expired
             page is checked first — if time is up it shows the failure; otherwise the active
-            page shows. See <a href="progression.html#timed">Quest Patterns &rarr; Timed Quest</a>.
+            page shows. See <a href="progression.html#timed-quest">Quest Patterns &rarr; Timed Quest</a>.
           </p>
         </div>
       </div>
@@ -463,13 +455,13 @@
       <pre class="code-block"><code><span class="hl-cmt">// Expire page — must come BEFORE active page in Pages list</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"timedExpired:courier_timer:300"</span>
+  <span class="hl-str">"timedExpired:courier_timer"</span>
 <span class="hl-punc">]</span>
 
 <span class="hl-cmt">// Active page — shown while timer is running</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
   <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"timedActive:courier_timer:300"</span>
+  <span class="hl-str">"timedActive:courier_timer"</span>
 <span class="hl-punc">]</span></code></pre>
 
       <p>
@@ -478,9 +470,9 @@
       </p>
     </div>
 
-    <!-- ======================== POSITION ======================== -->
+    <!-- ======================== POSITION & WORLD ======================== -->
     <div class="section-group">
-      <h2>Position</h2>
+      <h2>Position &amp; World</h2>
 
       <div class="table-wrapper">
         <table>
@@ -492,25 +484,6 @@
               <td>nearPosition:x:y:z:radius</td>
               <td>True if the player is within <em>radius</em> blocks of the coordinate (x, y, z).</td>
             </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h4>Example</h4>
-      <pre class="code-block"><code><span class="hl-cmt">// Player must be near the quest location to turn in</span>
-<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"nearPosition:120:64:-340:10"</span><span class="hl-punc">]</span></code></pre>
-    </div>
-
-    <!-- ======================== WORLD TIME ======================== -->
-    <div class="section-group">
-      <h2>World Time</h2>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr><th>Format</th><th>Description</th></tr>
-          </thead>
-          <tbody>
             <tr>
               <td>timeOfDay:morning</td>
               <td>In-game hours 6&ndash;11.</td>
@@ -527,64 +500,14 @@
               <td>timeOfDay:night</td>
               <td>In-game hours 21&ndash;5.</td>
             </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h4>Example</h4>
-      <pre class="code-block"><code><span class="hl-cmt">// NPC only talks at night</span>
-<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"timeOfDay:night"</span><span class="hl-punc">]</span></code></pre>
-    </div>
-
-    <!-- ======================== MOON PHASE ======================== -->
-    <div class="section-group">
-      <h2>Moon Phase</h2>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr><th>Format</th><th>Description</th></tr>
-          </thead>
-          <tbody>
             <tr>
-              <td>moonPhase:full</td>
-              <td>Moon phase index 0 (full moon).</td>
-            </tr>
-            <tr>
-              <td>moonPhase:waning</td>
-              <td>Moon phase indices 1&ndash;3.</td>
-            </tr>
-            <tr>
-              <td>moonPhase:new</td>
-              <td>Moon phase index 4 (new moon).</td>
-            </tr>
-            <tr>
-              <td>moonPhase:waxing</td>
-              <td>Moon phase indices 5&ndash;7.</td>
+              <td>moonPhase:full&nbsp;/&nbsp;waning&nbsp;/&nbsp;new&nbsp;/&nbsp;waxing</td>
+              <td>Named moon phase. <code>full</code> = index 0, <code>waning</code> = 1–3, <code>new</code> = 4, <code>waxing</code> = 5–7.</td>
             </tr>
             <tr>
               <td>moonPhase:3</td>
               <td>Exact numeric phase check (0&ndash;7).</td>
             </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h4>Example</h4>
-      <pre class="code-block"><code><span class="hl-cmt">// Werewolf quest only during full moon</span>
-<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"moonPhase:full"</span><span class="hl-punc">]</span></code></pre>
-    </div>
-
-    <!-- ======================== WORLD ======================== -->
-    <div class="section-group">
-      <h2>World</h2>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr><th>Format</th><th>Description</th></tr>
-          </thead>
-          <tbody>
             <tr>
               <td>world:worldName</td>
               <td>True if the player is currently in the named world.</td>
@@ -593,8 +516,18 @@
         </table>
       </div>
 
-      <h4>Example</h4>
-      <pre class="code-block"><code><span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"world:overworld"</span><span class="hl-punc">]</span></code></pre>
+      <h4>Examples</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Player must be near the quest location to turn in</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"nearPosition:120:64:-340:10"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// NPC only talks at night</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"timeOfDay:night"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Werewolf quest only during full moon</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"moonPhase:full"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Quest only available in the overworld</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"world:overworld"</span><span class="hl-punc">]</span></code></pre>
     </div>
 
     <!-- ======================== LOGIC OPERATORS ======================== -->
@@ -750,8 +683,10 @@
           <tr><td>item:itemId:qty:true</td><td>Inventory</td><td>Has item (consume on use)</td></tr>
           <tr><td>talk:citizenName:qty</td><td>NPC Talk</td><td>Talk count threshold (auto-tracked, uses display name)</td></tr>
           <tr><td>cooldown:key:seconds</td><td>Cooldown</td><td>Elapsed since setTimestamp (true if never set)</td></tr>
-          <tr><td>timedActive:key:seconds</td><td>Timer</td><td>Timer running and not yet expired</td></tr>
-          <tr><td>timedExpired:key:seconds</td><td>Timer</td><td>Timer started and expired</td></tr>
+          <tr><td>timedActive:key</td><td>Timer</td><td>Timer running and not yet expired (reads stored duration)</td></tr>
+          <tr><td>timedActive:key:seconds</td><td>Timer</td><td>Timer running — overrides stored duration</td></tr>
+          <tr><td>timedExpired:key</td><td>Timer</td><td>Timer started and expired (reads stored duration)</td></tr>
+          <tr><td>timedExpired:key:seconds</td><td>Timer</td><td>Timer expired — overrides stored duration</td></tr>
           <tr><td>nearPosition:x:y:z:r</td><td>Position</td><td>Within radius blocks</td></tr>
           <tr><td>timeOfDay:morning|afternoon|evening|night</td><td>World</td><td>Time of day</td></tr>
           <tr><td>moonPhase:full|waning|new|waxing|&lt;int&gt;</td><td>World</td><td>Moon phase</td></tr>

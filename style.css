@@ -610,6 +610,15 @@ hr.divider {
 
 /* ---------- Sidebar Section Sub-Navigation ---------- */
 .sidebar-sub-nav {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.22s ease, opacity 0.18s ease;
+  opacity: 0;
+}
+
+.sidebar-sub-nav.sidebar-sub-nav-open {
+  max-height: 800px; /* large enough for any page */
+  opacity: 1;
   padding-bottom: 6px;
 }
 

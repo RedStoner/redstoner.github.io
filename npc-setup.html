@@ -65,7 +65,7 @@
     <!-- ======================== HYCITIZENS ======================== -->
     <h2>HyCitizens Overview</h2>
     <p>
-      HyCitizens is the NPC framework for Hytale servers. It manages NPC spawning,
+      HyCitizens is the primary NPC framework for Hytale servers. It manages NPC spawning,
       appearance, and interaction events. QuestLines listens to the
       <code>CitizenInteractEvent</code> emitted by HyCitizens to intercept player
       interactions and open the appropriate dialogue.
@@ -85,6 +85,33 @@
           Use <code>/ql wand &lt;questId&gt;</code> and punch an NPC. The wand mode
           reads the NPC's citizen ID automatically and stores it in <code>npcs.json</code>.
           You can also look up citizen IDs in the HyCitizen UI (<code>/citizens</code>).
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== STANDARD HYTALE NPCS ======================== -->
+    <h2>Standard Hytale NPCs</h2>
+    <p>
+      In addition to HyCitizens NPCs, QuestLines also handles interactions with <strong>standard
+      Hytale NPCs</strong> — entities spawned directly by the game or other plugins. These use
+      the entity's <strong>UUID</strong> as the key in <code>npcs.json</code> instead of a
+      citizen ID. The quest linking and page resolution logic is identical for both types.
+    </p>
+    <p>
+      Standard NPC interactions are detected via the <code>SyncInteractionChains</code> packet
+      watcher in <code>NpcInteractListener</code>. Wand mode works with standard NPCs too —
+      punching one in wand mode stores its entity UUID automatically.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Same npcs.json, Different Key Format</div>
+        <p>
+          HyCitizens NPCs use a citizen ID (UUID-like string from HyCitizens); standard Hytale
+          NPCs use the entity's UUID. Both appear in the same <code>Npcs</code> map. There is
+          no separate section — the plugin detects which listener to use based on the interaction
+          event type, not the key format.
         </p>
       </div>
     </div>

@@ -116,14 +116,12 @@
   CONFIG FILES  (stored in the plugin data folder)
   ═══════════════════════════════════════════════════════
 
-  quests/&lt;questId&gt;.json  — one file per quest  (e.g. quests/my_quest.json)
-  pages/&lt;pageId&gt;.json    — one file per page   (e.g. pages/my_quest_page1.json)
+  quests/&lt;questId&gt;.json  — one file per quest; pages are embedded inside it
   npcs.json              — NPC-to-quest assignments
   players.json           — Per-player state (auto-managed)
 
-  The quests/ and pages/ directories are created automatically on first run.
-  Each file contains only the quest or page body — the ID is the filename, not a key.
-
+  The quests/ directory is created automatically on first run.
+  The filename (without .json) is the quest ID.
   All JSON keys are PascalCase.
 
   ═══════════════════════════════════════════════════════
@@ -134,21 +132,26 @@
   {
     "Title":        "The Lost Sword",
     "Description":  "Recover the blacksmith's stolen sword.",
-    "Requirements": ["questNotStarted:my_quest"],
+    "Requirements": [],
     "Actions":      [],
-    "Pages":        ["my_quest_page1", "my_quest_page2"]
+    "Pages":        ["my_quest_page1", "my_quest_page2"],
+    "PageData": {
+      "my_quest_page1": { ... page object ... },
+      "my_quest_page2": { ... page object ... }
+    }
   }
 
-  The filename (without .json) is the quest ID. No outer wrapper key.
-  The Pages list is ordered — the first page whose requirements pass is shown to the player.
+  Pages is an ordered list of page IDs. PageData holds the page objects keyed by ID.
+  The first page whose requirements pass is shown to the player.
 
-  ── Page  (file: pages/my_quest_page1.json) ────────────
+  ── Page object (inside PageData) ──────────────────────
   {
     "Id":           "my_quest_page1",
     "Title":        "my_quest_page1",
     "Name":         "Blacksmith",
     "Requirements": ["questNotStarted:my_quest"],
     "LoadActions":  [],
+    "GoalText":     "Talk to the Blacksmith",
     "Dialog":       "Adventurer! Someone stole my sword. Can you help?",
     "Response1": { ... },
     "Response2": { ... },
@@ -156,8 +159,8 @@
     "Response4": { ... }
   }
 
-  The filename (without .json) is the page ID. Page IDs must be unique across all pages.
-  Recommended convention: questId_pageN.
+  GoalText is shown in the Quest Goal HUD when the player tracks this quest and this is
+  their current page. Page IDs must be unique across all pages; convention: questId_pageN.
 
   ── Response ───────────────────────────────────────────
   {
@@ -173,14 +176,16 @@
   ── NpcConfig ──────────────────────────────────────────
   {
     "Npcs": {
-      "citizen_abc123": "my_quest,another_quest"
+      "citizen_abc123": "my_quest,another_quest",
+      "uuid-of-standard-npc": "other_quest"
     },
     "RandomGroups": {
       "citizen_abc123": "questA|questB;questC|questD"
     }
   }
 
-  The citizenId comes from HyCitizens. One NPC can serve multiple quests.
+  HyCitizens NPCs use a citizen ID; standard Hytale NPCs use the entity UUID.
+  Both go in the same Npcs map. One NPC can serve multiple quests (comma-separated).
 
   ═══════════════════════════════════════════════════════
   PAGE RESOLUTION — HOW THE PLUGIN PICKS WHICH PAGE TO SHOW
@@ -416,7 +421,7 @@
     2. expired   — Requirements: [questStarted:quest_id, timedExpired:arena_timer]
     3. active    — Requirements: [questStarted:quest_id, timedActive:arena_timer]
     4. intro     — Requirements: [questNotStarted:quest_id]
-         Accept response: Actions: [questStarted:quest_id, timedStart:arena_timer:60]
+         Accept response: Actions: [questStarted:quest_id, timedStart:arena_timer]
 
   ── Item turn-in ───────────────────────────────────────
 
@@ -436,7 +441,8 @@
   5. Tags can contain colons: hasTag:tracking:kill:Zombie is valid.
   6. command:text — commandText is parts[1] only; commands with colons need a wrapper command.
   7. page: navigation action should always be last in the Actions list.
-  8. timedStart:key:N stores the duration. timedActive:key and timedExpired:key read it back.
+  8. timedStart:key records the time. timedActive:key and timedExpired:key read it back.
+     Optionally append :seconds on the requirement to override the duration.
   9. Multiple quests on one NPC are evaluated in the order listed in the Npcs map value.
   10. LoadActions fire automatically when a page is shown (on first open AND on page: navigation),
       before the player clicks any button. Use them for per-view side effects. All action types
@@ -484,9 +490,10 @@
         <div>
           <strong>Copy the generated JSON into your server files.</strong>
           <p>
-            Save each generated file to the appropriate location on your server — quest files
-            to <code>quests/</code>, page files to <code>pages/</code>, and update
-            <code>npcs.json</code> if the AI provided changes for it.
+            Save the generated quest file to <code>quests/</code> on your server. Pages are
+            embedded inside the quest file — there is no separate <code>pages/</code> directory
+            to update. Update <code>npcs.json</code> if the AI provided changes for it, then
+            run <code>/ql reload</code> to apply.
           </p>
         </div>
       </li>
@@ -702,20 +709,22 @@ The quest has five pages:
 
     <h3>timedStart format</h3>
     <p>
-      The <code>timedStart</code> action in the plugin stores both the start time and the
-      duration together. The correct format is <code>timedStart:key:durationSeconds</code>
-      with the duration attached to the action, not split across the action and requirement.
-      Verify the AI has used this three-segment form.
+      The <code>timedStart</code> action records the current time under a key in the player's
+      timestamps. The correct format is <code>timedStart:key</code> — two segments only. The
+      <code>timedActive</code> and <code>timedExpired</code> requirements read the stored
+      timestamp and can either derive the duration from context or use an optional
+      <code>:seconds</code> override.
     </p>
-    <pre class="code-block"><code><span class="hl-cmt">// Correct — duration included in the action</span>
-<span class="hl-str">"timedStart:courier_timer:180"</span>
+    <pre class="code-block"><code><span class="hl-cmt">// Correct — start the timer</span>
+<span class="hl-str">"timedStart:courier_timer"</span>
 
-<span class="hl-cmt">// Correct — requirement uses the key only (no seconds needed here)</span>
+<span class="hl-cmt">// Correct — requirements use key only (reads stored timestamp)</span>
 <span class="hl-str">"timedActive:courier_timer"</span>
 <span class="hl-str">"timedExpired:courier_timer"</span>
 
-<span class="hl-cmt">// Wrong — AI sometimes omits the duration from the action</span>
-<span class="hl-str">"timedStart:courier_timer"</span>   <span class="hl-cmt">// missing :180</span></code></pre>
+<span class="hl-cmt">// Also valid — explicit second override on the requirement</span>
+<span class="hl-str">"timedActive:courier_timer:180"</span>
+<span class="hl-str">"timedExpired:courier_timer:180"</span></code></pre>
 
     <h3>Item and entity ID casing</h3>
     <p>
@@ -806,13 +815,15 @@ The quest has five pages:
       tracking tag that was added.
     </p>
 
-    <h3>timedStart missing the duration segment</h3>
+    <h3>timedStart missing key / wrong format</h3>
     <p>
-      A common error is writing <code>"timedStart:my_timer"</code> without the duration.
-      The action requires three segments: <code>timedStart:key:durationSeconds</code>.
-      The <code>timedActive</code> and <code>timedExpired</code> requirements, however,
-      take only the key — they retrieve the stored duration automatically. Make sure the
-      duration is on the action, not the requirements.
+      The correct format for the action is <code>timedStart:key</code> — two segments. The
+      requirements <code>timedActive:key</code> and <code>timedExpired:key</code> read the
+      stored timestamp back using just the key. If you need to override the comparison
+      duration on the requirement side, append <code>:seconds</code> there. The AI
+      occasionally invents a <code>timedStart:key:durationSeconds</code> three-segment form
+      for the action — that extra segment is ignored; the duration belongs on the requirement
+      if needed, not the action.
     </p>
 
     <h3>Lowercase or wrong-format entity / item IDs</h3>
@@ -836,7 +847,12 @@ The quest has five pages:
   <span class="hl-str">"courier_expired"</span><span class="hl-punc">,</span>    <span class="hl-cmt">// questStarted + timedExpired — before active</span>
   <span class="hl-str">"courier_active"</span><span class="hl-punc">,</span>     <span class="hl-cmt">// questStarted + timedActive — after expired</span>
   <span class="hl-str">"courier_intro"</span>       <span class="hl-cmt">// questNotStarted — last</span>
-<span class="hl-punc">]</span></code></pre>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Expired page requirements (key-only reads stored duration)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:courier"</span><span class="hl-punc">,</span> <span class="hl-str">"timedExpired:courier_timer"</span><span class="hl-punc">]</span>
+<span class="hl-cmt">// Active page requirements</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:courier"</span><span class="hl-punc">,</span> <span class="hl-str">"timedActive:courier_timer"</span><span class="hl-punc">]</span></code></pre>
 
     <h3>page: navigation action not last in the list</h3>
     <p>
