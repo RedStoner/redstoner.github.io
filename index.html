@@ -20,13 +20,13 @@
       <img class="suite-banner-logo" src="images/questlineslogolarge.png" alt="QuestLines" />
       <div class="suite-banner-title">A Quest System Worth Exploring</div>
       <p class="suite-banner-subtitle">
-        Eight Hytale plugins that turn your server into a story. Branching NPC
+        Nine Hytale plugins that turn your server into a story. Branching NPC
         dialogue, native NPC management, floating quest icons, linear story dialogs,
-        player titles, custom GUIs, land protection, and city-and-nation governance
-        &mdash; each stands alone, together they sing.
+        player titles, custom GUIs, land protection, city-and-nation governance, and a
+        full MMO suite &mdash; each stands alone, together they sing.
       </p>
       <div class="suite-banner-stats">
-        <span><strong>8</strong> plugins</span>
+        <span><strong>9</strong> plugins</span>
         <span><strong>1</strong> suite</span>
         <span><strong>0</strong> JSON files you have to hand-write</span>
       </div>
@@ -164,6 +164,18 @@
         </p>
         <div class="plugin-card-cta">Read the docs</div>
       </a>
+
+      <a class="plugin-card" data-plugin="mmo" href="mmo.html">
+        <img class="plugin-card-logo" src="images/QLMMOLogo.png" alt="QuestLines MMO" />
+        <div class="plugin-card-tag">Standalone Plugin</div>
+        <div class="plugin-card-title">QuestLines MMO</div>
+        <p class="plugin-card-desc">
+          A standalone MMO suite &mdash; parties &amp; friends, guilds and guild halls,
+          instanced dungeons with LFG, and dynamic world events &amp; discoveries. Fully
+          independent of Core.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
     </div>
 
     <!-- How They Fit Together -->
@@ -213,6 +225,11 @@
         <div class="fit-card-dot"></div>
         <div class="fit-card-title">Denizens</div>
         <p>Standalone native NPC manager. Runs without Core; with Core installed it syncs quest-giver / quest-board NPCs into Core&rsquo;s <code>NpcConfig</code> by entity UUID and registers NPC-control actions (<code>setAttitudeP:</code>, <code>swapRole:</code>, <code>lookAt:</code>, &hellip;).</p>
+      </div>
+      <div class="fit-card" data-plugin="mmo">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">MMO</div>
+        <p>Standalone MMO suite &mdash; parties &amp; friends, guilds &amp; halls, instanced dungeons with LFG, and dynamic world events &amp; discoveries. Shares no APIs with Core; runs entirely on its own.</p>
       </div>
     </div>
 
@@ -293,6 +310,11 @@
             <td>QuestLines Denizens</td>
             <td><code>questlines-denizens-{version}.jar</code></td>
             <td><code>mods/QuestLinesDenizens/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines MMO</td>
+            <td><code>questlines-mmo-{version}.jar</code></td>
+            <td><code>mods/QuestLinesMMO/</code></td>
           </tr>
         </tbody>
       </table>
