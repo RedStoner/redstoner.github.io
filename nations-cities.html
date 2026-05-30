@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Cities</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">Cities</h1>
+      <p class="page-subtitle">
+        How a city comes into existence, who&rsquo;s in it, how its ranks and
+        permissions work, and how its leadership changes hands.
+      </p>
+    </div>
+
+    <!-- Founding -->
+    <div data-section-body="Founding a City">
+    <h2 data-section="Founding a City">Founding a City</h2>
+    <p>
+      Cities are founded by two players together. The founder runs
+      <code>/city create</code> naming the second player; the second player runs
+      <code>/city accept</code> to make it real.
+    </p>
+<pre><code>/city create &lt;playerName&gt; &lt;name&gt; &lt;tag&gt; [#color] [motd...]</code></pre>
+    <p>
+      The founder pays <code>create_city_cost</code> (default 500) up front from
+      their VaultUnlocked balance. The cost is <strong>non-refundable</strong>:
+      if the invitee declines or the invite expires, the city is never created
+      but the coins stay spent. Cancel an open invitation with
+      <code>/city create cancel</code> &mdash; same rule, the cost is already gone.
+    </p>
+    <p>
+      While the invite is open, no city row exists. A
+      <code>PendingCityCreation</code> row sits in the database with the
+      founder, invitee, name, tag, color, and motd. Only when the invitee runs:
+    </p>
+<pre><code>/city accept &lt;cityName&gt;</code></pre>
+    <p>
+      &hellip; does the city actually materialize. That single command opens a
+      transaction that inserts the city row, its four built-in ranks, both members,
+      and deletes the pending row &mdash; if any step fails the whole thing rolls back.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Name and tag rules</div>
+        <p>
+          Names are 3&ndash;24 characters, alphanumeric plus space. Tags are
+          2&ndash;5 characters, automatically uppercased. Both must be unique
+          across all existing cities <em>and</em> all pending creations &mdash;
+          you can&rsquo;t reserve a name by pending it forever.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Members -->
+    <div data-section-body="Members">
+    <h2 data-section="Members">Members</h2>
+    <p>
+      A player belongs to at most one city at a time. Membership is stored as a
+      <code>CityMember</code> row keyed by player UUID, carrying their cached
+      username, current rank, join time, and tax arrears.
+    </p>
+    <h3>Joining</h3>
+    <p>
+      Existing cities invite new players via
+      <code>/city invite &lt;player&gt;</code> (requires the
+      <code>INVITE_PLAYER</code> perm); the player accepts with
+      <code>/city accept &lt;cityName&gt;</code>. Joining puts them on the
+      Default rank (the built-in &ldquo;Citizen&rdquo;).
+    </p>
+    <p>
+      The same <code>/city accept</code> command handles both pending-creation
+      acceptances and ordinary invites &mdash; it figures out which applies based
+      on whether your UUID is the invitee on a pending creation or has an
+      <code>InvitePending</code> row to an existing city of that name.
+    </p>
+    <p>
+      Accepting any invite drops every other pending invite you held, so you
+      don&rsquo;t accidentally keep stale invitations sitting around.
+    </p>
+    <h3>Leaving</h3>
+    <p>
+      <code>/city leave</code> removes you from your city and drops all your
+      <em>Share with City</em> grants. The mayor cannot leave directly &mdash;
+      they must first transfer the role (see below). When membership drops
+      below <code>min_city_members</code> (default 2), the city enters GRACE.
+    </p>
+    <h3>Kicking</h3>
+    <p>
+      <code>/city kick &lt;player&gt;</code> requires the
+      <code>KICK_MEMBER</code> perm. You can&rsquo;t kick someone whose rank
+      weight is at or above yours &mdash; the &ldquo;Allies&rdquo; rank is
+      pinned at weight 0 and is not a real member, so it never comes up.
+    </p>
+    </div>
+
+    <!-- Ranks -->
+    <div data-section-body="Ranks">
+    <h2 data-section="Ranks">Ranks</h2>
+    <p>
+      Every city has a permission system built from per-rank bitmasks. When a
+      city is created four ranks are seeded automatically &mdash; three of them
+      immutable (you can edit their permissions but not delete or rename them),
+      one of them just a seed you can change however you like.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Weight</th>
+            <th>Role</th>
+            <th>Default permissions</th>
+            <th>Mutable?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Mayor</strong></td>
+            <td>100</td>
+            <td>Founder rank. Always held by exactly one player &mdash; the current mayor.</td>
+            <td><em>All</em> permissions, including <code>ADMIN_OVERRIDE</code>.</td>
+            <td>Name + flag locked; <code>ADMIN_OVERRIDE</code> cannot be toggled off.</td>
+          </tr>
+          <tr>
+            <td><strong>Officer</strong></td>
+            <td>50</td>
+            <td>Seeded mid-tier rank for trusted members.</td>
+            <td><code>INVITE_PLAYER</code>, <code>KICK_MEMBER</code>, <code>EDIT_INFO</code>, <code>BANK</code>, <code>CITY_CLAIM</code>, <code>CITY_UNCLAIM</code>, <code>CITY_BUILD</code>, <code>CITY_BREAK</code>, <code>CITY_INTERACT</code>, <code>CITY_USE_CONTAINERS</code>, <code>MANAGE_PLOTS</code>.</td>
+            <td>Fully editable &mdash; rename, delete, or rewrite perms.</td>
+          </tr>
+          <tr>
+            <td><strong>Citizen</strong></td>
+            <td>10</td>
+            <td>Default rank assigned to every new joiner.</td>
+            <td>None.</td>
+            <td>Name + flag locked; permissions editable.</td>
+          </tr>
+          <tr>
+            <td><strong>Allies</strong></td>
+            <td>0</td>
+            <td>Governs what allied outsiders may do in this city&rsquo;s chunks. Not held by any actual player.</td>
+            <td><code>CITY_INTERACT</code> only.</td>
+            <td>Name + flag locked; permissions editable.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Add custom ranks with <code>/city rank create &lt;name&gt; &lt;weight&gt;</code>,
+      edit any rank&rsquo;s bitmask with
+      <code>/city rank perm &lt;rank&gt; &lt;perm&gt; on|off</code>, and move
+      members between ranks with <code>/city setrank &lt;player&gt; &lt;rank&gt;</code>.
+      Custom ranks can be renamed or deleted; the three immutable ones cannot.
+    </p>
+    </div>
+
+    <!-- Permission list -->
+    <div data-section-body="City Permissions">
+    <h2 data-section="City Permissions">City Permissions</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Group</th>
+            <th>What it grants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>INVITE_PLAYER</code></td><td>Management</td><td>Use <code>/city invite</code>, <code>/city uninvite</code>.</td></tr>
+          <tr><td><code>KICK_MEMBER</code></td><td>Management</td><td>Use <code>/city kick</code> (cannot kick higher-weight rank).</td></tr>
+          <tr><td><code>MANAGE_RANKS</code></td><td>Management</td><td>Use <code>/city rank ...</code> and <code>/city setrank</code>.</td></tr>
+          <tr><td><code>EDIT_INFO</code></td><td>Management</td><td>Change name, tag, motd, color; combined with <code>BANK</code> sets tax rates.</td></tr>
+          <tr><td><code>DIPLOMACY</code></td><td>Management</td><td>Propose / accept / break alliances; declare / surrender city wars.</td></tr>
+          <tr><td><code>BANK</code></td><td>Management</td><td><code>/city bank deposit</code> and <code>/city bank withdraw</code>. Reading balance and log is open to everyone.</td></tr>
+          <tr><td><code>MANAGE_PLOTS</code></td><td>Management</td><td>List/unlist/give/revoke city plots; also lets the holder define and resize plot polygons via Claims (mapped to its <code>MANAGE_SUBREGIONS</code>).</td></tr>
+          <tr><td><code>CITY_CLAIM</code></td><td>Territory</td><td>Claim chunks for the city via <code>/claim map</code> (with the city selected as owner).</td></tr>
+          <tr><td><code>CITY_UNCLAIM</code></td><td>Territory</td><td>Release city chunks via <code>/claim map</code>.</td></tr>
+          <tr><td><code>CITY_BUILD</code></td><td>In-claim</td><td>Place blocks inside city chunks (and inside personal chunks of fellow members who toggled <em>Share with City</em>).</td></tr>
+          <tr><td><code>CITY_BREAK</code></td><td>In-claim</td><td>Break blocks under the same scope.</td></tr>
+          <tr><td><code>CITY_INTERACT</code></td><td>In-claim</td><td>Right-click doors, signs, buttons, NPCs.</td></tr>
+          <tr><td><code>CITY_USE_CONTAINERS</code></td><td>In-claim</td><td>Open chests and other inventories.</td></tr>
+          <tr><td><code>ADMIN_OVERRIDE</code></td><td>Internal</td><td>Forced on for the Mayor rank. Bypasses every other gate inside city chunks.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      A rank&rsquo;s <code>CITY_*</code> in-claim perms double as the ceiling for
+      what a fellow member can do in <em>your</em> personal claim while you have
+      <em>Share with City</em> enabled there &mdash; see
+      <a href="nations-claims.html#share-with-city">Share with City</a>.
+    </p>
+    </div>
+
+    <!-- Mayor transfer -->
+    <div data-section-body="Mayor Transfer">
+    <h2 data-section="Mayor Transfer">Mayor Transfer</h2>
+    <p>
+      The mayor is pinned to whichever member holds the Mayor rank. There is
+      always exactly one. The role is handed off through an offer-and-accept
+      flow so no one can be made mayor against their will:
+    </p>
+    <ol>
+      <li><code>/city transfer &lt;player&gt;</code> &mdash; mayor opens an offer to a member.</li>
+      <li><code>/city transfer accept</code> &mdash; target accepts; in one transaction the previous mayor moves to the Default rank, the new mayor takes the Founder rank, and the pending fields clear.</li>
+      <li><code>/city transfer decline</code> &mdash; target rejects.</li>
+      <li><code>/city transfer cancel</code> &mdash; incumbent rescinds an open offer.</li>
+    </ol>
+    <p>
+      Offers expire after <code>transfer_offer_ttl_minutes</code> (default 60).
+      The mayor cannot run <code>/city leave</code> while an offer is pending &mdash;
+      resolve or cancel the transfer first. Server admins can override the mayor
+      directly without consent via <code>/citiesadmin setmayor</code>.
+    </p>
+    </div>
+
+    <!-- Grace + Disband -->
+    <div data-section-body="Grace &amp; Disband">
+    <h2 data-section="Grace &amp; Disband">Grace &amp; Disband</h2>
+    <p>
+      When a city drops below <code>min_city_members</code> (default 2) it
+      enters the <strong>GRACE</strong> state. While in grace:
+    </p>
+    <ul>
+      <li>Existing claims are still protected.</li>
+      <li>New claims and invites still flow normally &mdash; the city can recover by reaching quorum again.</li>
+      <li>The tax sweeper continues running.</li>
+      <li>Remaining members get a periodic broadcast warning the city is about to disband.</li>
+    </ul>
+    <p>
+      If the city stays under quorum past <code>grace_days</code> (default 7)
+      the grace-sweep task auto-disbands it. <code>/city disband</code>
+      run by the mayor &mdash; double-confirmed &mdash; does the same thing immediately.
+      Either path releases every city claim, ejects every member, drops every
+      share grant for the city, marks alliances <code>BROKEN</code>, marks wars
+      <code>ENDED_BY_DISBAND</code>, and (when <code>disband_refund_to_members</code>
+      is on) splits the treasury evenly among remaining members &mdash; with
+      the rounding remainder going to the mayor.
+    </p>
+    <p>
+      Server admins can force-disband a stuck city without grace via
+      <code>/citiesadmin delete &lt;cityName&gt;</code>.
+    </p>
+    </div>
+
+    <!-- Settings -->
+    <div data-section-body="Settings">
+    <h2 data-section="Settings">Settings</h2>
+    <p>
+      The basic identity of a city is editable any time by holders of
+      <code>EDIT_INFO</code>:
+    </p>
+    <ul>
+      <li><code>/city setname &lt;name&gt;</code> &mdash; same uniqueness rules as creation.</li>
+      <li><code>/city settag &lt;tag&gt;</code> &mdash; uppercased; same scope.</li>
+      <li><code>/city setmotd &lt;text&gt;</code> &mdash; 200 char cap.</li>
+      <li><code>/city setcolor &lt;#hex&gt;</code> &mdash; affects map tint, banner, and chat tag.</li>
+    </ul>
+    <p>
+      Color changes propagate instantly to the entry banner, the chat-tag
+      prefix, and <code>/claim map</code>&rsquo;s tinting.
+    </p>
+    </div>
+
+    <!-- City Overview UI -->
+    <div data-section-body="City Overview UI">
+    <h2 data-section="City Overview UI">City Overview UI</h2>
+    <p>
+      Typing bare <code>/city</code> opens the <strong>City Overview</strong>
+      page (<code>CityOverviewUI</code>) for your current city. It&rsquo;s a
+      single-page layout with the city name and tag in the header, the motd,
+      a paginated member list (8 per page, sorted by rank with the mayor
+      first, then by join date), and a row of action buttons in the footer
+      that route to the ranks panel, the bank, the claim map (via
+      <code>/claim map</code>), and the settings panel.
+    </p>
+    <p>
+      Most everyday operations &mdash; setting ranks, kicking, transferring
+      mayor &mdash; are reached by clicking a member row, which opens a
+      per-member action panel. The CLI subcommands listed under
+      <a href="nations-commands.html">Commands</a> remain available for
+      scripting, automation, and quick one-offs.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Config &amp; Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">Config &amp; Admin</h1>
+      <p class="page-subtitle">
+        The full <code>questlinesnations.conf</code> key reference, the
+        permission node, the conquest flow, and the on-disk file layout.
+      </p>
+    </div>
+
+    <!-- File layout -->
+    <div data-section-body="File Layout">
+    <h2 data-section="File Layout">File Layout</h2>
+    <p>
+      All Nations data lives under <code>mods/QuestLinesNations/</code>.
+    </p>
+<pre><code>mods/QuestLinesNations/
+  questlinesnations.conf     plugin settings (this page)
+  nations.db                 SQLite database
+</code></pre>
+    <p>
+      Missing keys in <code>questlinesnations.conf</code> are written back with
+      defaults on first load &mdash; you can ship a stub file and let the plugin
+      fill it in.
+    </p>
+    </div>
+
+    <!-- Founding -->
+    <div data-section-body="Founding">
+    <h2 data-section="Founding">Founding</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>create_city_cost</code></td><td><code>500</code></td><td>Coins charged to the founder when creating a city. Non-refundable.</td></tr>
+          <tr><td><code>create_nation_cost</code></td><td><code>2500</code></td><td>Coins charged to the founding city&rsquo;s treasury when forming a nation. Non-refundable.</td></tr>
+          <tr><td><code>relocate_town_hall_cost</code></td><td><code>250</code></td><td><em>Dormant in v3.0.0.</em> Reserved for the future Town Hall implementation; <code>/city setth</code> is still a stub.</td></tr>
+          <tr><td><code>relocate_capital_district_cost</code></td><td><code>1500</code></td><td><em>Dormant in v3.0.0.</em> Reserved for Capital District relocation; the capital-transfer flow does not currently charge.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Claim pools -->
+    <div data-section-body="Claim Pools">
+    <h2 data-section="Claim Pools">Claim Pools</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>city_claims_per_member</code></td><td><code>5</code></td><td>Bonus chunks added to a city&rsquo;s pool per member.</td></tr>
+          <tr><td><code>city_claim_min_pool</code></td><td><code>8</code></td><td>Floor on the city pool regardless of member count.</td></tr>
+          <tr><td><code>nation_claims_per_city</code></td><td><code>8</code></td><td>Bonus chunks added per member city.</td></tr>
+          <tr><td><code>nation_claim_min_pool</code></td><td><code>12</code></td><td>Floor on the nation pool.</td></tr>
+          <tr><td><code>require_adjacent_city_claims</code></td><td><code>false</code></td><td><em>Dormant in v3.0.0.</em> Cities are forced single-territory by the resolver (<code>allowsMultipleClaimGroups: false</code>) regardless of this flag.</td></tr>
+          <tr><td><code>require_adjacent_nation_claims</code></td><td><code>false</code></td><td><em>Dormant in v3.0.0.</em> Nations are not restricted to a single connected blob.</td></tr>
+          <tr><td><code>excluded_worlds</code></td><td><em>empty</em></td><td>Comma-separated world ids where city/nation claims are disallowed entirely.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Quorum & grace -->
+    <div data-section-body="Quorum &amp; Grace">
+    <h2 data-section="Quorum &amp; Grace">Quorum &amp; Grace</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>grace_days</code></td><td><code>7</code></td><td>Days a city/nation may sit below quorum before auto-disbanding.</td></tr>
+          <tr><td><code>min_city_members</code></td><td><code>2</code></td><td>Minimum members to keep a city out of grace.</td></tr>
+          <tr><td><code>min_nation_cities</code></td><td><code>2</code></td><td>Minimum member cities to keep a nation out of grace.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Economy -->
+    <div data-section-body="Economy &amp; Refunds">
+    <h2 data-section="Economy &amp; Refunds">Economy &amp; Refunds</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>require_economy</code></td><td><code>false</code></td><td>When true, founding refuses to run without VaultUnlocked. When false, costs become no-ops without economy.</td></tr>
+          <tr><td><code>disband_refund_to_members</code></td><td><code>true</code></td><td>Split city treasury among remaining members on disband; rounding remainder goes to mayor.</td></tr>
+          <tr><td><code>disband_refund_to_cities</code></td><td><code>true</code></td><td>Split nation treasury among released member cities on disband; remainder goes to (former) capital.</td></tr>
+          <tr><td><code>transfer_offer_ttl_minutes</code></td><td><code>60</code></td><td>How long mayor/capital transfer offers stay valid.</td></tr>
+          <tr><td><code>conquest_confirm_token_ttl_seconds</code></td><td><code>60</code></td><td>How long the printed CONFIRM token from <code>conquer</code> stays valid.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Tax -->
+    <div data-section-body="Tax Defaults">
+    <h2 data-section="Tax Defaults">Tax Defaults</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>default_city_tax_amount</code></td><td><code>50</code></td><td>Per-member city tax applied to newly created cities.</td></tr>
+          <tr><td><code>default_city_tax_interval_hours</code></td><td><code>24</code></td><td>Hours between city tax collections for new cities.</td></tr>
+          <tr><td><code>default_nation_tax_amount</code></td><td><code>200</code></td><td>Per-member-city nation tax for new nations.</td></tr>
+          <tr><td><code>default_nation_tax_interval_hours</code></td><td><code>24</code></td><td>Hours between nation tax collections.</td></tr>
+          <tr><td><code>min_tax_interval_hours</code></td><td><code>1</code></td><td>Lower bound on intervals at either tier.</td></tr>
+          <tr><td><code>max_tax_interval_hours</code></td><td><code>168</code></td><td>Upper bound on intervals.</td></tr>
+          <tr><td><code>tax_scan_interval_minutes</code></td><td><code>15</code></td><td>How often the sweep task ticks.</td></tr>
+          <tr><td><code>default_city_tax_founder_exempt</code></td><td><code>true</code></td><td>Default for the per-city <code>taxFounderExempt</code> flag.</td></tr>
+          <tr><td><code>default_nation_tax_capital_exempt</code></td><td><code>true</code></td><td>Default for the per-nation <code>capitalCityExempt</code> flag.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Neutral policy -->
+    <div data-section-body="Neutral Policies">
+    <h2 data-section="Neutral Policies">Neutral Policies</h2>
+    <p>
+      Outsiders who aren&rsquo;t members, co-nation compatriots, or allies fall
+      back to this server-wide policy. Cities cannot override these per-city &mdash;
+      tighten the Allies rank instead if you want certain partners treated
+      differently.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>city_neutral_can_enter</code></td><td><code>true</code></td><td>Outsiders may walk into city chunks.</td></tr>
+          <tr><td><code>city_neutral_can_interact</code></td><td><code>true</code></td><td>Outsiders may right-click doors, signs, buttons, NPCs.</td></tr>
+          <tr><td><code>city_neutral_can_use_containers</code></td><td><code>false</code></td><td>Outsiders may open chests.</td></tr>
+          <tr><td><code>city_neutral_can_build</code></td><td><code>false</code></td><td>Outsiders may place blocks.</td></tr>
+          <tr><td><code>city_neutral_can_break</code></td><td><code>false</code></td><td>Outsiders may break blocks.</td></tr>
+          <tr><td><code>nation_neutral_can_enter</code></td><td><code>true</code></td><td>Same five keys, repeated for the nation tier.</td></tr>
+          <tr><td colspan="3"><em>(<code>nation_neutral_can_interact</code>, <code>nation_neutral_can_use_containers</code>, <code>nation_neutral_can_build</code>, <code>nation_neutral_can_break</code>)</em></td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Invites & Diplomacy -->
+    <div data-section-body="Invites &amp; Diplomacy">
+    <h2 data-section="Invites &amp; Diplomacy">Invites &amp; Diplomacy</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>invite_ttl_minutes</code></td><td><code>60</code></td><td>How long any invite or pending creation stays open.</td></tr>
+          <tr><td><code>max_pending_invites_per_city</code></td><td><code>25</code></td><td>Cap on outstanding invites a city may have open.</td></tr>
+          <tr><td><code>max_pending_invites_per_nation</code></td><td><code>25</code></td><td>Same at the nation tier.</td></tr>
+          <tr><td><code>max_pending_invites_per_player</code></td><td><code>10</code></td><td>Cap on invites a player may be sitting on.</td></tr>
+          <tr><td><code>max_city_alliances_per_city</code></td><td><code>5</code></td><td>Active city-to-city alliance cap.</td></tr>
+          <tr><td><code>max_nation_alliances_per_nation</code></td><td><code>5</code></td><td>Active nation-to-nation alliance cap.</td></tr>
+          <tr><td><code>alliance_proposal_ttl_hours</code></td><td><code>48</code></td><td>How long a proposal sits before TTL pruning.</td></tr>
+          <tr><td><code>war_declaration_cooldown_minutes</code></td><td><code>30</code></td><td>Soft throttle on successive declarations from the same side.</td></tr>
+          <tr><td><code>max_concurrent_city_wars</code></td><td><code>3</code></td><td>Active city wars per city.</td></tr>
+          <tr><td><code>max_concurrent_nation_wars</code></td><td><code>3</code></td><td>Active nation wars per nation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Names / colors -->
+    <div data-section-body="Names, Tags, Colors">
+    <h2 data-section="Names, Tags, Colors">Names, Tags, Colors</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>name_min_length</code></td><td><code>3</code></td><td>Minimum characters for a city or nation name.</td></tr>
+          <tr><td><code>name_max_length</code></td><td><code>24</code></td><td>Maximum.</td></tr>
+          <tr><td><code>tag_min_length</code></td><td><code>2</code></td><td>Minimum tag length.</td></tr>
+          <tr><td><code>tag_max_length</code></td><td><code>5</code></td><td>Maximum tag length.</td></tr>
+          <tr><td><code>default_color_palette</code></td><td><em>10 hex defaults</em></td><td>Comma-separated hex colors offered when the founder leaves <code>#color</code> off.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Plots -->
+    <div data-section-body="City Plots">
+    <h2 data-section="City Plots">City Plots</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>plots_enabled</code></td><td><code>true</code></td><td>Master switch for the city-plot feature.</td></tr>
+          <tr><td><code>min_plot_price</code></td><td><code>0</code></td><td>Lower bound on a sold plot&rsquo;s price.</td></tr>
+          <tr><td><code>max_plot_price</code></td><td><code>1000000</code></td><td>Upper bound.</td></tr>
+          <tr><td><code>max_plots_per_member</code></td><td><code>0</code></td><td>Cap on simultaneously held plots per player. <code>0</code> = unlimited.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Display -->
+    <div data-section-body="Display">
+    <h2 data-section="Display">Display</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>show_entry_banner</code></td><td><code>true</code></td><td>Show the title-and-subtitle banner when crossing into a claimed chunk.</td></tr>
+          <tr><td><code>show_wilderness_chat_on_exit</code></td><td><code>false</code></td><td>Print a chat line when leaving all claims into wilderness.</td></tr>
+          <tr><td><code>entry_banner_cooldown_seconds</code></td><td><code>5</code></td><td>Per-player cooldown between banner fires.</td></tr>
+          <tr><td><code>broadcast_war_declarations</code></td><td><code>true</code></td><td>Server-wide chat broadcast on war declaration at either tier.</td></tr>
+          <tr><td><code>broadcast_alliance_formation</code></td><td><code>true</code></td><td>Server-wide broadcast when an alliance forms.</td></tr>
+          <tr><td><code>browser_page_size</code></td><td><code>10</code></td><td>Rows per page in <code>/city list</code>, <code>/nation list</code>, and the browser UIs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Database -->
+    <div data-section-body="Database" id="database">
+    <h2 data-section="Database">Database</h2>
+    <p>
+      Only SQLite is implemented in v3.0.0. The remaining keys are placeholders
+      for future MySQL/MariaDB support.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>database_type</code></td><td><code>sqlite</code></td><td>Backend driver id.</td></tr>
+          <tr><td><code>database_host</code></td><td><code>localhost</code></td><td>Hostname for remote backends.</td></tr>
+          <tr><td><code>database_port</code></td><td><code>3306</code></td><td>TCP port for remote backends.</td></tr>
+          <tr><td><code>database_name</code></td><td><code>questlinesnations</code></td><td>Schema / database name.</td></tr>
+          <tr><td><code>database_user</code></td><td><code>nations</code></td><td>Username.</td></tr>
+          <tr><td><code>database_password</code></td><td><code>nations</code></td><td>Password.</td></tr>
+          <tr><td><code>database_use_ssl</code></td><td><code>false</code></td><td>Negotiate TLS to the remote backend.</td></tr>
+          <tr><td><code>database_extra_params</code></td><td><em>empty</em></td><td>Extra JDBC parameters appended to the connection URL.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Tables</h3>
+    <p>All tables are prefixed <code>nations_</code>:</p>
+    <ul>
+      <li><code>nations_city</code>, <code>nations_city_member</code>, <code>nations_city_rank</code>, <code>nations_city_invite</code>, <code>nations_pending_city_creation</code></li>
+      <li><code>nations_city_alliance</code>, <code>nations_city_war</code></li>
+      <li><code>nations_player_share_grant</code>, <code>nations_plot_listing</code></li>
+      <li><code>nations_nation</code>, <code>nations_member_city</code>, <code>nations_nation_rank</code>, <code>nations_nation_invite</code>, <code>nations_pending_nation_creation</code></li>
+      <li><code>nations_nation_alliance</code>, <code>nations_nation_war</code></li>
+      <li><code>nations_bank_log</code></li>
+    </ul>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Node</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>questlinesnations.admin</code></td><td>op</td><td>Required for <code>/citiesadmin</code> and <code>/nationsadmin</code> subtrees. Also bypasses both ownership resolvers at step zero.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Player-facing commands (<code>/city</code>, <code>/nation</code>) are not
+      permission-gated &mdash; they&rsquo;re open to everyone, with access
+      controlled internally by per-rank bitmasks.
+    </p>
+    </div>
+
+    <!-- Conquest -->
+    <div data-section-body="Conquest" id="conquest">
+    <h2 data-section="Conquest">Conquest</h2>
+    <p>
+      Conquest is the admin-staged finishing move that consumes a losing entity
+      into a winning one. It exists at both tiers with identical syntax. Because
+      it&rsquo;s irreversible, both commands require a confirm-token round-trip:
+    </p>
+<pre><code>/citiesadmin conquer &lt;loser&gt; &lt;winner&gt; [claims|absorb]
+/nationsadmin conquer &lt;loser&gt; &lt;winner&gt; [claims|absorb]</code></pre>
+    <p>
+      The first invocation prints a token and the exact re-run command. Within
+      <code>conquest_confirm_token_ttl_seconds</code> (default 60) you re-invoke
+      with the token appended to execute.
+    </p>
+    <h3>What happens in both modes</h3>
+    <p>
+      Regardless of mode, the loser is fully dissolved:
+    </p>
+    <ul>
+      <li>Every chunk the loser owned is unclaimed and re-claimed under the winner&rsquo;s ownership.</li>
+      <li>The loser&rsquo;s entire treasury is added to the winner&rsquo;s treasury, audited as a <code>conquest:&lt;loserName&gt;</code> CREDIT row on the winner.</li>
+      <li>All of the loser&rsquo;s alliances flip to <code>BROKEN</code>; all of its active wars flip to <code>ENDED_BY_DISBAND</code>.</li>
+      <li>The loser&rsquo;s pending invites and share grants are wiped.</li>
+      <li>The loser row itself is deleted.</li>
+    </ul>
+    <h3>Mode difference: members</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Mode</th><th>What happens to the loser&rsquo;s members</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>claims</code> (default)</td>
+            <td>Ejected to no-city / no-nation state. They&rsquo;re free to join or found a new entity.</td>
+          </tr>
+          <tr>
+            <td><code>absorb</code></td>
+            <td>Migrated into the winner at the winner&rsquo;s Default rank. The loser&rsquo;s mayor loses mayor status &mdash; everyone comes in equal.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Co-nation conquest is allowed: a member-city absorbing another member-city
+      may push their shared nation into grace if it drops below quorum.
+    </p>
+    </div>
+
+    <!-- Manifest -->
+    <div data-section-body="Manifest &amp; Versioning">
+    <h2 data-section="Manifest &amp; Versioning">Manifest &amp; Versioning</h2>
+    <p>
+      Nations ships as <code>questlines-nations-{version}.jar</code> placed in
+      <code>mods/</code>. The plugin manifest declares:
+    </p>
+<pre><code>{
+  "Group": "net.evilcraft",
+  "Name": "QuestLinesNations",
+  "Main": "net.evilcraft.questlinesnations.QuestLinesNationsPlugin",
+  "LoadOrder": "POSTWORLD",
+  "Dependencies": {
+    "net.evilcraft:QuestLinesClaims": "*"
+  },
+  "OptionalDependencies": {
+    "TheNewEconomy:VaultUnlocked": "*"
+  }
+}</code></pre>
+    <p>
+      Claims is hard-required at the manifest level so Hytale loads it first;
+      VaultUnlocked is optional and surfaces through the
+      <code>VaultUnlockedEconomyService</code> bridge inside the plugin (falling
+      back to a no-op service if absent).
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

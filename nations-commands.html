@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Commands</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">Commands</h1>
+      <p class="page-subtitle">
+        Full reference for the four command trees: <code>/city</code>,
+        <code>/nation</code>, <code>/citiesadmin</code>, <code>/nationsadmin</code>.
+        Permissions and member-only gates are noted in the &ldquo;needs&rdquo;
+        column.
+      </p>
+    </div>
+
+    <!-- /city -->
+    <div data-section-body="/city">
+    <h2 data-section="/city">/city</h2>
+    <p>
+      Bare <code>/city</code> opens the <strong>City Overview</strong> UI for
+      your current city, or prints a hint if you&rsquo;re not in one. All other
+      <code>/city</code> activity is dispatched through the subcommands below.
+    </p>
+    <h3>Lifecycle</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Needs</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/city create &lt;player&gt; &lt;name&gt; &lt;tag&gt; [#color] [motd...]</code></td><td>Not in a city</td><td>Charges <code>create_city_cost</code> (sunk); opens a <code>PendingCityCreation</code> waiting for the named player.</td></tr>
+          <tr><td><code>/city create cancel</code></td><td>Pending creation as founder</td><td>Aborts the pending row. Cost stays gone.</td></tr>
+          <tr><td><code>/city accept &lt;name&gt;</code></td><td>&mdash;</td><td>Accepts a pending creation (you&rsquo;re the invitee) or an ordinary invite.</td></tr>
+          <tr><td><code>/city decline &lt;name&gt;</code></td><td>&mdash;</td><td>Rejects a pending creation or invite to that named city.</td></tr>
+          <tr><td><code>/city disband</code></td><td>Mayor</td><td>Double-confirmed teardown. Releases all claims, refunds treasury per config.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Information &amp; browsers</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city info [name]</code></td><td>&mdash;</td><td>Details of the named city (or your own).</td></tr>
+          <tr><td><code>/city list [page]</code></td><td>&mdash;</td><td>Console-paginated city listing.</td></tr>
+          <tr><td><code>/city browser</code></td><td>&mdash;</td><td>Opens the in-game CityBrowser UI.</td></tr>
+          <tr><td><code>/city help</code></td><td>&mdash;</td><td>Prints the subcommand list.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Membership</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city invite &lt;player&gt;</code></td><td><code>INVITE_PLAYER</code></td><td>Opens an invite for the named online player.</td></tr>
+          <tr><td><code>/city uninvite &lt;player&gt;</code></td><td><code>INVITE_PLAYER</code></td><td>Revokes a pending invite.</td></tr>
+          <tr><td><code>/city invites</code></td><td>&mdash;</td><td>Invites pending for you.</td></tr>
+          <tr><td><code>/city leave</code></td><td>Not mayor</td><td>Drops you and your share grants. Mayor must transfer first.</td></tr>
+          <tr><td><code>/city kick &lt;player&gt;</code></td><td><code>KICK_MEMBER</code></td><td>Cannot kick equal or higher rank weight.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Mayor transfer</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city transfer &lt;player&gt;</code></td><td>Mayor</td><td>Opens a transfer offer (expires per <code>transfer_offer_ttl_minutes</code>).</td></tr>
+          <tr><td><code>/city transfer accept</code></td><td>Pending target</td><td>Accept the offer; mayor role swaps atomically.</td></tr>
+          <tr><td><code>/city transfer decline</code></td><td>Pending target</td><td>Reject; clears pending fields.</td></tr>
+          <tr><td><code>/city transfer cancel</code></td><td>Mayor</td><td>Rescind your own open offer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Ranks</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city rank create &lt;name&gt; &lt;weight&gt;</code></td><td><code>MANAGE_RANKS</code></td><td>Add a custom rank.</td></tr>
+          <tr><td><code>/city rank delete &lt;name&gt;</code></td><td><code>MANAGE_RANKS</code></td><td>Rejects built-ins (Mayor/Citizen/Allies).</td></tr>
+          <tr><td><code>/city rank rename &lt;old&gt; &lt;new&gt;</code></td><td><code>MANAGE_RANKS</code></td><td>Rejects built-ins.</td></tr>
+          <tr><td><code>/city rank perm &lt;rank&gt; &lt;perm&gt; on|off</code></td><td><code>MANAGE_RANKS</code></td><td><code>ADMIN_OVERRIDE</code> on Mayor cannot be toggled off.</td></tr>
+          <tr><td><code>/city rank list</code></td><td>&mdash;</td><td>Shows ranks and their bitmasks.</td></tr>
+          <tr><td><code>/city setrank &lt;player&gt; &lt;rank&gt;</code></td><td><code>MANAGE_RANKS</code></td><td>Cannot target the mayor; cannot assign Mayor rank (use <em>transfer</em>).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Territory &amp; settings</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city setth</code></td><td>Mayor</td><td><em>Stub in v3.0.0.</em> Reserved for promoting the current chunk to Town Hall; currently prints a &ldquo;not yet implemented&rdquo; notice.</td></tr>
+          <tr><td><code>/city setname &lt;name&gt;</code></td><td><code>EDIT_INFO</code></td><td>Rename. Same uniqueness rules as creation.</td></tr>
+          <tr><td><code>/city settag &lt;tag&gt;</code></td><td><code>EDIT_INFO</code></td><td>Retag. Tag is uppercased.</td></tr>
+          <tr><td><code>/city setmotd &lt;text&gt;</code></td><td><code>EDIT_INFO</code></td><td>200-char cap.</td></tr>
+          <tr><td><code>/city setcolor &lt;#hex&gt;</code></td><td><code>EDIT_INFO</code></td><td>Updates banner/map/chat tint live.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Diplomacy</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city ally &lt;cityName&gt;</code></td><td><code>DIPLOMACY</code></td><td>Propose alliance.</td></tr>
+          <tr><td><code>/city ally accept|decline|break &lt;cityName&gt;</code></td><td><code>DIPLOMACY</code></td><td>Respond or end.</td></tr>
+          <tr><td><code>/city war declare &lt;cityName&gt;</code></td><td><code>DIPLOMACY</code></td><td>Goes active immediately. Cannot target ally, co-nation, or current war.</td></tr>
+          <tr><td><code>/city war surrender &lt;cityName&gt;</code></td><td><code>DIPLOMACY</code></td><td>End by surrender.</td></tr>
+          <tr><td><code>/city wars</code></td><td>&mdash;</td><td>List your active wars.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Bank &amp; tax</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city bank balance</code></td><td>&mdash;</td><td>Read treasury.</td></tr>
+          <tr><td><code>/city bank deposit &lt;amount&gt;</code></td><td><code>BANK</code></td><td>Personal Vault to treasury.</td></tr>
+          <tr><td><code>/city bank withdraw &lt;amount&gt;</code></td><td><code>BANK</code></td><td>Treasury to personal Vault.</td></tr>
+          <tr><td><code>/city bank log [page]</code></td><td>&mdash;</td><td>10 rows per page, newest first.</td></tr>
+          <tr><td><code>/city tax set &lt;amount&gt; &lt;intervalHours&gt;</code></td><td><code>EDIT_INFO</code> + <code>BANK</code></td><td>Interval clamped to config bounds.</td></tr>
+          <tr><td><code>/city tax founderexempt true|false</code></td><td><code>EDIT_INFO</code> + <code>BANK</code></td><td>Toggle per-city founder exemption.</td></tr>
+          <tr><td><code>/city tax info</code></td><td>&mdash;</td><td>Settings + next sweep + your arrears.</td></tr>
+          <tr><td><code>/city tax pay</code></td><td>&mdash;</td><td>Clear your arrears from your Vault balance.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Plots</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/city plot list &lt;name&gt; &lt;price&gt;</code></td><td><code>MANAGE_PLOTS</code></td><td>List a defined plot for sale.</td></tr>
+          <tr><td><code>/city plot unlist &lt;name&gt;</code></td><td><code>MANAGE_PLOTS</code></td><td>Remove a listing.</td></tr>
+          <tr><td><code>/city plot give &lt;name&gt; &lt;player&gt;</code></td><td><code>MANAGE_PLOTS</code></td><td>Assign without payment.</td></tr>
+          <tr><td><code>/city plot revoke &lt;name&gt;</code></td><td><code>MANAGE_PLOTS</code></td><td>Reclaim; auto-relists if originally sold.</td></tr>
+          <tr><td><code>/city plot info</code></td><td>&mdash;</td><td>Plot under your feet.</td></tr>
+          <tr><td><code>/city plot mine</code></td><td>&mdash;</td><td>Open the My Plots page.</td></tr>
+          <tr><td><code>/city plot browse</code></td><td>&mdash;</td><td>Open the Buy browser.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- /nation -->
+    <div data-section-body="/nation">
+    <h2 data-section="/nation">/nation</h2>
+    <p>
+      Bare <code>/nation</code> opens the <strong>Nation Overview</strong> UI
+      for your current nation (you must be in a city that&rsquo;s in a nation).
+    </p>
+    <h3>Lifecycle</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/nation create &lt;cityName&gt; &lt;name&gt; &lt;tag&gt; [#color] [motd...]</code></td><td>Mayor of a solo city</td><td>Charges <code>create_nation_cost</code> from city treasury; opens pending creation.</td></tr>
+          <tr><td><code>/nation create cancel</code></td><td>Founder city&rsquo;s mayor</td><td>Aborts pending. Cost gone.</td></tr>
+          <tr><td><code>/nation accept &lt;nationName&gt;</code></td><td>Invitee city&rsquo;s mayor</td><td>Accepts pending creation or ordinary invite.</td></tr>
+          <tr><td><code>/nation decline &lt;nationName&gt;</code></td><td>Invitee city&rsquo;s mayor</td><td>Reject.</td></tr>
+          <tr><td><code>/nation disband</code></td><td>Capital mayor</td><td>Double-confirmed teardown.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Information &amp; browsers</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/nation info [name]</code></td><td>&mdash;</td><td>Details of a nation.</td></tr>
+          <tr><td><code>/nation list [page]</code></td><td>&mdash;</td><td>Console listing.</td></tr>
+          <tr><td><code>/nation browser</code></td><td>&mdash;</td><td>Opens the NationBrowser UI.</td></tr>
+          <tr><td><code>/nation help</code></td><td>&mdash;</td><td>Subcommand list.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Membership</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/nation invite &lt;cityName&gt;</code></td><td><strong>Capital mayor only</strong></td><td>Hard-gated; no rank perm.</td></tr>
+          <tr><td><code>/nation uninvite &lt;cityName&gt;</code></td><td>Capital mayor only</td><td>Revoke pending invite.</td></tr>
+          <tr><td><code>/nation invites</code></td><td>Mayor of invitee city</td><td>Invites pending for your city.</td></tr>
+          <tr><td><code>/nation leave</code></td><td>Non-capital mayor</td><td>Withdraw your city. Capital must transfer first.</td></tr>
+          <tr><td><code>/nation kick &lt;cityName&gt;</code></td><td>Capital mayor only</td><td>Hard-gated.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Capital transfer</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>Needs</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/nation transfer &lt;cityName&gt;</code></td><td>Capital mayor</td><td>Opens an offer.</td></tr>
+          <tr><td><code>/nation transfer accept</code></td><td>Target city&rsquo;s mayor</td><td>Accept; capital flips.</td></tr>
+          <tr><td><code>/nation transfer decline</code></td><td>Target city&rsquo;s mayor</td><td>Reject.</td></tr>
+          <tr><td><code>/nation transfer cancel</code></td><td>Capital mayor</td><td>Rescind.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Ranks, settings, diplomacy, bank, tax</h3>
+    <p>
+      Same shapes as the city tier, scoped to the nation. Key differences:
+    </p>
+    <ul>
+      <li><code>/nation setrank</code> targets a <em>city</em>, not a player; cannot target the capital.</li>
+      <li><code>/nation tax pay</code> is run by any member-city mayor and drains <em>that city&rsquo;s</em> treasury to clear the city&rsquo;s arrears.</li>
+      <li><code>/nation tax capitalexempt true|false</code> replaces <code>founderexempt</code>.</li>
+      <li>There is no <code>/nation setcd</code> standalone command in v3.0.0 &mdash; capital-district relocation is done by the capital-transfer flow.</li>
+    </ul>
+    </div>
+
+    <!-- Admin -->
+    <div data-section-body="Admin Commands" id="admin-commands">
+    <h2 data-section="Admin Commands">Admin Commands</h2>
+    <p>
+      The two admin trees require <code>questlinesnations.admin</code>.
+      Conquest commands at both tiers use a two-step confirm-token pattern: the
+      first invocation prints a token, you re-run with the token appended
+      within <code>conquest_confirm_token_ttl_seconds</code> (default 60) to
+      execute.
+    </p>
+    <h3>/citiesadmin</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/citiesadmin reload</code></td><td>Reload <code>questlinesnations.conf</code>.</td></tr>
+          <tr><td><code>/citiesadmin delete &lt;cityName&gt;</code></td><td>Force-disband without grace.</td></tr>
+          <tr><td><code>/citiesadmin setmayor &lt;cityName&gt; &lt;player&gt;</code></td><td>Override mayor without target consent.</td></tr>
+          <tr><td><code>/citiesadmin setperm &lt;cityName&gt; &lt;player&gt; &lt;perm&gt; on|off</code></td><td>Directly edit one member&rsquo;s bitmask snapshot.</td></tr>
+          <tr><td><code>/citiesadmin unclaim &lt;cityName&gt; &lt;x&gt; &lt;z&gt; [world]</code></td><td>Force-release one city chunk.</td></tr>
+          <tr><td><code>/citiesadmin unclaimall &lt;cityName&gt;</code></td><td>Force-release every chunk the city owns.</td></tr>
+          <tr><td><code>/citiesadmin conquer &lt;loser&gt; &lt;winner&gt; [claims|absorb] [token]</code></td><td>Confirm-token gated. <code>claims</code> moves chunks only; <code>absorb</code> additionally folds members into the winner.</td></tr>
+          <tr><td><code>/citiesadmin treasury set &lt;city&gt; &lt;amount&gt;</code></td><td>Rewrite treasury balance; logs as <code>admin</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>/nationsadmin</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/nationsadmin reload</code></td><td>Reload config.</td></tr>
+          <tr><td><code>/nationsadmin delete &lt;nationName&gt;</code></td><td>Force-disband without grace.</td></tr>
+          <tr><td><code>/nationsadmin setcapital &lt;nationName&gt; &lt;cityName&gt;</code></td><td>Override capital without consent.</td></tr>
+          <tr><td><code>/nationsadmin setperm &lt;nationName&gt; &lt;cityName&gt; &lt;perm&gt; on|off</code></td><td>Directly edit a member-city&rsquo;s perm snapshot.</td></tr>
+          <tr><td><code>/nationsadmin unclaim &lt;nationName&gt; &lt;x&gt; &lt;z&gt; [world]</code></td><td>Force-release one nation chunk.</td></tr>
+          <tr><td><code>/nationsadmin unclaimall &lt;nationName&gt;</code></td><td>Force-release every nation chunk.</td></tr>
+          <tr><td><code>/nationsadmin war end &lt;nationA&gt; &lt;nationB&gt; [note]</code></td><td>Admin-terminate an active war.</td></tr>
+          <tr><td><code>/nationsadmin war setstatus &lt;nationA&gt; &lt;nationB&gt; &lt;status&gt;</code></td><td>Override <code>WarStatus</code>.</td></tr>
+          <tr><td><code>/nationsadmin conquer &lt;loser&gt; &lt;winner&gt; [claims|absorb] [token]</code></td><td>Confirm-token gated nation conquest.</td></tr>
+          <tr><td><code>/nationsadmin treasury set &lt;nation&gt; &lt;amount&gt;</code></td><td>Rewrite nation treasury; logs as <code>admin</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      See <a href="nations-config.html#conquest">Conquest</a> for the
+      claims-vs-absorb semantics.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

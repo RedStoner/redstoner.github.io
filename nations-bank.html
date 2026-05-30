@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Bank &amp; Tax</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">Bank &amp; Tax</h1>
+      <p class="page-subtitle">
+        The treasury at each tier, who can move money in and out, how the tax
+        sweeper works, the audit log behind every transfer, and what happens
+        when VaultUnlocked isn&rsquo;t installed.
+      </p>
+    </div>
+
+    <!-- Economy bridge -->
+    <div data-section-body="Economy Bridge">
+    <h2 data-section="Economy Bridge">Economy Bridge</h2>
+    <p>
+      Nations integrates with VaultUnlocked through a small bridge that
+      abstracts <em>deposit / withdraw / balance</em>. When VaultUnlocked is
+      present and available, real coins move; when it isn&rsquo;t, the no-op
+      service stands in. Two paths handle this:
+    </p>
+    <ul>
+      <li><strong>Default:</strong> <code>require_economy=false</code> (default). Without an economy, the founding-cost charges silently succeed as a free op, treasury deposits and withdrawals refuse to run, and the tax sweeper logs a startup warning and never executes.</li>
+      <li><strong>Strict:</strong> <code>require_economy=true</code>. Without an economy, founding a city or nation fails up front with a clear error. Use this on servers where economy is core to your design and you don&rsquo;t want bypasses if VaultUnlocked goes down.</li>
+    </ul>
+    </div>
+
+    <!-- City treasury -->
+    <div data-section-body="City Treasury">
+    <h2 data-section="City Treasury">City Treasury</h2>
+    <p>
+      Every city has a single treasury balance stored as a 64-bit integer.
+      Members with the <code>BANK</code> rank perm deposit and withdraw via:
+    </p>
+<pre><code>/city bank balance              show current treasury (any member)
+/city bank deposit &lt;amount&gt;     drains personal funds to the treasury
+/city bank withdraw &lt;amount&gt;    drains the treasury to personal funds
+/city bank log [page]           paginated audit log (any member)</code></pre>
+    <p>
+      Reads (<em>balance</em>, <em>log</em>) are open to every city member.
+      Writes (<em>deposit</em>, <em>withdraw</em>) require <code>BANK</code>.
+      Withdraw refuses if the treasury can&rsquo;t cover the amount, and rolls
+      back if the corresponding Vault deposit to the player fails.
+    </p>
+    </div>
+
+    <!-- Nation treasury -->
+    <div data-section-body="Nation Treasury">
+    <h2 data-section="Nation Treasury">Nation Treasury</h2>
+    <p>
+      The nation treasury works the same way, scoped to the nation tier. Any
+      member-city mayor can <em>balance</em> and <em>log</em>; the nation
+      <code>BANK</code> permission is required for movements.
+    </p>
+<pre><code>/nation bank balance
+/nation bank deposit &lt;amount&gt;
+/nation bank withdraw &lt;amount&gt;
+/nation bank log [page]</code></pre>
+    <p>
+      Unlike the city tier, <strong>nation deposits and withdrawals move funds
+      between the nation treasury and the actor&rsquo;s personal Vault
+      balance</strong>, not between the nation treasury and a city treasury.
+      Player-to-treasury and treasury-to-player are the only flows on either
+      tier; the tax sweep is the one that moves between treasuries.
+    </p>
+    </div>
+
+    <!-- Tax -->
+    <div data-section-body="Tax">
+    <h2 data-section="Tax">Tax</h2>
+    <p>
+      Both tiers ship with a tax sweeper that runs on a single executor at
+      <code>tax_scan_interval_minutes</code> (default 15). On each tick the
+      sweeper picks up entities whose own <code>taxIntervalHours</code> has
+      elapsed since their last collection.
+    </p>
+    <h3>City tax</h3>
+    <p>
+      Each member pays <code>taxAmount</code> coins every
+      <code>taxIntervalHours</code> hours (default 24). The founder is exempt
+      when <code>taxFounderExempt</code> is on (default <code>true</code>) &mdash;
+      this is a per-city setting separate from the server-wide
+      <code>default_city_tax_founder_exempt</code>.
+    </p>
+    <p>
+      Configure via the mayor (or someone with <code>EDIT_INFO</code> +
+      <code>BANK</code>):
+    </p>
+<pre><code>/city tax set &lt;amount&gt; &lt;intervalHours&gt;
+/city tax founderexempt true|false
+/city tax info
+/city tax pay              clear your own arrears from personal Vault</code></pre>
+    <p>
+      <code>intervalHours</code> is clamped to
+      <code>[min_tax_interval_hours, max_tax_interval_hours]</code> (defaults
+      1&ndash;168). Setting <code>amount</code> to <code>0</code> disables city
+      tax collection entirely.
+    </p>
+    <p>On each sweep, for every member except the (optional) exempt founder:</p>
+    <ul>
+      <li>If <code>Vault.withdraw</code> succeeds: the treasury is credited, a <code>BankLog</code> row is written with reason <code>tax</code>, and the member&rsquo;s <code>lastTaxPaidAt</code> updates.</li>
+      <li>If the member is broke: their <code>taxArrears</code> increases by <code>amount</code>, and a chat warning fires when they&rsquo;re next online. Officer-and-higher ranks get a separate alert.</li>
+    </ul>
+    <p>
+      Use <code>/city tax pay</code> to clear your own arrears from your
+      personal Vault balance in one shot (rejected if you don&rsquo;t have
+      enough to cover the whole amount). Tax sweeps continue while the city is
+      in GRACE.
+    </p>
+    <h3>Nation tax</h3>
+    <p>
+      The nation sweeper bills <em>cities</em>, not players. Each member city
+      pays <code>taxAmount</code> coins out of <em>its own treasury</em> every
+      <code>taxIntervalHours</code> hours (default 24). The capital is exempt
+      when <code>capitalCityExempt</code> is on (default <code>true</code>).
+    </p>
+<pre><code>/nation tax set &lt;amount&gt; &lt;intervalHours&gt;
+/nation tax capitalexempt true|false
+/nation tax info
+/nation tax pay              clear your city's arrears from city treasury</code></pre>
+    <p>
+      On each sweep, for every member city except the (optional) exempt capital:
+    </p>
+    <ul>
+      <li>If the city&rsquo;s treasury covers the amount: it&rsquo;s debited, the nation treasury is credited, and two <code>BankLog</code> rows are written (DEBIT at city tier, CREDIT at nation tier, both reason <code>tax</code>).</li>
+      <li>If the city can&rsquo;t cover it: <code>memberCity.taxArrears</code> increases by <code>amount</code>, and the city&rsquo;s mayor is warned in chat.</li>
+    </ul>
+    <p>
+      Any member-city mayor can run <code>/nation tax pay</code> to clear
+      <em>their</em> city&rsquo;s arrears (drains that city&rsquo;s treasury;
+      reason <code>tax-pay-arrears</code>).
+    </p>
+    </div>
+
+    <!-- Bank log -->
+    <div data-section-body="Bank Log">
+    <h2 data-section="Bank Log">Bank Log</h2>
+    <p>
+      Every coin movement Nations touches is appended to
+      <code>nations_bank_log</code>. The log is append-only &mdash; there is no
+      auto-prune in this version. Each row records:
+    </p>
+    <ul>
+      <li><code>tier</code> &mdash; <code>CITY</code> or <code>NATION</code>.</li>
+      <li><code>cityId</code> / <code>nationId</code> &mdash; the affected entity (one is set, the other null).</li>
+      <li><code>playerUuid</code> &mdash; the acting player, or null for system events (tax sweeps, disband refunds).</li>
+      <li><code>direction</code> &mdash; <code>CREDIT</code> or <code>DEBIT</code>.</li>
+      <li><code>amount</code> &mdash; absolute value.</li>
+      <li><code>balanceAfter</code> &mdash; snapshot of the treasury after the move.</li>
+      <li><code>reason</code> &mdash; one of the enumerated reasons below.</li>
+      <li><code>createdAt</code> &mdash; epoch millis.</li>
+    </ul>
+    <h3>Reason codes</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Reason</th><th>Source</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>tax</code></td><td>Periodic tax sweep.</td></tr>
+          <tr><td><code>deposit</code></td><td>Manual deposit via <code>bank deposit</code>.</td></tr>
+          <tr><td><code>withdraw</code></td><td>Manual withdraw via <code>bank withdraw</code>.</td></tr>
+          <tr><td><code>admin</code></td><td>Server-admin <code>treasury set</code> override.</td></tr>
+          <tr><td><code>conquest:&lt;otherName&gt;</code></td><td>Treasury movement during admin <code>conquer</code>.</td></tr>
+          <tr><td><code>disband-refund</code></td><td>Treasury split on disband.</td></tr>
+          <tr><td><code>create-cost</code></td><td>Non-refundable founding charge (city or nation).</td></tr>
+          <tr><td><code>plot-purchase</code></td><td>Member bought a listed city plot via the browser UI.</td></tr>
+          <tr><td><code>relocate-th</code></td><td><em>Reserved.</em> <code>/city setth</code> is a stub in v3.0.0; no rows with this reason are written yet.</td></tr>
+          <tr><td><code>relocate-cd</code></td><td><em>Reserved.</em> Capital District relocation is not implemented yet.</td></tr>
+          <tr><td><code>tax-pay-arrears</code></td><td>Manual <code>tax pay</code> at either tier.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Pull recent activity with <code>/city bank log [page]</code> or
+      <code>/nation bank log [page]</code> &mdash; ten rows per page, newest
+      first.
+    </p>
+    </div>
+
+    <!-- Admin overrides -->
+    <div data-section-body="Admin Overrides">
+    <h2 data-section="Admin Overrides">Admin Overrides</h2>
+    <p>
+      Server admins (holders of <code>questlinesnations.admin</code>) can rewrite
+      treasury balances directly. The override still writes a <code>BankLog</code>
+      row with reason <code>admin</code> for traceability.
+    </p>
+<pre><code>/citiesadmin treasury set &lt;city&gt; &lt;amount&gt;
+/nationsadmin treasury set &lt;nation&gt; &lt;amount&gt;</code></pre>
+    <p>
+      <code>conquest</code> and forced-disband flows write their own bank-log
+      rows automatically &mdash; the <code>admin</code> reason is reserved for
+      explicit balance edits.
+    </p>
+    </div>
+
+    <!-- Founding costs -->
+    <div data-section-body="Founding Costs">
+    <h2 data-section="Founding Costs">Founding Costs</h2>
+    <p>
+      Both founding flows charge a non-refundable cost up front, audited as a
+      <code>create-cost</code> bank-log row even though no entity exists yet
+      (the <code>cityId</code>/<code>nationId</code> columns sit null until
+      materialization):
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Action</th><th>Cost key</th><th>Default</th><th>Paid from</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Found a city</td><td><code>create_city_cost</code></td><td>500</td><td>Founder&rsquo;s Vault balance</td></tr>
+          <tr><td>Found a nation</td><td><code>create_nation_cost</code></td><td>2500</td><td>Founding city&rsquo;s treasury</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Both costs are non-refundable. Cancelling a pending creation, declining
+      an invitation, or letting the invite TTL expire leaves the cost gone &mdash;
+      no automatic rollback. <code>relocate_town_hall_cost</code> and
+      <code>relocate_capital_district_cost</code> exist in config but are
+      currently dormant; see
+      <a href="nations-claims.html#town-hall-capital-district">Town Hall &amp;
+      Capital District</a>.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

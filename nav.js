@@ -23,7 +23,9 @@
     layout:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h18M10 10v11"/></svg>',
     map:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2Z"/><path d="M9 3v16M15 5v16"/></svg>',
     swords:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M14.5 17.5 21 11l-2-2-6.5 6.5"/><path d="m13 16-3-3"/><path d="m9 17-2 2H4v-3l2-2"/><path d="M3 3l6 6"/><path d="M14.5 6.5 21 13l-2 2-6.5-6.5"/><path d="m11 8 3 3"/></svg>',
-    chat:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-3.8-.8L3 21l1.8-4.7A8.38 8.38 0 0 1 4 12.5 8.5 8.5 0 0 1 12.5 4 8.5 8.5 0 0 1 21 11.5Z"/><path d="M8.5 11.5h7M8.5 14.5h4"/></svg>'
+    chat:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-3.8-.8L3 21l1.8-4.7A8.38 8.38 0 0 1 4 12.5 8.5 8.5 0 0 1 12.5 4 8.5 8.5 0 0 1 21 11.5Z"/><path d="M8.5 11.5h7M8.5 14.5h4"/></svg>',
+    banner:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h13l-3 4 3 4H5"/></svg>',
+    crown:   '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m3 7 4 4 5-6 5 6 4-4-2 12H5z"/></svg>'
   };
 
   var NAV_ITEMS = [
@@ -75,6 +77,16 @@
     { type: 'link', href: 'mmo-interface.html', icon: SVG.layout,  label: 'UI & Commands',           plugin: 'mmo' },
     { type: 'link', href: 'mmo-config.html',    icon: SVG.gear,    label: 'Configuration',           plugin: 'mmo' },
     { type: 'link', href: 'mmo-reference.html', icon: SVG.check,   label: 'Permissions & Integrations', plugin: 'mmo' },
+
+    { type: 'section', label: 'Nations',        plugin: 'nations' },
+    { type: 'link', href: 'nations.html',            icon: SVG.banner,  label: 'Overview',            plugin: 'nations' },
+    { type: 'link', href: 'nations-cities.html',     icon: SVG.home,    label: 'Cities',              plugin: 'nations' },
+    { type: 'link', href: 'nations-tier.html',       icon: SVG.crown,   label: 'Nations',             plugin: 'nations' },
+    { type: 'link', href: 'nations-diplomacy.html',  icon: SVG.swords,  label: 'Diplomacy & Wars',    plugin: 'nations' },
+    { type: 'link', href: 'nations-bank.html',       icon: SVG.diamond, label: 'Bank & Tax',          plugin: 'nations' },
+    { type: 'link', href: 'nations-claims.html',     icon: SVG.map,     label: 'Claims & Plots',      plugin: 'nations' },
+    { type: 'link', href: 'nations-commands.html',   icon: SVG.sheet,   label: 'Commands',            plugin: 'nations' },
+    { type: 'link', href: 'nations-config.html',     icon: SVG.gear,    label: 'Config & Admin',      plugin: 'nations' },
 
     { type: 'section', label: 'QuestLines Knowledge', plugin: 'bot' },
     { type: 'link', href: 'bot.html',           icon: SVG.chat,    label: 'Discord Bot',    plugin: 'bot' },

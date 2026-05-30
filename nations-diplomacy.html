@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Diplomacy &amp; Wars</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">Diplomacy &amp; Wars</h1>
+      <p class="page-subtitle">
+        Alliances and wars at both tiers, the relationship resolver behind the
+        banner and map colors, and the rank-based permission model that decides
+        what an allied outsider may do inside your chunks.
+      </p>
+    </div>
+
+    <!-- Two tiers -->
+    <div data-section-body="Two Independent Tiers">
+    <h2 data-section="Two Independent Tiers">Two Independent Tiers</h2>
+    <p>
+      Diplomacy is layered the same way as ownership: city-to-city relations
+      live on the city tier, nation-to-nation relations live on the nation tier,
+      and the two don&rsquo;t cascade through each other&rsquo;s membership.
+    </p>
+    <ul>
+      <li>A city ally <em>only</em> grants access to that city&rsquo;s own chunks.</li>
+      <li>A nation ally <em>only</em> grants access to that nation&rsquo;s own chunks (the federation projects), not to the member cities&rsquo; chunks.</li>
+      <li>Member cities of the same nation are implicitly at peace and counted as &ldquo;Compatriots&rdquo; &mdash; they can&rsquo;t declare war on each other.</li>
+    </ul>
+    <p>
+      Every relationship is symmetric and binary: you either have an active
+      alliance or you don&rsquo;t, an active war or you don&rsquo;t. There are
+      no per-pair custom permission overrides &mdash; access is gated by each
+      side&rsquo;s own Allies rank perms, not by negotiated treaty terms.
+    </p>
+    </div>
+
+    <!-- Alliances -->
+    <div data-section-body="Alliances">
+    <h2 data-section="Alliances">Alliances</h2>
+    <h3>City alliances</h3>
+    <p>The acting city must have a member with the <code>DIPLOMACY</code> permission for any of these commands:</p>
+<pre><code>/city ally &lt;cityName&gt;          propose
+/city ally accept &lt;cityName&gt;   accept a pending proposal
+/city ally decline &lt;cityName&gt;  reject a pending proposal
+/city ally break &lt;cityName&gt;    end an active alliance</code></pre>
+    <p>
+      A proposal sits in <code>nations_city_alliance</code> with status
+      <code>PROPOSED_BY_A</code> (or <code>PROPOSED_BY_B</code>) until accepted
+      &mdash; at which point it flips to <code>ACTIVE</code> &mdash; or until
+      <code>alliance_proposal_ttl_hours</code> (default 48) elapses and the
+      sweep task prunes it.
+    </p>
+    <p>Several rules block proposals:</p>
+    <ul>
+      <li>You can&rsquo;t propose an alliance to a city you&rsquo;re already at war with &mdash; <code>/city war surrender</code> first.</li>
+      <li>You can&rsquo;t propose an alliance to a co-nation city &mdash; you&rsquo;re already implicitly at peace as compatriots.</li>
+      <li><code>max_city_alliances_per_city</code> (default 5) caps total active alliances per city.</li>
+    </ul>
+    <h3>Nation alliances</h3>
+    <p>
+      Identical shape at the nation tier; the acting member must hold the
+      nation <code>DIPLOMACY</code> permission.
+    </p>
+<pre><code>/nation ally &lt;nationName&gt;
+/nation ally accept &lt;nationName&gt;
+/nation ally decline &lt;nationName&gt;
+/nation ally break &lt;nationName&gt;</code></pre>
+    <p>
+      <code>max_nation_alliances_per_nation</code> (default 5) caps the count.
+      When <code>broadcast_alliance_formation</code> is on (default), accepting
+      a proposal at either tier sends a server-wide broadcast.
+    </p>
+    </div>
+
+    <!-- Wars -->
+    <div data-section-body="Wars">
+    <h2 data-section="Wars">Wars</h2>
+    <h3>City wars</h3>
+    <p>Same <code>DIPLOMACY</code> gate; wars become active immediately on declaration:</p>
+<pre><code>/city war declare &lt;cityName&gt;       open war (no proposal step)
+/city war surrender &lt;cityName&gt;     end with surrender by either side
+/city wars                          list your active wars</code></pre>
+    <p>
+      Wars sit in <code>nations_city_war</code> with status <code>ACTIVE</code>
+      and one of the closing statuses:
+      <code>ENDED_BY_SURRENDER_A</code>, <code>ENDED_BY_SURRENDER_B</code>,
+      <code>ENDED_BY_TREATY</code>, <code>ENDED_BY_ADMIN</code>, or
+      <code>ENDED_BY_DISBAND</code>.
+    </p>
+    <p>Declaration rules:</p>
+    <ul>
+      <li>You can&rsquo;t declare on a current ally &mdash; <code>/city ally break</code> first.</li>
+      <li>You can&rsquo;t declare on a city you&rsquo;re already at war with.</li>
+      <li>You can&rsquo;t declare on a co-nation city.</li>
+      <li><code>max_concurrent_city_wars</code> (default 3) caps simultaneous active wars per city.</li>
+      <li><code>war_declaration_cooldown_minutes</code> (default 30) is a soft per-side throttle.</li>
+    </ul>
+    <h3>Nation wars</h3>
+    <p>Identical shape at the nation tier:</p>
+<pre><code>/nation war declare &lt;nationName&gt;
+/nation war surrender &lt;nationName&gt;
+/nation wars</code></pre>
+    <p>
+      <code>max_concurrent_nation_wars</code> (default 3) caps the count.
+      Admins can end either tier&rsquo;s wars with
+      <code>/nationsadmin war end</code> or
+      <code>/nationsadmin war setstatus</code>; see
+      <a href="nations-commands.html#admin-commands">Admin Commands</a>.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Wars do not change protection</div>
+        <p>
+          Declaring war does not modify permission resolution one bit. It does
+          not turn on PvP, drop claim protection, or grant access to enemy
+          chunks. The only things wars affect are the relationship label shown
+          on the entry banner, the tint on <code>/claim map</code>, and the
+          chat broadcast when <code>broadcast_war_declarations</code> is on.
+          Conquest happens through admin staging after an out-of-band fight; see
+          <a href="nations-config.html#conquest">Conquest</a>.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Relationship resolver -->
+    <div data-section-body="Relationship Resolver">
+    <h2 data-section="Relationship Resolver">Relationship Resolver</h2>
+    <p>
+      When an actor enters a chunk owned by some other party,
+      <code>EntryBannerSystem</code> classifies the relationship for the banner
+      and chat line. For a <strong>CITY</strong> chunk the classifier picks the
+      first match from this order:
+    </p>
+    <ol>
+      <li><code>CITY_MEMBER</code> &mdash; the owning city is your city.</li>
+      <li><code>CITY_ENEMY</code> &mdash; you&rsquo;re in an active <code>CityWar</code> with the owning city.</li>
+      <li><code>CITY_ALLY</code> &mdash; you have an active <code>CityAlliance</code> with the owning city.</li>
+      <li><code>NATION_MEMBER</code> (Compatriot) &mdash; your city and the owning city are in the same nation.</li>
+      <li><code>NATION_ENEMY</code> &mdash; your nation has an active <code>NationWar</code> with the owning city&rsquo;s nation (cascades to all member cities for the banner label).</li>
+      <li><code>NATION_ALLY</code> &mdash; your nation has an active <code>NationAlliance</code> with theirs (also cascades).</li>
+      <li><code>NEUTRAL</code> &mdash; none of the above.</li>
+    </ol>
+    <p>
+      For a <strong>NATION</strong> chunk the classifier collapses to the four
+      nation-level cases: <code>NATION_MEMBER</code>, <code>NATION_ENEMY</code>,
+      <code>NATION_ALLY</code>, <code>NEUTRAL</code> &mdash; city-level
+      alliances and wars are not consulted for nation-owned land.
+    </p>
+    <p>
+      <strong>The label never changes what you can or can&rsquo;t do</strong>
+      &mdash; that&rsquo;s done by the rank-based perm checks described next.
+      It only drives the entry banner subtitle, the banner title&rsquo;s color
+      tint, and the wilderness-aware chat line.
+    </p>
+    </div>
+
+    <!-- Allies-rank perm model -->
+    <div data-section-body="The Allies Rank">
+    <h2 data-section="The Allies Rank">The Allies Rank</h2>
+    <p>
+      Each city and each nation has a built-in <strong>Allies</strong> rank that
+      is never assigned to any actual member. Its purpose is to act as the
+      permission template for everyone who counts as an ally of that entity.
+    </p>
+    <p>
+      When an outsider performs an action inside your city&rsquo;s chunk and the
+      resolver determines they&rsquo;re a city ally or a co-nation compatriot,
+      Nations gates the action by <strong>your city&rsquo;s</strong> Allies-rank
+      perm (not theirs). The default seeded value is
+      <code>CITY_INTERACT</code> only &mdash; allies can right-click doors and
+      signs in your city, but can&rsquo;t break, build, or open chests until you
+      explicitly grant those:
+    </p>
+<pre><code>/city rank perm Allies CITY_BUILD on
+/city rank perm Allies CITY_USE_CONTAINERS on</code></pre>
+    <p>
+      The same model applies at the nation tier. Inside a
+      <code>NATION</code>-typed chunk, allied-nation actions are gated by the
+      owning nation&rsquo;s Allies rank. Configure it with
+      <code>/nation rank perm Allies &lt;NATION_*&gt; on|off</code>.
+    </p>
+    <p>
+      Crucially, neither a city nor a nation can grant access to the
+      <em>other tier&rsquo;s</em> claims through their Allies rank. The city
+      Allies rank only governs <code>CITY_*</code> perms inside city chunks. The
+      nation Allies rank only governs <code>NATION_*</code> perms inside nation
+      chunks.
+    </p>
+    </div>
+
+    <!-- Outsiders & neutral policy -->
+    <div data-section-body="Neutral Outsiders">
+    <h2 data-section="Neutral Outsiders">Neutral Outsiders</h2>
+    <p>
+      An actor who isn&rsquo;t a member, a co-nation compatriot, or an ally
+      falls into the <strong>neutral</strong> bucket. What they can do inside
+      a claim is controlled by the server-wide neutral policy in
+      <code>questlinesnations.conf</code>:
+    </p>
+<pre><code>city_neutral_can_enter=true
+city_neutral_can_interact=true
+city_neutral_can_use_containers=false
+city_neutral_can_build=false
+city_neutral_can_break=false
+nation_neutral_can_enter=true
+nation_neutral_can_interact=true
+nation_neutral_can_use_containers=false
+nation_neutral_can_build=false
+nation_neutral_can_break=false</code></pre>
+    <p>
+      These are server-wide defaults &mdash; every city uses the same
+      <code>city_neutral_*</code> policy, every nation uses the same
+      <code>nation_neutral_*</code> policy. A city or nation can be more
+      generous to neutrals than to allies (rare, but possible) by tightening the
+      Allies rank instead of the neutral policy.
+    </p>
+    </div>
+
+    <!-- Banner + Chat -->
+    <div data-section-body="Banner &amp; Chat Indicators">
+    <h2 data-section="Banner &amp; Chat Indicators">Banner &amp; Chat Indicators</h2>
+    <p>
+      <code>EntryBannerSystem</code> polls online players every 500&nbsp;ms; on
+      a chunk change it shows a brief title-and-subtitle card via Claims&rsquo;
+      own notification manager (so it doesn&rsquo;t compete with the vanilla
+      title slot or Claims&rsquo; own banners). Per-player cooldown between
+      banner fires is <code>entry_banner_cooldown_seconds</code> (default 5).
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Owner</th><th>Title</th><th>Subtitle</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Nation chunk</td><td>NationName</td><td><code>Nation chunk</code>, or <code>Nation chunk - &lt;label&gt;</code> when the relationship has a label</td></tr>
+          <tr><td>City chunk</td><td>CityName</td><td><code>City chunk</code>, or <code>City chunk - &lt;label&gt;</code></td></tr>
+          <tr><td>Player chunk (member of a city)</td><td>PlayerName</td><td><code>Citizen of CityName</code></td></tr>
+          <tr><td>Player chunk (solo owner)</td><td>PlayerName</td><td>(empty)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The relationship labels used in the subtitle are:
+    </p>
+    <ul>
+      <li><code>CITY_MEMBER</code> / <code>SELF</code> &rarr; &ldquo;Member territory&rdquo;</li>
+      <li><code>NATION_MEMBER</code> &rarr; &ldquo;Compatriot territory&rdquo;</li>
+      <li><code>CITY_ALLY</code> / <code>NATION_ALLY</code> &rarr; &ldquo;Allied territory&rdquo;</li>
+      <li><code>CITY_ENEMY</code> / <code>NATION_ENEMY</code> &rarr; &ldquo;Enemy territory&rdquo;</li>
+      <li><code>NEUTRAL</code> &rarr; no label (the subtitle is just &ldquo;City chunk&rdquo; / &ldquo;Nation chunk&rdquo; with no suffix)</li>
+    </ul>
+    <p>
+      The title text is tinted by relationship: green for member, cyan for
+      compatriot, blue for allied, red for enemy, white for neutral.
+    </p>
+    <p>
+      On a city or nation chunk, the banner also prints a chat line:
+    </p>
+<pre><code>[CITYTAG] Your territory (OwnerName)            // CITY_MEMBER / SELF
+[CITYTAG] Compatriot territory (OwnerName)      // NATION_MEMBER
+[CITYTAG] Allied territory (OwnerName)          // ALLY
+[CITYTAG] WARNING: enemy territory (OwnerName)  // ENEMY
+[CITYTAG] Neutral territory (OwnerName)         // NEUTRAL</code></pre>
+    <p>
+      Crossing into wilderness only prints a chat line when
+      <code>show_wilderness_chat_on_exit</code> is on (default off), and the
+      line is the fixed string <code>[Nations] Entering wilderness.</code>
+    </p>
+    <h3>Chat prefix</h3>
+    <p>
+      Separately, <code>ChatTagSystem</code> intercepts every
+      <code>PlayerChatEvent</code> and prepends a stacked bracket prefix
+      depending on the speaker&rsquo;s membership state:
+    </p>
+<pre><code>PlayerName: ...                            // not in a city
+[CITYTAG] PlayerName: ...                  // in a solo city
+[NATIONTAG][CITYTAG] PlayerName: ...       // in a city that is in a nation</code></pre>
+    <p>
+      Tags are plain ASCII; the configured city/nation colors are
+      <em>not</em> applied to the chat prefix (they apply to the entry banner
+      title only).
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

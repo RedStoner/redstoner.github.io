@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">QuestLines Nations</h1>
+      <p class="page-subtitle">
+        A city-and-nation governance layer built on top of
+        <a href="claims.html">QuestLines Claims</a>. Players band together
+        into invite-only cities; cities federate into nations. Each tier has
+        its own claim pool, treasury, ranks, and diplomacy.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">This documentation is split across pages</div>
+        <p>
+          This page covers the overall model and how the pieces fit together.
+          From here jump to
+          <a href="nations-cities.html">Cities</a>,
+          <a href="nations-tier.html">Nations</a>,
+          <a href="nations-diplomacy.html">Diplomacy &amp; Wars</a>,
+          <a href="nations-bank.html">Bank &amp; Tax</a>,
+          <a href="nations-claims.html">Claims &amp; Plots</a>,
+          <a href="nations-commands.html">Commands</a>, or
+          <a href="nations-config.html">Config &amp; Admin</a>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Elevator -->
+    <div data-section-body="Elevator Pitch">
+    <h2 data-section="Elevator Pitch">Elevator Pitch</h2>
+    <p>
+      Two or more players form an invite-only <strong>city</strong>: name, tag,
+      color, motd. Each player keeps their personal QuestLines Claims chunks
+      unchanged &mdash; those stay private &mdash; but the city itself owns a separate
+      pool of city chunks for shared builds: markets, mines, halls, anything
+      the membership decides together. Members with the right rank claim and
+      unclaim those chunks through Claims&rsquo; map.
+    </p>
+    <p>
+      Two or more cities federate into an invite-only <strong>nation</strong>.
+      Cities keep their own land. The nation receives a third pool of nation
+      chunks for federation projects &mdash; embassies, shared infrastructure,
+      whatever the member cities cooperate on. The capital city&rsquo;s mayor
+      is the sole gate for nation-membership changes.
+    </p>
+    <p>
+      Diplomacy operates at both levels. Cities ally and war other cities; nations
+      ally and war other nations. Member cities of the same nation are implicitly
+      at peace and share visibility. Each tier&rsquo;s &ldquo;Allies&rdquo; rank
+      decides what allied outsiders may do inside its chunks &mdash; nations cannot
+      grant outsiders access to their member cities&rsquo; chunks, only to the
+      nation&rsquo;s own land.
+    </p>
+    </div>
+
+    <!-- The Two Tiers -->
+    <div data-section-body="The Two Tiers">
+    <h2 data-section="The Two Tiers">The Two Tiers</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Members</th>
+            <th>Leader</th>
+            <th>Owns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>City</strong></td>
+            <td>Individual players (min 2)</td>
+            <td>Mayor</td>
+            <td>One contiguous group of <code>CITY</code>-typed claims</td>
+          </tr>
+          <tr>
+            <td><strong>Nation</strong></td>
+            <td>Member cities (min 2)</td>
+            <td>Capital city&rsquo;s mayor</td>
+            <td>A pool of <code>NATION</code>-typed claims (multiple groups allowed)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Membership is exclusive at both tiers: a player belongs to at most one
+      city, and a city belongs to at most one nation. Joining a city does
+      <em>not</em> automatically expose your personal claims to your fellow
+      members &mdash; that&rsquo;s a separate opt-in toggle (see
+      <a href="nations-claims.html#share-with-city">Share with City</a>).
+    </p>
+    </div>
+
+    <!-- Claim pools -->
+    <div data-section-body="Three Kinds of Claim">
+    <h2 data-section="Three Kinds of Claim">Three Kinds of Claim</h2>
+    <p>
+      Every chunk on the map falls into one of four buckets. The first three
+      live in QuestLines Claims as different
+      <a href="claims-api.html">claim owner types</a>; the fourth is unclaimed
+      wilderness.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Owner type</th>
+            <th>Who claims it</th>
+            <th>Who can build inside</th>
+            <th>Banner color</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>PLAYER</code></td>
+            <td>Any player via <code>/claim map</code></td>
+            <td>The owner; optionally fellow city members if <em>Share with City</em> is on for that claim</td>
+            <td>Player&rsquo;s city color (if any)</td>
+          </tr>
+          <tr>
+            <td><code>CITY</code></td>
+            <td>A city member with the <code>CITY_CLAIM</code> rank perm</td>
+            <td>Members of the owning city (per rank); city allies (per Allies rank)</td>
+            <td>City color</td>
+          </tr>
+          <tr>
+            <td><code>NATION</code></td>
+            <td>A member-city mayor with the <code>NATION_CLAIM</code> rank perm</td>
+            <td>Players in any member city (per nation rank); nation allies (per Allies rank)</td>
+            <td>Nation color</td>
+          </tr>
+          <tr>
+            <td><em>Wilderness</em></td>
+            <td>&mdash;</td>
+            <td>Everyone (subject to Claims&rsquo; wilderness flags)</td>
+            <td>None</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      All three claim flavors share a single map view: open
+      <code>/claim map</code> and switch the owner selector in the top row
+      between <em>Personal</em>, your city, and your nation. Nations does not
+      ship its own map UI &mdash; it registers a provider with Claims so the
+      shared map shows the right tiers.
+    </p>
+    </div>
+
+    <!-- Dependencies -->
+    <div data-section-body="Dependencies">
+    <h2 data-section="Dependencies">Dependencies</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Plugin</th>
+            <th>Role</th>
+            <th>Required?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="claims.html">QuestLines Claims</a></td>
+            <td>Holds the actual per-chunk claim rows. Nations registers City and Nation as additional <code>ClaimOwnerType</code>s and gates access through ownership resolvers.</td>
+            <td><strong>Required.</strong> Nations refuses to come up without it.</td>
+          </tr>
+          <tr>
+            <td>VaultUnlocked</td>
+            <td>Backs founding costs, treasury deposits/withdrawals, and the tax sweep.</td>
+            <td>Optional. Without it, all coin-charging features become no-ops unless <code>require_economy</code> is enabled in config.</td>
+          </tr>
+          <tr>
+            <td>QuestLines Core</td>
+            <td>Not used. Nations is independent of the Core quest system.</td>
+            <td>&mdash;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Commands at a glance -->
+    <div data-section-body="Command Roots">
+    <h2 data-section="Command Roots">Command Roots</h2>
+    <p>Nations ships four top-level command trees. See
+    <a href="nations-commands.html">Commands</a> for the full reference.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Who runs it</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/city</code></td>
+            <td>Players</td>
+            <td>Found, join, manage, and leave cities. Bare <code>/city</code> opens the City Overview UI for your current city.</td>
+          </tr>
+          <tr>
+            <td><code>/nation</code></td>
+            <td>City mayors</td>
+            <td>Found, join, manage, and leave nations. Capital-mayor gated for invites and kicks.</td>
+          </tr>
+          <tr>
+            <td><code>/citiesadmin</code></td>
+            <td>Server admins (<code>questlinesnations.admin</code>)</td>
+            <td>Override mayor, set perms, force-disband, unclaim, conquer one city into another.</td>
+          </tr>
+          <tr>
+            <td><code>/nationsadmin</code></td>
+            <td>Server admins</td>
+            <td>Override capital, end wars, force-disband, conquer one nation into another.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Where data lives -->
+    <div data-section-body="Where Data Lives">
+    <h2 data-section="Where Data Lives">Where Data Lives</h2>
+    <p>
+      All persistent state sits under <code>mods/QuestLinesNations/</code>
+      in a SQLite database (<code>nations.db</code>) plus a single
+      <code>questlinesnations.conf</code>. Future MySQL/MariaDB support
+      is stubbed in config but not implemented yet.
+    </p>
+    <p>
+      The database is split into roughly the following tables (full layout
+      in <a href="nations-config.html#database">Config &amp; Admin</a>):
+    </p>
+    <ul>
+      <li><code>nations_city</code> + <code>nations_city_member</code> + <code>nations_city_rank</code>: city tier.</li>
+      <li><code>nations_nation</code> + <code>nations_member_city</code> + <code>nations_nation_rank</code>: nation tier.</li>
+      <li><code>nations_pending_city_creation</code> / <code>nations_pending_nation_creation</code>: founder-charged invites waiting for the second party to accept.</li>
+      <li><code>nations_city_alliance</code> / <code>nations_city_war</code> + nation equivalents.</li>
+      <li><code>nations_player_share_grant</code>: per-chunk &ldquo;share with my city&rdquo; toggles.</li>
+      <li><code>nations_plot_listing</code>: city-plot listings sold or given to members.</li>
+      <li><code>nations_bank_log</code>: append-only audit of every coin movement.</li>
+    </ul>
+    <p>
+      Chunk-by-chunk claim rows live in QuestLines Claims, not here &mdash; Nations
+      writes through to Claims via its API.
+    </p>
+    </div>
+
+    <!-- Boot sequence -->
+    <div data-section-body="Boot Sequence">
+    <h2 data-section="Boot Sequence">Boot Sequence</h2>
+    <p>
+      Nations comes up in phases, logged at <code>INFO</code> at each step. If
+      QuestLines Claims is missing at start time, the protection resolvers and
+      share-grant features stay off and the plugin logs a <code>SEVERE</code> warning.
+    </p>
+    <ol>
+      <li><strong>Phase 1.</strong> Open the database, load registries, parse config, wire economy.</li>
+      <li><strong>Phase 2.</strong> Register City + Nation ownership resolvers and the share-grant interceptor with Claims; subscribe to chunk-removal events so share grants get cleaned up automatically. Register the claim-owner and share-option providers so Claims&rsquo; map UI knows about the new tiers.</li>
+      <li><strong>Phase 3.</strong> Register the four command trees.</li>
+      <li><strong>Phase 5.</strong> Schedule the city tax, nation tax, and grace-sweep tasks on a single-threaded executor ticking at <code>tax_scan_interval_minutes</code>.</li>
+      <li><strong>Phase 6.</strong> Start the chunk-transition entry banner poll and register the chat-tag listener.</li>
+    </ol>
+    </div>
+
+    <!-- What it does NOT do -->
+    <div data-section-body="What Nations Does Not Do">
+    <h2 data-section="What Nations Does Not Do">What Nations Does Not Do</h2>
+    <ul>
+      <li><strong>PvP rules.</strong> Wars track status only. Declaring war does not turn anyone&rsquo;s PvP on, off, or differently &mdash; vanilla server rules apply throughout.</li>
+      <li><strong>Block protection on player claims.</strong> Personal claims stay under QuestLines Claims&rsquo; existing per-player permission model. Joining a city doesn&rsquo;t grant your fellow members access to your private chunks; that&rsquo;s an explicit per-claim opt-in.</li>
+      <li><strong>Raiding mechanics.</strong> Conquest is admin-staged after the fact, not a live mechanic. There is no built-in siege, capture point, or block-of-loot system.</li>
+      <li><strong>Quest plumbing.</strong> Nations has no requirements, actions, or trackers for the Core quest system. The two plugins do not interact.</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Nations Tier</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">Nations</h1>
+      <p class="page-subtitle">
+        The federation layer above cities. A nation is two or more cities
+        choosing to share a capital, a treasury, and a slice of the map.
+      </p>
+    </div>
+
+    <!-- The Shape -->
+    <div data-section-body="The Shape">
+    <h2 data-section="The Shape">The Shape</h2>
+    <p>
+      A nation looks a lot like a city, but with cities as members instead of
+      players. It has its own name, tag, color, and motd; its own claim pool
+      (stored in QL Claims as <code>NATION</code>-typed claims); its own treasury,
+      tax rate, and rank system; and its own diplomacy.
+    </p>
+    <p>
+      One city &mdash; the <strong>capital</strong> &mdash; holds the leadership
+      role. The capital&rsquo;s mayor speaks for the nation: only they can invite
+      or kick member cities, only they can run a <code>/nation</code> command that
+      requires <code>ADMIN_OVERRIDE</code>. Other member cities elect their own
+      mayors and run their own internal affairs unaffected.
+    </p>
+    </div>
+
+    <!-- Founding -->
+    <div data-section-body="Founding a Nation">
+    <h2 data-section="Founding a Nation">Founding a Nation</h2>
+    <p>
+      Any mayor of any city can found a nation by inviting a second city. No
+      special &ldquo;found nation&rdquo; permission &mdash; being a mayor is the
+      gate.
+    </p>
+<pre><code>/nation create &lt;cityName&gt; &lt;name&gt; &lt;tag&gt; [#color] [motd...]</code></pre>
+    <p>
+      The founding city&rsquo;s treasury pays <code>create_nation_cost</code>
+      (default 2500). Same rule as cities: the cost is
+      <strong>non-refundable</strong> &mdash; if the invitee city&rsquo;s mayor
+      declines or the invite expires, the coin is gone but no nation exists.
+      Cancel an open invitation with <code>/nation create cancel</code>.
+    </p>
+    <p>
+      Materialization happens when the invitee city&rsquo;s mayor runs
+      <code>/nation accept &lt;nationName&gt;</code>. The accept transaction
+      inserts the nation row, seeds its built-in ranks, adds both cities as
+      <code>NationMemberCity</code> rows, and drops the pending row. The
+      founding city becomes the initial capital and is pinned to the Founder
+      nation rank.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Both cities must currently be solo</div>
+        <p>
+          Neither the founder city nor the target city can already be in a
+          nation. A city belongs to at most one nation at a time, just like a
+          player belongs to at most one city.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Member cities -->
+    <div data-section-body="Member Cities">
+    <h2 data-section="Member Cities">Member Cities</h2>
+    <p>
+      Each member city is stored as a <code>NationMemberCity</code> row with a
+      nation rank, join time, and tax arrears. <strong>All players of a member
+      city inherit that city&rsquo;s nation rank</strong> when acting inside the
+      nation&rsquo;s chunks. There is no per-player nation rank: the unit of
+      governance at this tier is the city, not the individual.
+    </p>
+    <h3>Joining</h3>
+    <p>
+      The capital mayor invites with:
+    </p>
+<pre><code>/nation invite &lt;cityName&gt;</code></pre>
+    <p>
+      Both the capital-mayor gate and the absence of any <code>INVITE_CITY</code>
+      permission are deliberate &mdash; this is one of the few capabilities not
+      reachable through the nation rank system. The invited city&rsquo;s mayor
+      runs <code>/nation accept &lt;nationName&gt;</code> to join.
+    </p>
+    <h3>Leaving</h3>
+    <p>
+      The mayor of any non-capital member city runs <code>/nation leave</code> to
+      withdraw their city. The capital city itself can&rsquo;t just leave &mdash;
+      it must first transfer the capital role (see below).
+    </p>
+    <h3>Kicking</h3>
+    <p>
+      <code>/nation kick &lt;cityName&gt;</code> is capital-mayor only. There is
+      no rank perm for kicking a city.
+    </p>
+    </div>
+
+    <!-- Ranks -->
+    <div data-section-body="Nation Ranks">
+    <h2 data-section="Nation Ranks">Nation Ranks</h2>
+    <p>
+      A nation seeds three immutable built-in ranks on creation, mirroring the
+      city tier:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Role</th>
+            <th>Mutable?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Capital</strong></td>
+            <td>Founder rank. Held by whatever city is currently the capital. Carries <code>ADMIN_OVERRIDE</code>.</td>
+            <td>Name + flag locked.</td>
+          </tr>
+          <tr>
+            <td><strong>Citizen</strong></td>
+            <td>Default rank assigned to newly joined member cities.</td>
+            <td>Name + flag locked.</td>
+          </tr>
+          <tr>
+            <td><strong>Allies</strong></td>
+            <td>Governs what allied outsider nations may do in this nation&rsquo;s chunks.</td>
+            <td>Name + flag locked.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Add custom ranks via <code>/nation rank create &lt;name&gt; &lt;weight&gt;</code>
+      and reassign member cities with
+      <code>/nation setrank &lt;cityName&gt; &lt;rankName&gt;</code>. Like the
+      city tier, the three built-in ranks can have their permissions rewritten
+      but can&rsquo;t be renamed or deleted.
+    </p>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Nation Permissions">
+    <h2 data-section="Nation Permissions">Nation Permissions</h2>
+    <p>
+      Permissions are split into management, territory, and in-claim groups,
+      mirroring the city tier. <strong>There is no
+      <code>INVITE_CITY</code> or <code>KICK_CITY</code> permission</strong> &mdash;
+      those are hard-gated to the capital mayor at the command layer, not
+      controlled by the rank bitmask.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Group</th>
+            <th>What it grants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>MANAGE_RANKS</code></td><td>Management</td><td>Create / delete / edit nation ranks; reassign member cities.</td></tr>
+          <tr><td><code>EDIT_INFO</code></td><td>Management</td><td>Change name, tag, motd, color; combined with <code>BANK</code> sets nation tax.</td></tr>
+          <tr><td><code>DIPLOMACY</code></td><td>Management</td><td>Propose / accept / break nation alliances; declare / surrender nation wars.</td></tr>
+          <tr><td><code>BANK</code></td><td>Management</td><td>Deposit and withdraw from the nation treasury.</td></tr>
+          <tr><td><code>NATION_CLAIM</code></td><td>Territory</td><td>Claim chunks for the nation via <code>/claim map</code>.</td></tr>
+          <tr><td><code>NATION_UNCLAIM</code></td><td>Territory</td><td>Release nation chunks via <code>/claim map</code>.</td></tr>
+          <tr><td><code>NATION_BUILD</code></td><td>In-claim</td><td>Place blocks inside nation chunks.</td></tr>
+          <tr><td><code>NATION_BREAK</code></td><td>In-claim</td><td>Break blocks inside nation chunks.</td></tr>
+          <tr><td><code>NATION_INTERACT</code></td><td>In-claim</td><td>Right-click doors, signs, buttons, NPCs in nation chunks.</td></tr>
+          <tr><td><code>NATION_USE_CONTAINERS</code></td><td>In-claim</td><td>Open chests in nation chunks.</td></tr>
+          <tr><td><code>ADMIN_OVERRIDE</code></td><td>Internal</td><td>Forced on for the Capital rank. Bypasses every other gate inside nation chunks.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Nation permissions only apply inside <em>nation</em> chunks. They do not
+      cascade down into member cities&rsquo; own city chunks &mdash; a nation
+      cannot grant outsiders (or even other member cities) access to its
+      members&rsquo; city land. That distinction is the core of why the model
+      has two separate tiers instead of one.
+    </p>
+    </div>
+
+    <!-- Capital transfer -->
+    <div data-section-body="Capital Transfer">
+    <h2 data-section="Capital Transfer">Capital Transfer</h2>
+    <p>
+      Like the mayor role, the capital is pinned to one specific member &mdash; in
+      this case, the member <em>city</em>. Hand the capital off through:
+    </p>
+    <ol>
+      <li><code>/nation transfer &lt;cityName&gt;</code> &mdash; capital mayor opens an offer to another member city.</li>
+      <li><code>/nation transfer accept</code> &mdash; the target city&rsquo;s mayor accepts; capital fields swap.</li>
+      <li><code>/nation transfer decline</code> &mdash; target&rsquo;s mayor declines.</li>
+      <li><code>/nation transfer cancel</code> &mdash; capital mayor rescinds.</li>
+    </ol>
+    <p>
+      Offers expire after <code>transfer_offer_ttl_minutes</code> (default 60).
+      The capital cannot run <code>/nation leave</code> while an offer is pending.
+      Accepting an offer is a pure rank swap inside a single transaction: the
+      capital field on the nation row flips to the new city, the old capital
+      drops to the Default nation rank, and the new capital takes the Founder
+      rank. No cost is charged.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Capital District is not wired yet</div>
+        <p>
+          The <code>relocate_capital_district_cost</code> config key and the
+          <code>relocate-cd</code> bank-log reason exist in the data model but
+          aren&rsquo;t consumed yet. Capital transfer in v3.0.0 is purely a
+          governance change &mdash; there is no &ldquo;Capital District&rdquo;
+          chunk anchor yet, and no charge is taken from the nation treasury.
+        </p>
+      </div>
+    </div>
+    <p>
+      Server admins can override the capital directly without consent via
+      <code>/nationsadmin setcapital</code>.
+    </p>
+    </div>
+
+    <!-- Grace + Disband -->
+    <div data-section-body="Grace &amp; Disband">
+    <h2 data-section="Grace &amp; Disband">Grace &amp; Disband</h2>
+    <p>
+      When a nation drops below <code>min_nation_cities</code> (default 2)
+      member cities, it enters <strong>GRACE</strong>:
+    </p>
+    <ul>
+      <li>Existing nation claims stay protected.</li>
+      <li>The capital mayor still receives invite responses; recovery is reaching quorum again.</li>
+      <li>The nation tax sweep still runs.</li>
+      <li>Member cities get a periodic broadcast.</li>
+    </ul>
+    <p>
+      Grace expires after <code>grace_days</code> (default 7), at which point
+      the grace-sweep task auto-disbands the nation. The capital mayor can also
+      run <code>/nation disband</code> for an immediate double-confirmed teardown.
+    </p>
+    <p>
+      Disband releases every nation claim, frees every member city to no-nation
+      state, marks alliances <code>BROKEN</code> and wars
+      <code>ENDED_BY_DISBAND</code>, and (when <code>disband_refund_to_cities</code>
+      is on) splits the nation treasury evenly among released member cities &mdash;
+      rounding remainder goes to the former capital. Server admins can force a
+      teardown via <code>/nationsadmin delete &lt;nationName&gt;</code>.
+    </p>
+    </div>
+
+    <!-- Settings -->
+    <div data-section-body="Settings">
+    <h2 data-section="Settings">Settings</h2>
+    <p>
+      Identity fields are editable by any actor whose nation rank carries
+      <code>EDIT_INFO</code>:
+    </p>
+    <ul>
+      <li><code>/nation setname &lt;name&gt;</code></li>
+      <li><code>/nation settag &lt;tag&gt;</code></li>
+      <li><code>/nation setmotd &lt;text&gt;</code></li>
+      <li><code>/nation setcolor &lt;#hex&gt;</code></li>
+    </ul>
+    <p>
+      Tag and color show up in chat as the outer brace of the
+      <code>[NATIONTAG][CITYTAG]</code> prefix, as the title on the entry banner
+      when crossing into a nation chunk, and as the dominant tint on
+      <code>/claim map</code>.
+    </p>
+    </div>
+
+    <!-- UI surfaces -->
+    <div data-section-body="Nation Overview UI">
+    <h2 data-section="Nation Overview UI">Nation Overview UI</h2>
+    <p>
+      Bare <code>/nation</code> opens the <strong>Nation Overview</strong>
+      page for your current nation. It mirrors the city overview&rsquo;s
+      single-page shape, scoped to the nation tier: identity header, motd,
+      a paginated member-city list (rows show city tag, mayor, member count,
+      nation rank), and footer buttons routing to ranks, bank, the claim map,
+      and settings. Per-city actions (set-rank / kick / inspect) open by
+      clicking a city row; the kick action is gated on you being the
+      capital&rsquo;s mayor.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Nations &mdash; Claims &amp; Plots</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="nations" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Nations Plugin</div>
+      <h1 class="page-title">Claims &amp; Plots</h1>
+      <p class="page-subtitle">
+        How city and nation claims sit inside QuestLines Claims, how members
+        actually claim chunks, the Share-with-City toggle, and the city-plot
+        listing layer.
+      </p>
+    </div>
+
+    <!-- Where the data lives -->
+    <div data-section-body="Where the Data Lives">
+    <h2 data-section="Where the Data Lives">Where the Data Lives</h2>
+    <p>
+      Nations does not store chunks. Every claimed chunk in a city or nation
+      pool is a row in QuestLines Claims&rsquo; database, tagged with
+      <code>ClaimOwnerType.CITY</code> or <code>ClaimOwnerType.NATION</code>
+      and the owner&rsquo;s UUID. Nations registers two ownership resolvers
+      with Claims so those rows protect the right people:
+    </p>
+    <ul>
+      <li><code>CityOwnershipResolver</code> &mdash; consulted whenever a player tries to act on a chunk owned by some city. It looks up the actor&rsquo;s city, walks their rank&rsquo;s <code>CITY_*</code> perms (or the Allies rank if they&rsquo;re an ally), and returns ALLOW/DENY.</li>
+      <li><code>NationOwnershipResolver</code> &mdash; identical at the nation tier. Acts via the player&rsquo;s member-city&rsquo;s nation rank.</li>
+    </ul>
+    <p>
+      Server admins automatically bypass both resolvers as step zero. The
+      resolvers never alter the protection chain for personal claims &mdash; the
+      Share-with-City interceptor (below) handles those.
+    </p>
+    </div>
+
+    <!-- /claim map -->
+    <div data-section-body="The Shared Map">
+    <h2 data-section="The Shared Map">The Shared Map</h2>
+    <p>
+      Claiming and unclaiming for both tiers runs through QuestLines Claims&rsquo;
+      own map UI:
+    </p>
+<pre><code>/claim map</code></pre>
+    <p>
+      Nations registers a <code>ClaimOwnerProvider</code> with Claims so the
+      map&rsquo;s top owner-selector row shows three modes &mdash;
+      <em>Personal</em> (your own claims), your <em>city</em>, and your
+      <em>nation</em>. The map handles all the wand-free, click-a-cell
+      claim/unclaim flow; Nations only contributes which entities you&rsquo;re
+      allowed to act as.
+    </p>
+    <p>
+      A few things to note:
+    </p>
+    <ul>
+      <li>You can only switch into <em>city</em> mode if you&rsquo;re in a city; same for <em>nation</em> mode.</li>
+      <li>Claiming for the city requires your rank to have <code>CITY_CLAIM</code> (or <code>ADMIN_OVERRIDE</code>); unclaim requires <code>CITY_UNCLAIM</code>.</li>
+      <li>The nation tier uses <code>NATION_CLAIM</code> / <code>NATION_UNCLAIM</code> on your member-city&rsquo;s nation rank.</li>
+      <li>The City Overview UI and Nation Overview UI each have an <strong>Open Map</strong> button that opens <code>/claim map</code> pre-focused on an existing city/nation claim so the selector starts on the right tier.</li>
+    </ul>
+    <p>
+      The old standalone <code>CityClaimMapUI</code> and <code>NationClaimMapUI</code>
+      surfaces were retired in the Phase 2 addon refactor &mdash; everything lives in
+      Claims&rsquo; map now.
+    </p>
+    </div>
+
+    <!-- Claim pools -->
+    <div data-section-body="Claim Pools">
+    <h2 data-section="Claim Pools">Claim Pools</h2>
+    <p>
+      Each tier has a capacity that scales with member count. The capacity acts
+      as a hard ceiling: the system never auto-unclaims when a city or nation
+      drops members, but it refuses new claims past the cap.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>Formula</th><th>Floor key</th><th>Per-unit key</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>City</td>
+            <td><code>max(city_claim_min_pool, members * city_claims_per_member)</code></td>
+            <td><code>city_claim_min_pool</code> (default 8)</td>
+            <td><code>city_claims_per_member</code> (default 5)</td>
+          </tr>
+          <tr>
+            <td>Nation</td>
+            <td><code>max(nation_claim_min_pool, memberCities * nation_claims_per_city)</code></td>
+            <td><code>nation_claim_min_pool</code> (default 12)</td>
+            <td><code>nation_claims_per_city</code> (default 8)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Claim attempts are rejected when:
+    </p>
+    <ul>
+      <li>The target chunk already belongs to any player, city, or nation.</li>
+      <li>The target world is in <code>excluded_worlds</code>.</li>
+      <li>The entity is in GRACE.</li>
+      <li>The pool is at capacity.</li>
+    </ul>
+    <h3>Cities are forced single-territory</h3>
+    <p>
+      The <code>CityOwnershipResolver</code> reports
+      <code>allowsMultipleClaimGroups: false</code> to QL Claims, so a city
+      can only ever have <strong>one connected blob</strong> of land. Every
+      new city claim has to extend the existing claim group; you can&rsquo;t
+      have a city &ldquo;outpost&rdquo; off in another biome. (Nations report
+      <code>true</code> and can have multiple disconnected groups.)
+    </p>
+    <p>
+      The <code>require_adjacent_city_claims</code> and
+      <code>require_adjacent_nation_claims</code> config flags are present but
+      currently dormant &mdash; the single-territory rule above is what
+      actually constrains city claims.
+    </p>
+    </div>
+
+    <!-- Anchors -->
+    <div data-section-body="Town Hall &amp; Capital District">
+    <h2 data-section="Town Hall &amp; Capital District">Town Hall &amp; Capital District</h2>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Not yet implemented in v3.0.0</div>
+        <p>
+          The Town Hall and Capital District anchors are part of the planned
+          model but aren&rsquo;t wired in v3.0.0. <code>/city setth</code> ships
+          as a stub that prints
+          &ldquo;<em>not yet implemented (Phase 3b). Town Hall relocation
+          tracking will land once QL Claims has a primary-chunk flag.</em>&rdquo;
+          There is no <code>/nation setcd</code> at all. The
+          <code>relocate_town_hall_cost</code>,
+          <code>relocate_capital_district_cost</code>,
+          <code>relocate-th</code>, and <code>relocate-cd</code> entries
+          you see in config and the bank-log reason enum are placeholders for
+          the eventual implementation &mdash; no charges flow through them today.
+        </p>
+        <p>
+          For now, city and nation chunks are uniform: there is no
+          first-chunk-is-special protection, and no special marker on the entry
+          banner or map for it.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Share with City -->
+    <div data-section-body="Share with City" id="share-with-city">
+    <h2 data-section="Share with City">Share with City</h2>
+    <p>
+      Joining a city does <em>not</em> let other members build on your personal
+      claims. By default your private chunks stay strictly private. The
+      <strong>Share with City</strong> toggle is the only way to opt in, and
+      it&rsquo;s per claim &mdash; not per chunk and not per city membership.
+    </p>
+    <p>
+      The toggle lives on the per-claim Settings panel inside the Claims map
+      UI. Nations registers a <code>PersonalClaimShareOptionProvider</code> with
+      Claims so that panel gains a &ldquo;Share with my city&rdquo; row whenever
+      the viewer is in a city. Flipping it on inserts a
+      <code>PlayerCityShareGrant</code> row for every chunk in that claim;
+      flipping it off removes them.
+    </p>
+    <p>
+      The standalone <code>/city share</code> command was removed in the same
+      Phase 2 refactor &mdash; the per-claim Settings toggle is the only surface
+      now, since the rule is all-or-nothing across a claim.
+    </p>
+    <h3>What sharing actually grants</h3>
+    <p>
+      With a grant active for a chunk, Nations registers a
+      <code>PlayerClaimAccessInterceptor</code> that, when a fellow city member
+      tries to act on that chunk, gates their action by <strong>their own
+      rank&rsquo;s</strong> <code>CITY_*</code> perms instead of by the chunk
+      owner&rsquo;s personal Claims perms. Concretely:
+    </p>
+    <ul>
+      <li>If their rank has <code>CITY_BUILD</code>, they can place blocks in your shared chunk.</li>
+      <li>If their rank has <code>CITY_BREAK</code>, they can break blocks.</li>
+      <li>If their rank has <code>CITY_INTERACT</code>, they can right-click stuff.</li>
+      <li>If their rank has <code>CITY_USE_CONTAINERS</code>, they can open your chests.</li>
+    </ul>
+    <p>
+      Outsiders, allies, and other non-members go through the normal Claims
+      personal-claim chain &mdash; sharing with the city does not loosen access
+      for anyone else.
+    </p>
+    <h3>Cleanup</h3>
+    <p>
+      Share grants get cleaned up automatically in three cases:
+    </p>
+    <ul>
+      <li>You unclaim the underlying personal chunk &mdash; Nations subscribes to Claims&rsquo; <code>ClaimEventListener.onClaimChunkRemoved</code> and drops the grant.</li>
+      <li>You <code>/city leave</code> &mdash; all your grants for that city are dropped.</li>
+      <li>The city disbands &mdash; all its grants are dropped.</li>
+    </ul>
+    <p>
+      Grants are stored in <code>nations_player_share_grant</code> keyed by
+      <code>(worldId, chunkX, chunkZ)</code>, with the original
+      <code>cityId</code> and <code>playerUuid</code> tracked for revalidation
+      at lookup time.
+    </p>
+    </div>
+
+    <!-- City plots -->
+    <div data-section-body="City Plots">
+    <h2 data-section="City Plots">City Plots</h2>
+    <p>
+      City plots are the &ldquo;here&rsquo;s a sub-region of our city for a
+      member to call home&rdquo; layer. The physical plot definition lives in
+      QuestLines Claims (you wand-select corners and run
+      <code>/claim plot define</code>); Nations layers a <strong>listing</strong>
+      on top so the mayor can sell or give a plot to a member.
+    </p>
+    <p>
+      Master switch is <code>plots_enabled</code> (default <code>true</code>) in
+      config &mdash; turn it off to disable the entire feature server-wide.
+    </p>
+    <h3>Setup</h3>
+    <ol>
+      <li>A holder of <code>MANAGE_PLOTS</code> wand-selects corners inside a city claim and runs <code>/claim plot define &lt;name&gt;</code>. (<code>MANAGE_PLOTS</code> maps to Claims&rsquo; <code>MANAGE_SUBREGIONS</code> so the Claims plot subsystem accepts the action.)</li>
+      <li>Run <code>/city plot list &lt;name&gt; &lt;price&gt;</code> to put the plot up for sale at a fixed price, or <code>/city plot give &lt;name&gt; &lt;player&gt;</code> to assign it free of charge.</li>
+    </ol>
+    <h3>Member-facing actions</h3>
+    <p>Any city member can:</p>
+    <ul>
+      <li><code>/city plot browse</code> &mdash; open the for-sale browser UI; click <em>Buy</em> to pay <code>price</code> from your Vault balance and have the plot assigned to you.</li>
+      <li><code>/city plot mine</code> &mdash; open your &ldquo;my plots&rdquo; page.</li>
+      <li><code>/city plot info</code> &mdash; show the plot under your feet.</li>
+    </ul>
+    <h3>Mayor-facing actions</h3>
+    <p>Holders of <code>MANAGE_PLOTS</code> additionally have:</p>
+    <ul>
+      <li><code>/city plot list &lt;name&gt; &lt;price&gt;</code> &mdash; price clamped to <code>[min_plot_price, max_plot_price]</code>.</li>
+      <li><code>/city plot unlist &lt;name&gt;</code> &mdash; remove a for-sale listing.</li>
+      <li><code>/city plot give &lt;name&gt; &lt;player&gt;</code> &mdash; assign without payment.</li>
+      <li><code>/city plot revoke &lt;name&gt;</code> &mdash; reclaim the plot. If it was previously sold, it auto-relists at the original price.</li>
+    </ul>
+    <p>
+      <code>max_plots_per_member</code> caps how many plots a single player can
+      own simultaneously across all cities (<code>0</code> = unlimited; default
+      <code>0</code>).
+    </p>
+    <p>
+      Plot assignment is enforced through Claims&rsquo; existing
+      <code>ClaimPlot</code> model &mdash; the plot owner can build, break, and
+      open containers inside the plot regardless of their rank. Other city
+      members fall back to their normal rank perms for the surrounding city
+      claim.
+    </p>
+    </div>
+
+    <!-- Map tinting -->
+    <div data-section-body="Map Display">
+    <h2 data-section="Map Display">Map Display</h2>
+    <p>
+      <code>/claim map</code> renders every chunk owner type using the same
+      Claims-side widgets. Nations contributes:
+    </p>
+    <ul>
+      <li><strong>Owner display name</strong> &mdash; resolvers report the city or nation name when you hover a chunk.</li>
+      <li><strong>Owner selector entries</strong> &mdash; your current city and nation appear in the map&rsquo;s top selector row, alongside <em>Personal</em>.</li>
+      <li><strong>Share-with-city option</strong> &mdash; on PLAYER claims you own, the Settings panel grows a &ldquo;Share with my city&rdquo; toggle.</li>
+    </ul>
+    <p>
+      The exact tints, border decorations, and enemy-relationship overlays are
+      all decided by Claims itself based on the resolver data it gets back.
+      Wilderness stays untinted.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>
