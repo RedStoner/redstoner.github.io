@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Behavior &amp; AI</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">Behavior &amp; AI</h1>
+      <p class="page-subtitle">
+        The <code>Behavior</code> block drives how a Denizen acts in the world &mdash; where it
+        looks, how it moves, what animations it plays, how tough it is, and what happens when
+        it dies.
+      </p>
+    </div>
+
+    <!-- Attitude -->
+    <div data-section-body="Attitude">
+    <h2 data-section="Attitude">Attitude</h2>
+    <p>
+      <code>Behavior.Attitude</code> sets the Denizen&rsquo;s disposition toward players.
+      It maps to the engine&rsquo;s native attitude system.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>PASSIVE</code></td><td>Never fights back.</td></tr>
+          <tr><td><code>NEUTRAL</code></td><td>Default. Ignores players unless provoked.</td></tr>
+          <tr><td><code>AGGRESSIVE</code></td><td>Attacks players in range.</td></tr>
+          <tr><td><code>HOSTILE</code></td><td>Actively hostile.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Attitude can also be overridden <em>per player and temporarily</em> from a quest with the
+      <a href="denizens-interaction.html#actions"><code>setAttitudeP:</code></a> action.
+    </p>
+    </div>
+
+    <!-- Look-At -->
+    <div data-section-body="Look-At">
+    <h2 data-section="Look-At">Look-At</h2>
+    <p>
+      <code>Behavior.LookAt</code> turns the Denizen&rsquo;s head. Modes:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th><code>Mode</code></th><th>Fields</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>OFF</code></td><td>&mdash;</td><td>No head tracking (default).</td></tr>
+          <tr><td><code>NEAREST_PLAYER</code></td><td><code>Range</code> (default <code>8.0</code>)</td><td>Track the closest player within range.</td></tr>
+          <tr><td><code>FIXED_YAW</code></td><td><code>FixedYaw</code></td><td>Hold a fixed facing in degrees.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Look-at can be changed live from a quest with the
+      <a href="denizens-interaction.html#actions"><code>lookAt:</code></a> action &mdash; no respawn needed.
+    </p>
+    </div>
+
+    <!-- Wander -->
+    <div data-section-body="Wander">
+    <h2 data-section="Wander">Wander</h2>
+    <p>
+      <code>Behavior.Wander</code> makes the Denizen roam randomly around its anchor.
+      A new point is picked after a random idle pause between <code>MinIdleSec</code> and
+      <code>MaxIdleSec</code>.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Enabled</code></td><td><code>false</code></td><td>Turn wandering on.</td></tr>
+          <tr><td><code>Radius</code></td><td><code>6.0</code></td><td>Max distance from the anchor.</td></tr>
+          <tr><td><code>MinIdleSec</code></td><td><code>4.0</code></td><td>Shortest pause between moves.</td></tr>
+          <tr><td><code>MaxIdleSec</code></td><td><code>12.0</code></td><td>Longest pause between moves.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Patrol wins over Wander</div>
+        <p>When both Patrol and Wander are enabled, the patrol takes precedence.</p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Patrol -->
+    <div data-section-body="Patrols">
+    <h2 id="patrol" data-section="Patrols">Patrols</h2>
+    <p>
+      <code>Behavior.Patrol</code> walks the Denizen through an ordered list of waypoints
+      with pathfinding. Author waypoints in the editor&rsquo;s <strong>Waypoints</strong> tab.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Patrol key</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Enabled</code></td><td><code>false</code></td><td>Turn the patrol on.</td></tr>
+          <tr><td><code>Loop</code></td><td><code>true</code></td><td><code>true</code> loops back to the first waypoint; <code>false</code> ping-pongs back along the path.</td></tr>
+          <tr><td><code>Frozen</code></td><td><code>false</code></td><td>Held in place. Persisted &mdash; a frozen patrol stays frozen across respawn / restart. Toggle with <code>/denizen patrol freeze|resume</code>.</td></tr>
+          <tr><td><code>Waypoints</code></td><td><code>[]</code></td><td>The ordered waypoint list (below).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Each waypoint:</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Waypoint key</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>X</code> / <code>Y</code> / <code>Z</code></td><td><code>0</code></td><td>Waypoint position.</td></tr>
+          <tr><td><code>WaitMinSec</code> / <code>WaitMaxSec</code></td><td><code>0</code></td><td>Random dwell window on arrival. Both 0 = no pause.</td></tr>
+          <tr><td><code>DwellMode</code></td><td><code>IDLE</code></td><td><code>IDLE</code> stands still; <code>WANDER</code> micro-wanders inside <code>WanderRadius</code> while dwelling.</td></tr>
+          <tr><td><code>WanderRadius</code></td><td><code>0</code></td><td>Micro-wander radius for <code>WANDER</code> dwell mode.</td></tr>
+          <tr><td><code>ArriveAnim</code></td><td>&mdash;</td><td>One-shot animation (Action slot) on arrival.</td></tr>
+          <tr><td><code>IdleAnim</code></td><td>&mdash;</td><td>Looped animation (Status slot) while dwelling; overrides the Behavior idle animation.</td></tr>
+          <tr><td><code>LeaveAnim</code></td><td>&mdash;</td><td>One-shot animation (Action slot) just before leaving.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-key">"Behavior"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Patrol"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-num">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Loop"</span><span class="hl-punc">:</span> <span class="hl-num">true</span><span class="hl-punc">,</span>
+    <span class="hl-key">"Waypoints"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+      <span class="hl-punc">{</span> <span class="hl-key">"X"</span><span class="hl-punc">:</span> <span class="hl-num">100</span><span class="hl-punc">,</span> <span class="hl-key">"Y"</span><span class="hl-punc">:</span> <span class="hl-num">65</span><span class="hl-punc">,</span> <span class="hl-key">"Z"</span><span class="hl-punc">:</span> <span class="hl-num">-200</span><span class="hl-punc">,</span> <span class="hl-key">"WaitMinSec"</span><span class="hl-punc">:</span> <span class="hl-num">2</span><span class="hl-punc">,</span> <span class="hl-key">"WaitMaxSec"</span><span class="hl-punc">:</span> <span class="hl-num">5</span> <span class="hl-punc">},</span>
+      <span class="hl-punc">{</span> <span class="hl-key">"X"</span><span class="hl-punc">:</span> <span class="hl-num">112</span><span class="hl-punc">,</span> <span class="hl-key">"Y"</span><span class="hl-punc">:</span> <span class="hl-num">65</span><span class="hl-punc">,</span> <span class="hl-key">"Z"</span><span class="hl-punc">:</span> <span class="hl-num">-200</span><span class="hl-punc">,</span> <span class="hl-key">"DwellMode"</span><span class="hl-punc">:</span> <span class="hl-str">"WANDER"</span><span class="hl-punc">,</span> <span class="hl-key">"WanderRadius"</span><span class="hl-punc">:</span> <span class="hl-num">3</span> <span class="hl-punc">}</span>
+    <span class="hl-punc">]</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    <p>
+      Patrols can also be frozen / resumed from a quest with the
+      <a href="denizens-interaction.html#actions"><code>freezePatrol:</code></a> and
+      <code>resumePatrol:</code> actions.
+    </p>
+    </div>
+
+    <!-- Animations -->
+    <div data-section-body="Animations">
+    <h2 id="animation" data-section="Animations">Animations</h2>
+    <p>
+      Set an idle and a moving animation that play automatically based on the Denizen&rsquo;s
+      state. The <strong>Animation</strong> editor tab sets the animation <em>ids</em>; the
+      animation <em>slots</em> default sensibly and are only overridable in JSON.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default slot</th><th>Plays when&hellip;</th></tr></thead>
+        <tbody>
+          <tr><td><code>IdleAnimId</code></td><td><code>Status</code></td><td>The Denizen is stationary.</td></tr>
+          <tr><td><code>MoveAnimId</code></td><td><code>Movement</code></td><td>The Denizen is moving / wandering.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Override the slot with <code>IdleAnimSlot</code> / <code>MoveAnimSlot</code> (valid slots:
+      <code>Movement</code>, <code>Status</code>, <code>Action</code>, <code>Face</code>,
+      <code>Emote</code>). You can also fire one-off animations from a quest with the
+      <a href="denizens-interaction.html#actions"><code>playAnim:</code></a> / <code>clearAnim:</code> actions.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Valid animation ids are per-model</div>
+        <p>
+          Animation ids come from the role&rsquo;s own animation set &mdash; what&rsquo;s valid
+          depends on the model. Use ids that exist on the chosen role.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Combat & Survival -->
+    <div data-section-body="Combat & Survival">
+    <h2 data-section="Combat &amp; Survival">Combat &amp; Survival</h2>
+    <p>
+      The remaining <code>Behavior</code> fields govern how durable a Denizen is and what
+      happens when it dies. They live on the <strong>Behavior</strong> and <strong>Combat</strong>
+      editor tabs.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Invulnerable</code></td><td><code>true</code></td><td>God-mode. Defaults on so quest NPCs can&rsquo;t be farmed; set <code>false</code> for a killable mob.</td></tr>
+          <tr><td><code>Health</code></td><td>role default</td><td>Custom max health.</td></tr>
+          <tr><td><code>KnockbackScale</code></td><td>role default</td><td><code>0</code> = immovable, <code>1</code> = normal knockback.</td></tr>
+          <tr><td><code>LeashDistance</code></td><td><code>32.0</code></td><td>How far the Denizen may stray from its anchor.</td></tr>
+          <tr><td><code>RespawnOnDeath</code></td><td><code>true</code></td><td>Auto-respawn after being killed.</td></tr>
+          <tr><td><code>RespawnDelaySec</code></td><td><code>30.0</code></td><td>Delay before respawning.</td></tr>
+          <tr><td><code>HealOnRespawn</code></td><td><code>true</code></td><td>Restore to full health on respawn.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

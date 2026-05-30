@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Licensing</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">Licensing</h1>
+      <p class="page-subtitle">
+        Denizens is fully usable for free. A Pro license unlocks a couple of advanced features.
+        Here&rsquo;s the tier breakdown and how to activate a license.
+      </p>
+    </div>
+
+    <!-- Tiers -->
+    <div data-section-body="Tiers">
+    <h2 data-section="Tiers">Tiers</h2>
+    <p>
+      There are two tiers. <strong>Free</strong> is the default with no license installed (or
+      when a license is unverifiable, not bound to this product, or expired past its grace
+      window). <strong>Pro</strong> unlocks the paid features.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Feature</th><th>Tier</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Core NPC management</td><td>Free</td><td>Create, customize, drive, and interact with Denizens &mdash; everything on the other pages.</td></tr>
+          <tr><td>Per-player overrides</td><td>Pro</td><td>Show a different appearance / behavior / interaction to specific players based on requirements.</td></tr>
+          <tr><td>Schedules</td><td>Pro</td><td>Time-of-day activity schedules.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Per-Player Overrides -->
+    <div data-section-body="Per-Player Overrides">
+    <h2 id="per-player-overrides" data-section="Per-Player Overrides">Per-Player Overrides</h2>
+    <p>
+      A Pro Denizen can carry a <code>PerPlayerOverrides</code> list. Each override has a
+      <code>Priority</code>, a set of <code>Requirements</code>, and an <code>Apply</code> block
+      that partially overlays the Denizen&rsquo;s <code>Appearance</code> / <code>Behavior</code> /
+      <code>Interaction</code>. For a viewing player, the highest-priority override whose
+      requirements pass is layered over the base &mdash; so one NPC can look or behave differently
+      per player (different skin, different quests, hostile to some, friendly to others). On the
+      free tier these entries round-trip on disk but are not applied.
+    </p>
+    </div>
+
+    <!-- License Commands -->
+    <div data-section-body="License Commands">
+    <h2 id="commands" data-section="License Commands">License Commands</h2>
+    <p>All license commands live under <code>/denizen license</code> and require <code>qldenizen.admin</code>.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/denizen license info</code></td><td>Show the current tier, subject, server-binding status, expiry, days remaining, and per-feature enabled/disabled state.</td></tr>
+          <tr><td><code>/denizen license server-id</code></td><td>Print this server&rsquo;s stable binding id (also logged to console for copying).</td></tr>
+          <tr><td><code>/denizen license paste &lt;token&gt;</code></td><td>Install a license token. It is verified (signature + product binding) <em>before</em> being written, so a bad token never replaces a good one.</td></tr>
+          <tr><td><code>/denizen license refresh</code></td><td>Re-read and re-verify <code>license.jwt</code> from disk (e.g. after dropping in a new file).</td></tr>
+          <tr><td><code>/denizen license clear</code></td><td>Delete the license file and revert to the free tier.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Restart to wire features</div>
+        <p>
+          <code>paste</code> activates the tier immediately for status, but feature wiring is
+          decided at startup &mdash; restart the server for newly-unlocked Pro features to come
+          fully online.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Activating -->
+    <div data-section-body="Activating a License">
+    <h2 data-section="Activating a License">Activating a License</h2>
+    <ol>
+      <li>Run <code>/denizen license server-id</code> and copy the printed binding id.</li>
+      <li>On the distributor&rsquo;s Discord, request a token: <code>/license issue product:denizens server-id:&lt;paste&gt;</code>.</li>
+      <li>Run <code>/denizen license paste &lt;token&gt;</code> in-game.</li>
+      <li>Restart the server so the Pro features wire in.</li>
+    </ol>
+    <p>
+      The binding id is derived from the host&rsquo;s machine identity and the server install
+      directory &mdash; there is no hand-editable id file to copy between machines. A server-bound
+      token only runs on the server it was issued for.
+    </p>
+    </div>
+
+    <!-- Storage & Lifecycle -->
+    <div data-section-body="Storage & Lifecycle">
+    <h2 data-section="Storage &amp; Lifecycle">Storage &amp; Lifecycle</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Path</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>mods/QuestLinesDenizens/license.jwt</code></td><td>The installed license token (a single-line signed string).</td></tr>
+          <tr><td><code>mods/QuestLinesDenizens/license-config.txt</code></td><td>Optional auto-refresh &amp; revocation-check settings (JSON). All off by default.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      A license has a <strong>grace period</strong> after its expiry during which Pro features
+      keep working &mdash; if it is re-issued before grace ends, full access simply resumes;
+      otherwise the plugin downgrades to free. If the optional auto-refresh and revocation-check
+      endpoints are configured in <code>license-config.txt</code>, the plugin can renew a
+      near-expiry token and honor a revocation list automatically.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

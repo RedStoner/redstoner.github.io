@@ -151,6 +151,18 @@
         </p>
         <div class="plugin-card-cta">Read the docs</div>
       </a>
+
+      <a class="plugin-card" data-plugin="denizens" href="denizens.html">
+        <img class="plugin-card-logo" src="images/QLDenizensLogo.png" alt="QuestLines Denizens" />
+        <div class="plugin-card-tag">Standalone Plugin</div>
+        <div class="plugin-card-title">QuestLines Denizens</div>
+        <p class="plugin-card-desc">
+          A native Hytale NPC manager (<code>/denizen</code>). Spawn, skin, equip, and
+          drive NPCs &mdash; patrols, look-at, attitudes, respawn &mdash; on native APIs.
+          A clean-room replacement for HyCitizens that syncs quest-givers into Core.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
     </div>
 
     <!-- How They Fit Together -->
@@ -195,6 +207,11 @@
         <div class="fit-card-dot"></div>
         <div class="fit-card-title">Nations</div>
         <p>Claims addon. Adds <code>CITY</code> and <code>NATION</code> claim owner types on top of Claims and ships <code>/city</code> + <code>/nation</code> trees for membership, ranks, diplomacy, treasury, and tax.</p>
+      </div>
+      <div class="fit-card" data-plugin="denizens">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">Denizens</div>
+        <p>Standalone native NPC manager. Runs without Core; with Core installed it syncs quest-giver / quest-board NPCs into Core&rsquo;s <code>NpcConfig</code> by entity UUID and registers NPC-control actions (<code>setAttitudeP:</code>, <code>swapRole:</code>, <code>lookAt:</code>, &hellip;).</p>
       </div>
     </div>
 
@@ -270,6 +287,11 @@
             <td>QuestLines Nations</td>
             <td><code>questlines-nations-{version}.jar</code></td>
             <td><code>mods/QuestLinesNations/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines Denizens</td>
+            <td><code>questlines-denizens-{version}.jar</code></td>
+            <td><code>mods/QuestLinesDenizens/</code></td>
           </tr>
         </tbody>
       </table>

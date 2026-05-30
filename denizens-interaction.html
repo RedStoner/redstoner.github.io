@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Interaction &amp; Quests</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">Interaction &amp; Quests</h1>
+      <p class="page-subtitle">
+        What happens when a player clicks a Denizen &mdash; running actions, opening quest
+        dialogue, or showing a quest board &mdash; and the NPC-control actions Denizens
+        registers with QuestLines Core.
+      </p>
+    </div>
+
+    <!-- Interaction Block -->
+    <div data-section-body="The Interaction Block">
+    <h2 data-section="The Interaction Block">The Interaction Block</h2>
+    <p>
+      A Denizen&rsquo;s <code>Interaction</code> block (the editor&rsquo;s
+      <strong>Interaction</strong> tab) decides its click behavior.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Mode</code></td><td>enum</td><td><code>NONE</code></td><td>Click behavior (below).</td></tr>
+          <tr><td><code>Actions</code></td><td>string[]</td><td><code>[]</code></td><td>Core action strings run in <code>CLICK_TO_ACTION</code> mode.</td></tr>
+          <tr><td><code>Quests</code></td><td>string[]</td><td><code>[]</code></td><td>Quest ids assigned to this NPC for the quest-giver / board modes.</td></tr>
+          <tr><td><code>Requirements</code></td><td>string[]</td><td><code>[]</code></td><td>Core requirement strings checked before the actions run.</td></tr>
+          <tr><td><code>CooldownSec</code></td><td>double</td><td><code>0</code></td><td>Per-player, per-Denizen cooldown between interactions.</td></tr>
+          <tr><td><code>ReachDistance</code></td><td>double</td><td><code>8.0</code></td><td>Max click distance.</td></tr>
+          <tr><td><code>DialoguePageId</code></td><td>string</td><td>&mdash;</td><td>Dialogue page opened in <code>DIALOGUE</code> mode.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Modes -->
+    <div data-section-body="Interaction Modes">
+    <h2 data-section="Interaction Modes">Interaction Modes</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Mode</th><th>On click&hellip;</th></tr></thead>
+        <tbody>
+          <tr><td><code>NONE</code></td><td>Clicks are ignored.</td></tr>
+          <tr><td><code>CLICK_TO_ACTION</code></td><td>If <code>Requirements</code> pass, run <code>Actions</code> through Core&rsquo;s ActionManager. Works for anything &mdash; <code>giveitem:</code>, <code>chat:</code>, <code>page:</code>, custom actions, etc.</td></tr>
+          <tr><td><code>QUEST_GIVER</code></td><td>Open the dialogue for the player&rsquo;s first eligible quest in <code>Quests</code>.</td></tr>
+          <tr><td><code>QUEST_BOARD</code></td><td>Open a quest board listing all assigned <code>Quests</code>.</td></tr>
+          <tr><td><code>DIALOGUE</code></td><td>Open a dialogue directly at <code>DialoguePageId</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Anti-spam</div>
+        <p>
+          Interactions are rate-limited by a short global per-player guard, plus the
+          per-Denizen <code>CooldownSec</code> if set.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Quest Sync -->
+    <div data-section-body="How Quest Sync Works">
+    <h2 data-section="How Quest Sync Works">How Quest Sync Works</h2>
+    <p>
+      The quest-related modes need QuestLines Core. When a Denizen spawns, Denizens pushes
+      its mode and quest list into Core&rsquo;s <code>NpcConfig</code> &mdash; keyed by the
+      <strong>native entity UUID</strong>, not the Denizen&rsquo;s own id. Core&rsquo;s standard
+      NPC interaction listener then routes player clicks to the right quest dialogue or board
+      UI, exactly as it would for any other NPC. Setting <code>QUEST_BOARD</code> mode also
+      sets the board flag on the <code>NpcConfig</code> entry.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">No Core? Fail-open</div>
+        <p>
+          Without Core installed, <code>QUEST_GIVER</code> / <code>QUEST_BOARD</code> /
+          <code>CLICK_TO_ACTION</code> become silent no-ops &mdash; the Denizen still spawns,
+          moves, and renders. Add Core and the integration wires itself in automatically.
+        </p>
+      </div>
+    </div>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Make a Denizen a quest-giver for two quests</span>
+<span class="hl-key">"Interaction"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Mode"</span><span class="hl-punc">:</span>   <span class="hl-str">"QUEST_GIVER"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Quests"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span> <span class="hl-str">"intro_quest"</span><span class="hl-punc">,</span> <span class="hl-str">"daily_bounty"</span> <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Registered Actions -->
+    <div data-section-body="NPC-Control Actions">
+    <h2 id="actions" data-section="NPC-Control Actions">NPC-Control Actions</h2>
+    <p>
+      When Core is present, Denizens registers actions with Core&rsquo;s ActionManager so any
+      quest, dialogue response, or load action can drive a Denizen at runtime. Each takes a
+      Denizen reference (name, full UUID, UUID prefix, or <code>#shortId</code>) as its first
+      argument. They are silent no-ops if Core is absent or the Denizen is unknown.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Action</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>setAttitudeP:&lt;denizen&gt;:&lt;attitude&gt;[:durationSec]</code></td><td>Temporarily override the Denizen&rsquo;s attitude <em>toward the triggering player</em>. Default duration 60s. Attitude is a schema name (<code>PASSIVE</code>/<code>NEUTRAL</code>/<code>AGGRESSIVE</code>/<code>HOSTILE</code>) or a native name (<code>IGNORE</code>/<code>FRIENDLY</code>/<code>REVERED</code>).</td></tr>
+          <tr><td><code>swapRole:&lt;denizen&gt;:&lt;roleName&gt;[:keepAppearance]</code></td><td>Permanently swap the Denizen&rsquo;s role. <code>keepAppearance</code> defaults to <code>true</code> (no visual flicker).</td></tr>
+          <tr><td><code>lookAt:&lt;denizen&gt;:&lt;mode&gt;[:rangeOrYaw]</code></td><td>Set look-at mode live (<code>OFF</code> / <code>NEAREST_PLAYER</code>:range / <code>FIXED_YAW</code>:degrees). Applies without a respawn.</td></tr>
+          <tr><td><code>playAnim:&lt;denizen&gt;:&lt;slot&gt;:&lt;animationId&gt;</code></td><td>Play an animation on a slot (<code>Movement</code>/<code>Status</code>/<code>Action</code>/<code>Face</code>/<code>Emote</code>).</td></tr>
+          <tr><td><code>clearAnim:&lt;denizen&gt;:&lt;slot&gt;</code></td><td>Clear the animation on a slot.</td></tr>
+          <tr><td><code>freezePatrol:&lt;denizen&gt;</code></td><td>Hold the Denizen&rsquo;s patrol in place (persisted).</td></tr>
+          <tr><td><code>resumePatrol:&lt;denizen&gt;</code></td><td>Release a held patrol.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// A quest response that turns a guard hostile to the player for 30s and plays a taunt</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"setAttitudeP:Camp Warlord:HOSTILE:30"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"playAnim:Camp Warlord:Emote:taunt"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+    <p>
+      These same actions can be reached programmatically through the
+      <a href="denizens-integration.html#api">developer API</a>.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

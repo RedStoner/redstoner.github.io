@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Commands</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">Commands</h1>
+      <p class="page-subtitle">
+        Everything is managed through the single <code>/denizen</code> command tree. Run it
+        bare to open the manager UI, or use a subcommand for scriptable control.
+      </p>
+    </div>
+
+    <!-- Permission -->
+    <div data-section-body="Permission">
+    <h2 data-section="Permission">Permission</h2>
+    <p>
+      Every <code>/denizen</code> subcommand &mdash; and opening the manager UI &mdash; requires
+      the <code>qldenizen.admin</code> permission (default <strong>false</strong>). The console
+      is always allowed and falls back to the help listing where a UI would otherwise open.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Selecting a Denizen</div>
+        <p>
+          Subcommands that take a <code>&lt;name&gt;</code> accept a Denizen by display
+          <strong>name</strong>, <code>#shortId</code>, full <strong>UUID</strong>, or an
+          unambiguous UUID prefix. Where the name is shown as <code>[name]</code> (optional),
+          omitting it falls back to your current <a href="#wand">wand selection</a>.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Subcommands -->
+    <div data-section-body="Subcommands">
+    <h2 data-section="Subcommands">Subcommands</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/denizen</code></td><td>Open the manager UI (Browse + Create tabs).</td></tr>
+          <tr><td><code>/denizen help</code></td><td>List every subcommand with a short description.</td></tr>
+          <tr><td><code>/denizen create &lt;roleName&gt; [name]</code></td><td>Create and spawn a Denizen at your position and rotation. <code>roleName</code> must be a valid NPC role (see <a href="#roles"><code>roles</code></a>). <code>name</code> is an optional admin label &mdash; it defaults to the role name. Player-model roles auto-default their skin to the given name. A <code>#shortId</code> is allocated automatically.</td></tr>
+          <tr><td><code>/denizen list [filter]</code></td><td>List all Denizens. The optional filter is <code>world:&lt;name&gt;</code>, <code>tag:&lt;tag&gt;</code>, or a case-insensitive name substring. Each row shows short id, name, UUID, role, world, position, and spawned/offline status.</td></tr>
+          <tr><td><code>/denizen inspect [name]</code></td><td>Print a Denizen&rsquo;s persisted fields in chat (name, ids, role, world, anchor, scale, status, tags, equipment, nameplate, attitude, interaction mode).</td></tr>
+          <tr><td><code>/denizen tp &lt;name&gt;</code></td><td>Teleport <em>you</em> to the Denizen&rsquo;s anchor (position + rotation). Crosses worlds.</td></tr>
+          <tr><td><code>/denizen movehere [name]</code></td><td>Move the Denizen&rsquo;s anchor to your current position, rotation, and world, then respawn it there.</td></tr>
+          <tr><td><code>/denizen clone [name]</code></td><td>Duplicate a Denizen under a fresh UUID and short id, copying all fields.</td></tr>
+          <tr><td><code>/denizen remove &lt;name&gt;</code></td><td>Despawn and permanently delete the Denizen, removing its JSON file. Clears the wand selection if it pointed at it.</td></tr>
+          <tr><td><code>/denizen respawn [name]</code></td><td>Force a despawn + respawn to refresh the live entity &mdash; use after editing the JSON by hand.</td></tr>
+          <tr><td><code>/denizen patrol &lt;freeze|resume&gt; [name]</code></td><td>Hold a patrolling Denizen in place (<code>freeze</code>) or release it (<code>resume</code>). The held state persists across respawn and restart. No-op if no patrol is configured. (Also accepts <code>stop</code>/<code>hold</code>/<code>pause</code> and <code>start</code>/<code>go</code>/<code>unfreeze</code>.)</td></tr>
+          <tr><td><code>/denizen edit [name]</code></td><td>Open the tabbed in-game editor for a Denizen. See <a href="denizens-appearance.html#editor">The Editor</a>.</td></tr>
+          <tr><td><code>/denizen wand</code></td><td>Toggle wand-mode &mdash; see <a href="#wand">Wand Selection</a> below.</td></tr>
+          <tr><td><code>/denizen roles [filter]</code></td><td>List spawnable NPC role names &mdash; see <a href="#roles">Discovering Roles</a> below.</td></tr>
+          <tr><td><code>/denizen import-hc [dry]</code></td><td>Migrate HyCitizens NPCs into Denizens &mdash; see <a href="denizens-integration.html#import-hc">HyCitizens Import</a>.</td></tr>
+          <tr><td><code>/denizen license &lt;sub&gt;</code></td><td>View and manage the license &mdash; see <a href="denizens-license.html#commands">License Commands</a>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Wand Selection -->
+    <div data-section-body="Wand Selection">
+    <h2 id="wand" data-section="Wand Selection">Wand Selection</h2>
+    <p>
+      <code>/denizen wand</code> toggles wand-mode for you. While armed, the next Denizen
+      you click is stored as your selection (the mode times out after about 60 seconds).
+      Once selected, subcommands written without a name argument &mdash; <code>tp</code>,
+      <code>inspect</code>, <code>movehere</code>, <code>clone</code>, <code>remove</code>,
+      <code>respawn</code>, <code>patrol</code>, <code>edit</code> &mdash; act on that selection.
+    </p>
+    <p>
+      The wand click overrides the Denizen&rsquo;s normal interaction mode, so you can select
+      even a quest-giver NPC without triggering its dialogue.
+    </p>
+    </div>
+
+    <!-- The Editor Staff -->
+    <div data-section-body="The Editor Staff">
+    <h2 id="the-editor-staff" data-section="The Editor Staff">The Editor Staff</h2>
+    <p>
+      The asset pack ships an admin item, <code>QuestLinesDenizens_Staff</code>. An admin
+      holding the staff who clicks a Denizen opens its editor directly &mdash; a fast
+      alternative to typing <code>/denizen edit &lt;name&gt;</code>. Like the wand, the staff
+      bypasses the Denizen&rsquo;s normal click interaction.
+    </p>
+    </div>
+
+    <!-- Discovering Roles -->
+    <div data-section-body="Discovering Roles">
+    <h2 id="roles" data-section="Discovering Roles">Discovering Roles</h2>
+    <p>
+      <code>/denizen create</code> needs a valid NPC role id. Run <code>/denizen roles</code>
+      to list every spawnable role registered with the server, optionally filtered by a
+      case-insensitive substring. Up to 80 matches are shown in chat; the complete list is
+      always written to the server console.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Find every goblin role, then spawn one</span>
+/denizen roles goblin
+/denizen create Goblin_Boss Camp Warlord</code></pre>
+    </div>
+    <div class="callout warning">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Use real role ids</div>
+        <p>
+          Role ids must match the catalogue exactly. <code>/denizen roles</code> is the
+          authoritative source &mdash; don&rsquo;t guess names.
+        </p>
+      </div>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

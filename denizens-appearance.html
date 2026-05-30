@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Appearance</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">Appearance</h1>
+      <p class="page-subtitle">
+        The in-game editor, the shape of a Denizen entry, and how to set a Denizen&rsquo;s
+        skin, equipment, scale, and nameplate.
+      </p>
+    </div>
+
+    <!-- The Editor -->
+    <div data-section-body="The Editor">
+    <h2 id="editor" data-section="The Editor">The Editor</h2>
+    <p>
+      <code>/denizen edit [name]</code> (or clicking a Denizen with the
+      <a href="denizens-commands.html#the-editor-staff">editor staff</a>) opens a tabbed
+      editor. Field changes are staged in the form and committed in one step &mdash;
+      <strong>Apply</strong> writes to disk and re-spawns the live entity so your changes
+      take effect immediately. The editor reopens on whichever tab you last used.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Tab</th><th>What you set</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Info</td><td>Name, short id, world, anchor position, and role.</td></tr>
+          <tr><td>Appearance</td><td>Skin source, equipment in six slots, and the nameplate.</td></tr>
+          <tr><td>Behavior</td><td>Attitude, leash distance, health, invulnerability, knockback, and respawn rules. See <a href="denizens-behavior.html">Behavior &amp; AI</a>.</td></tr>
+          <tr><td>Waypoints</td><td>The patrol editor &mdash; add, edit, and order waypoints. See <a href="denizens-behavior.html#patrol">Patrols</a>.</td></tr>
+          <tr><td>Animation</td><td>Idle and move animation ids. See <a href="denizens-behavior.html#animation">Animations</a>.</td></tr>
+          <tr><td>Combat</td><td>Combat-related behavior fields (health, invulnerability, knockback).</td></tr>
+          <tr><td>Interaction</td><td>Click mode, actions, quests, requirements, cooldown, and reach. See <a href="denizens-interaction.html">Interaction &amp; Quests</a>.</td></tr>
+          <tr><td>Nameplate</td><td>NameplateBuilder segment editor. Only shown when NameplateBuilder is installed.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Entry Fields -->
+    <div data-section-body="Denizen Entry Fields">
+    <h2 data-section="Denizen Entry Fields">Denizen Entry Fields</h2>
+    <p>
+      These are the top-level fields of a Denizen JSON entry. Only
+      <code>Id</code>, <code>World</code>, <code>Anchor</code>, and <code>Model.RoleName</code>
+      are required; everything else has a default and is omitted from disk when unchanged.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Id</code></td><td>UUID string</td><td>&mdash;</td><td>Stable unique id. Required.</td></tr>
+          <tr><td><code>ShortId</code></td><td>int</td><td>auto</td><td>1-based <code>#N</code> handle, allocated from the monotonic counter. Never reused.</td></tr>
+          <tr><td><code>Name</code></td><td>string</td><td>role name</td><td>Admin label / fallback nameplate.</td></tr>
+          <tr><td><code>World</code></td><td>string</td><td>&mdash;</td><td>Home world. Required.</td></tr>
+          <tr><td><code>Anchor</code></td><td>object</td><td>&mdash;</td><td><code>X</code>, <code>Y</code>, <code>Z</code>, <code>Yaw</code>, <code>Pitch</code>. Spawn position + rotation. Required.</td></tr>
+          <tr><td><code>Model</code></td><td>object</td><td>&mdash;</td><td><code>{ "RoleName": "..." }</code> &mdash; the native NPC role. Required.</td></tr>
+          <tr><td><code>Scale</code></td><td>double</td><td><code>1.0</code></td><td>Model scale multiplier.</td></tr>
+          <tr><td><code>Tags</code></td><td>string[]</td><td><code>[]</code></td><td>Free-form labels for <code>/denizen list tag:</code> filtering.</td></tr>
+          <tr><td><code>Appearance</code></td><td>object</td><td>&mdash;</td><td>Skin / equipment / nameplate (below).</td></tr>
+          <tr><td><code>Behavior</code></td><td>object</td><td>&mdash;</td><td>AI &amp; movement. See <a href="denizens-behavior.html">Behavior &amp; AI</a>.</td></tr>
+          <tr><td><code>Interaction</code></td><td>object</td><td>&mdash;</td><td>Click response. See <a href="denizens-interaction.html">Interaction &amp; Quests</a>.</td></tr>
+          <tr><td><code>PerPlayerOverrides</code></td><td>object[]</td><td><code>[]</code></td><td>Pro feature. See <a href="denizens-license.html#per-player-overrides">Per-Player Overrides</a>.</td></tr>
+          <tr><td><code>SchemaVersion</code></td><td>int</td><td><code>1</code></td><td>Codec version for migration.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Skin -->
+    <div data-section-body="Skin">
+    <h2 data-section="Skin">Skin</h2>
+    <p>
+      The <code>Appearance.Skin</code> block decides how a Denizen is textured. The
+      <code>Source</code> picks one of three modes:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th><code>Source</code></th><th>Extra field</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>None</code></td><td>&mdash;</td><td>Use the role&rsquo;s default skin.</td></tr>
+          <tr><td><code>Username</code></td><td><code>Username</code></td><td>Fetch and apply a live Minecraft player skin by username. Best on the <code>QLD_PlayerNPC</code> role.</td></tr>
+          <tr><td><code>Custom</code></td><td><code>Custom</code></td><td>A map of skin <em>part id</em> &rarr; texture string, letting you mix individual parts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Live username skin on a player-model Denizen</span>
+<span class="hl-key">"Appearance"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Skin"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"Source"</span><span class="hl-punc">:</span> <span class="hl-str">"Username"</span><span class="hl-punc">,</span> <span class="hl-key">"Username"</span><span class="hl-punc">:</span> <span class="hl-str">"Notch"</span> <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Equipment -->
+    <div data-section-body="Equipment">
+    <h2 data-section="Equipment">Equipment</h2>
+    <p>
+      <code>Appearance.Equipment</code> maps equipment slots to items. Each item is
+      <code>{ "ItemId": "...", "Qty": 1 }</code> &mdash; <code>Qty</code> defaults to 1 and is
+      omitted when 1. The six slot keys are:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Slot key</th><th>Slot key</th><th>Slot key</th></tr></thead>
+        <tbody>
+          <tr><td><code>Head</code></td><td><code>Chest</code></td><td><code>Hands</code></td></tr>
+          <tr><td><code>Legs</code></td><td><code>MainHand</code></td><td><code>OffHand</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-key">"Appearance"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Equipment"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"MainHand"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"ItemId"</span><span class="hl-punc">:</span> <span class="hl-str">"sword_iron"</span> <span class="hl-punc">},</span>
+    <span class="hl-key">"Head"</span><span class="hl-punc">:</span>     <span class="hl-punc">{</span> <span class="hl-key">"ItemId"</span><span class="hl-punc">:</span> <span class="hl-str">"helmet_iron"</span> <span class="hl-punc">}</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Scale -->
+    <div data-section-body="Scale">
+    <h2 data-section="Scale">Scale</h2>
+    <p>
+      The top-level <code>Scale</code> field multiplies the model size (default <code>1.0</code>).
+      Use it for giant bosses or tiny critters. Set it from the editor&rsquo;s Info tab or in JSON,
+      then the change applies on the next spawn (<code>/denizen respawn</code> if needed).
+    </p>
+    </div>
+
+    <!-- Nameplate -->
+    <div data-section-body="Nameplate">
+    <h2 data-section="Nameplate">Nameplate</h2>
+    <p>
+      <code>Appearance.Nameplate</code> controls the label rendered above the Denizen.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Text</code></td><td>string</td><td>&mdash;</td><td>Nameplate text. Falls back to the Denizen name when unset.</td></tr>
+          <tr><td><code>Visible</code></td><td>bool</td><td><code>true</code></td><td>Show or hide the nameplate.</td></tr>
+          <tr><td><code>Color</code></td><td>string</td><td>&mdash;</td><td>Color for the nameplate text.</td></tr>
+          <tr><td><code>TitlesIntegration</code></td><td>bool</td><td><code>false</code></td><td>Pull a title from QuestLinesTitles into the nameplate (requires that plugin).</td></tr>
+          <tr><td><code>Segments</code></td><td>object</td><td><code>{}</code></td><td>NameplateBuilder segment id &rarr; text. Applied at spawn; no-op without NameplateBuilder.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      For multi-line / multi-segment nameplates with reorderable, restylable segments, see
+      <a href="denizens-integration.html#nameplatebuilder">NameplateBuilder</a> under Migration &amp; API.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

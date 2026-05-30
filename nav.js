@@ -88,6 +88,15 @@
     { type: 'link', href: 'nations-commands.html',   icon: SVG.sheet,   label: 'Commands',            plugin: 'nations' },
     { type: 'link', href: 'nations-config.html',     icon: SVG.gear,    label: 'Config & Admin',      plugin: 'nations' },
 
+    { type: 'section', label: 'Denizens',       plugin: 'denizens' },
+    { type: 'link', href: 'denizens.html',           icon: SVG.npc,    label: 'Overview',            plugin: 'denizens' },
+    { type: 'link', href: 'denizens-commands.html',  icon: SVG.sheet,  label: 'Commands',            plugin: 'denizens' },
+    { type: 'link', href: 'denizens-appearance.html',icon: SVG.smile,  label: 'Appearance',          plugin: 'denizens' },
+    { type: 'link', href: 'denizens-behavior.html',  icon: SVG.route,  label: 'Behavior & AI',       plugin: 'denizens' },
+    { type: 'link', href: 'denizens-interaction.html',icon: SVG.chat,  label: 'Interaction & Quests',plugin: 'denizens' },
+    { type: 'link', href: 'denizens-integration.html',icon: SVG.book,  label: 'Migration & API',     plugin: 'denizens' },
+    { type: 'link', href: 'denizens-license.html',   icon: SVG.diamond,label: 'Licensing',           plugin: 'denizens' },
+
     { type: 'section', label: 'QuestLines Knowledge', plugin: 'bot' },
     { type: 'link', href: 'bot.html',           icon: SVG.chat,    label: 'Discord Bot',    plugin: 'bot' },
     { type: 'link', href: 'bot-admin.html',     icon: SVG.gear,    label: 'Admin & Setup',  plugin: 'bot' },

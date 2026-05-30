@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">QuestLines Denizens</h1>
+      <p class="page-subtitle">
+        A native Hytale NPC manager. Spawn, skin, equip, and drive NPCs &mdash; patrols,
+        wander, look-at, attitudes, death &amp; respawn &mdash; entirely on the engine&rsquo;s
+        own NPC APIs. A clean-room replacement for HyCitizens that, when QuestLines Core
+        is installed, turns any NPC into a quest-giver or quest-board.
+      </p>
+    </div>
+
+    <!-- What It Does -->
+    <div data-section-body="What Denizens Does">
+    <h2 data-section="What Denizens Does">What Denizens Does</h2>
+    <p>
+      QuestLinesDenizens owns NPC creation, appearance, behavior, and runtime control
+      end-to-end on native Hytale APIs (<code>NPCEntity</code> / <code>NPCPlugin</code>).
+      Every NPC you place is called a <strong>Denizen</strong> and is stored as a single
+      JSON file on disk. The plugin spawns it, keeps it alive, drives its movement and
+      animations, and handles player clicks.
+    </p>
+    <p>A single Denizen can carry:</p>
+    <ul>
+      <li>A <strong>role</strong> from the native NPC catalogue (any spawnable entity), plus a <strong>scale</strong> multiplier.</li>
+      <li><strong>Appearance</strong> &mdash; a custom skin (per-part textures or a live Minecraft username), equipment in six slots, and a nameplate.</li>
+      <li><strong>Behavior</strong> &mdash; attitude, look-at, wander, multi-waypoint patrols (with per-waypoint dwell &amp; animations), idle/move animations, leash distance, health, invulnerability, and death/respawn rules.</li>
+      <li>An <strong>interaction</strong> mode &mdash; run actions on click, or (with Core) act as a quest-giver or quest-board.</li>
+    </ul>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">A clean-room HyCitizens replacement</div>
+        <p>
+          Denizens is built from scratch on Hytale&rsquo;s native NPC system &mdash; it shares
+          no code with HyCitizens. A one-way <a href="denizens-integration.html#import-hc"><code>/denizen import-hc</code></a>
+          migration reads an existing HyCitizens install&rsquo;s on-disk data and recreates
+          those NPCs as Denizens.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Core is Optional -->
+    <div data-section-body="Core is Optional">
+    <h2 data-section="Core is Optional">Core is Optional</h2>
+    <p>
+      Every QuestLines dependency is an <strong>optional, fail-open</strong> dependency.
+      Denizens loads and runs on its own &mdash; it will spawn, move, animate, and handle
+      clicks without QuestLines Core, Titles, or NameplateBuilder installed.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Optional dependency</th><th>What it adds</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>net.evilcraft:QuestLines</code> (Core)</td>
+            <td>Quest-giver / quest-board interaction modes sync into Core&rsquo;s <code>NpcConfig</code>; <code>CLICK_TO_ACTION</code> runs Core actions and checks Core requirements; five-plus NPC-control actions register with Core&rsquo;s ActionManager. See <a href="denizens-interaction.html">Interaction &amp; Quests</a>.</td>
+          </tr>
+          <tr>
+            <td><code>net.evilcraft:QuestLinesTitles</code></td>
+            <td>Pull a player/NPC title into the Denizen&rsquo;s nameplate.</td>
+          </tr>
+          <tr>
+            <td><code>Frotty27:NameplateBuilder</code></td>
+            <td>Advanced multi-segment nameplates. See <a href="denizens-integration.html#nameplatebuilder">NameplateBuilder</a>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Without Core, the quest-related interaction modes and registered actions become
+      silent no-ops &mdash; everything else keeps working.
+    </p>
+    </div>
+
+    <!-- Quick Start -->
+    <div data-section-body="Quick Start">
+    <h2 data-section="Quick Start">Quick Start</h2>
+    <p>
+      All management runs through the <code>/denizen</code> command (requires the
+      <code>qldenizen.admin</code> permission). Running it bare opens the manager UI with
+      <strong>Browse</strong> and <strong>Create</strong> tabs.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Spawn a smith NPC at your feet, named "Old Marc"</span>
+/denizen create Villager_Smith Old Marc
+
+<span class="hl-cmt">// Open the tabbed editor to skin it, set a patrol, or make it a quest-giver</span>
+/denizen edit Old Marc
+
+<span class="hl-cmt">// List, teleport to, or inspect a Denizen</span>
+/denizen list
+/denizen tp Old Marc
+/denizen inspect Old Marc
+
+<span class="hl-cmt">// Force a fresh respawn after editing the JSON directly</span>
+/denizen respawn Old Marc</code></pre>
+    </div>
+    <p>
+      Most subcommands accept a Denizen by name, <code>#shortId</code>, full UUID, or UUID
+      prefix &mdash; or you can arm <a href="denizens-commands.html#wand"><code>/denizen wand</code></a>
+      and click a Denizen to select it. See the full <a href="denizens-commands.html">Commands</a> reference.
+    </p>
+    </div>
+
+    <!-- Free vs Pro -->
+    <div data-section-body="Free vs Pro">
+    <h2 data-section="Free vs Pro">Free vs Pro</h2>
+    <p>
+      The plugin is fully functional on the <strong>free</strong> tier &mdash; creating,
+      customizing, and driving NPCs needs no license. A <strong>Pro</strong> license unlocks
+      two extra features:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Tier</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Per-player overrides</td><td>Pro</td><td>Show a different appearance / behavior / interaction to specific players based on requirements.</td></tr>
+          <tr><td>Schedules</td><td>Pro</td><td>Time-of-day activity schedules.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>See <a href="denizens-license.html">Licensing</a> for how to activate a license and the full tier breakdown.</p>
+    </div>
+
+    <!-- Where Data Lives -->
+    <div data-section-body="Where Data Lives">
+    <h2 data-section="Where Data Lives">Where Data Lives</h2>
+    <p>
+      Denizens stores one JSON file per NPC under its data directory,
+      <code>mods/QuestLinesDenizens/</code>. Files are grouped by world, so a Denizen&rsquo;s
+      file path is <code>mods/QuestLinesDenizens/&lt;worldName&gt;/&lt;uuid&gt;.json</code>.
+      All JSON keys are <strong>PascalCase</strong>.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Path</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>mods/QuestLinesDenizens/&lt;world&gt;/&lt;uuid&gt;.json</code></td><td>One Denizen entry. See the field reference on <a href="denizens-appearance.html">Appearance</a> and <a href="denizens-behavior.html">Behavior &amp; AI</a>.</td></tr>
+          <tr><td><code>mods/QuestLinesDenizens/next-short-id.txt</code></td><td>Monotonic counter that allocates the <code>#N</code> short ids. Never reused after deletion.</td></tr>
+          <tr><td><code>mods/QuestLinesDenizens/license.jwt</code></td><td>Installed license token, if any. See <a href="denizens-license.html">Licensing</a>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// A minimal Denizen entry. Required: Id, World, Anchor, Model.RoleName.</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>      <span class="hl-str">"550e8400-e29b-41d4-a716-446655440000"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"ShortId"</span><span class="hl-punc">:</span> <span class="hl-num">1</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>    <span class="hl-str">"Old Marc"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"World"</span><span class="hl-punc">:</span>   <span class="hl-str">"world_0"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Anchor"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"X"</span><span class="hl-punc">:</span> <span class="hl-num">100.5</span><span class="hl-punc">,</span> <span class="hl-key">"Y"</span><span class="hl-punc">:</span> <span class="hl-num">65.0</span><span class="hl-punc">,</span> <span class="hl-key">"Z"</span><span class="hl-punc">:</span> <span class="hl-num">-200.25</span><span class="hl-punc">,</span> <span class="hl-key">"Yaw"</span><span class="hl-punc">:</span> <span class="hl-num">0.0</span><span class="hl-punc">,</span> <span class="hl-key">"Pitch"</span><span class="hl-punc">:</span> <span class="hl-num">0.0</span> <span class="hl-punc">},</span>
+  <span class="hl-key">"Model"</span><span class="hl-punc">:</span>  <span class="hl-punc">{</span> <span class="hl-key">"RoleName"</span><span class="hl-punc">:</span> <span class="hl-str">"Villager_Smith"</span> <span class="hl-punc">},</span>
+  <span class="hl-key">"SchemaVersion"</span><span class="hl-punc">:</span> <span class="hl-num">1</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#9733;</span>
+      <div class="callout-body">
+        <div class="callout-title">Edit in-game, not by hand</div>
+        <p>
+          Codecs are sparse: only non-default fields are written back, so files stay small.
+          Prefer the in-game editor (<code>/denizen edit</code>) over hand-editing &mdash; it
+          applies and re-spawns in one step. If you do edit JSON directly, run
+          <code>/denizen respawn</code> to reload that Denizen.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Shipped Role Templates -->
+    <div data-section-body="Shipped Role Templates">
+    <h2 data-section="Shipped Role Templates">Shipped Role Templates</h2>
+    <p>
+      Denizens ships two NPC role templates in its asset pack (under
+      <code>resources/Server/NPC/Roles/</code>) so player-skin NPCs render correctly:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Role</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>QLD_Template_Citizen</code></td><td>Abstract citizen base with patrol / seek and movement states.</td></tr>
+          <tr><td><code>QLD_PlayerNPC</code></td><td>Player-skeleton variant so a Denizen can wear a real player skin (custom parts or a live username).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Any other spawnable role works too &mdash; use <a href="denizens-commands.html#roles"><code>/denizen roles</code></a>
+      to browse the full catalogue registered with your server.
+    </p>
+    </div>
+
+    <!-- Where to Next -->
+    <div data-section-body="Documentation">
+    <h2 data-section="Documentation">Documentation</h2>
+    <div class="cards-grid">
+      <a class="card" href="denizens-commands.html">
+        <div class="card-title">Commands</div>
+        <p class="card-desc">Every <code>/denizen</code> subcommand, wand-mode, and the editor staff.</p>
+      </a>
+      <a class="card" href="denizens-appearance.html">
+        <div class="card-title">Appearance</div>
+        <p class="card-desc">Roles, scale, skins, equipment, nameplates, and the editor tabs.</p>
+      </a>
+      <a class="card" href="denizens-behavior.html">
+        <div class="card-title">Behavior &amp; AI</div>
+        <p class="card-desc">Attitude, look-at, wander, patrols, animations, combat &amp; respawn.</p>
+      </a>
+      <a class="card" href="denizens-interaction.html">
+        <div class="card-title">Interaction &amp; Quests</div>
+        <p class="card-desc">Click modes, quest-giver/board sync, and Core actions.</p>
+      </a>
+      <a class="card" href="denizens-integration.html">
+        <div class="card-title">Migration &amp; API</div>
+        <p class="card-desc">HyCitizens import, NameplateBuilder, Titles, and the developer API.</p>
+      </a>
+      <a class="card" href="denizens-license.html">
+        <div class="card-title">Licensing</div>
+        <p class="card-desc">Free vs Pro, license commands, and server binding.</p>
+      </a>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

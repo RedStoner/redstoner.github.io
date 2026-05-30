@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Migration &amp; API</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">Migration &amp; API</h1>
+      <p class="page-subtitle">
+        Migrating from HyCitizens, the optional NameplateBuilder and Titles integrations, and
+        the developer API for driving Denizens from other plugins.
+      </p>
+    </div>
+
+    <!-- HyCitizens Import -->
+    <div data-section-body="HyCitizens Import">
+    <h2 id="import-hc" data-section="HyCitizens Import">HyCitizens Import</h2>
+    <p>
+      <code>/denizen import-hc [dry]</code> performs a one-way migration from HyCitizens. It is
+      a <strong>clean-room</strong> reader &mdash; it parses HyCitizens&rsquo; on-disk data file
+      (<code>mods/HyCitizensData/data.json</code>) and never touches HyCitizens code &mdash; so
+      it works whether or not HyCitizens is installed.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Behavior</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Idempotent</td><td>Citizens already present in the Denizens registry are skipped, so re-running is safe.</td></tr>
+          <tr><td>Dry run</td><td>Pass <code>dry</code> to preview the migration &mdash; counts only, nothing written.</td></tr>
+          <tr><td>What migrates</td><td>Identity (name, world, location), role mapping, skin / equipment, patrol paths (converted to waypoints), and quest assignments.</td></tr>
+          <tr><td>Report</td><td>Imported, skipped, quest-giver, armor-slot, and patrol-path counts.</td></tr>
+          <tr><td>After import</td><td>Imported Denizens are not spawned automatically &mdash; run <code>/denizen respawn &lt;name&gt;</code> (or reload) to bring them live.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Equipment recovery</div>
+        <p>
+          For armor / equipment to be recovered, the source citizens need to be loaded. Run a
+          dry run first to confirm the counts look right before the real import.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- NameplateBuilder -->
+    <div data-section-body="NameplateBuilder">
+    <h2 id="nameplatebuilder" data-section="NameplateBuilder">NameplateBuilder</h2>
+    <p>
+      When <code>Frotty27:NameplateBuilder</code> is installed, Denizens registers built-in
+      nameplate segments and the editor exposes a <strong>Nameplate</strong> tab for editing
+      per-Denizen segment text. This gives multi-line, reorderable, restylable nameplates that
+      coexist with segments from other plugins.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Built-in segment</th><th>Default text</th></tr></thead>
+        <tbody>
+          <tr><td><code>denizen.title</code></td><td>Quest Giver</td></tr>
+          <tr><td><code>denizen.subtitle</code></td><td>Lvl 5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Segment values are stored on the Denizen&rsquo;s <code>Appearance.Nameplate.Segments</code>
+      map and pushed to the entity at spawn. All bytecode references are isolated in a bridge
+      class, so the plugin loads cleanly when NameplateBuilder is absent (the segment editor is
+      simply hidden).
+    </p>
+    </div>
+
+    <!-- Titles -->
+    <div data-section-body="Titles">
+    <h2 data-section="Titles">Titles</h2>
+    <p>
+      With <code>net.evilcraft:QuestLinesTitles</code> installed, set
+      <code>Appearance.Nameplate.TitlesIntegration</code> to <code>true</code> to surface a
+      title in the Denizen&rsquo;s nameplate. See the
+      <a href="titles.html">Titles</a> documentation for how titles are defined and formatted.
+    </p>
+    </div>
+
+    <!-- API -->
+    <div data-section-body="Developer API">
+    <h2 id="api" data-section="Developer API">Developer API</h2>
+    <p>
+      Denizens exposes a cross-classloader-safe API object for other plugins. It is resolved by
+      reflection so callers need no compile-time dependency on Denizens:
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-type">PluginBase</span> denizens <span class="hl-punc">=</span> <span class="hl-type">HytaleServer</span>.get().getPluginManager().getPlugin(
+        <span class="hl-kw">new</span> <span class="hl-type">PluginIdentifier</span>(<span class="hl-str">"net.evilcraft"</span><span class="hl-punc">,</span> <span class="hl-str">"QuestLinesDenizens"</span>));
+<span class="hl-type">Object</span> api <span class="hl-punc">=</span> denizens.getClass().getMethod(<span class="hl-str">"getApi"</span>).invoke(denizens);
+<span class="hl-cmt">// then invoke DenizensAPI methods reflectively</span></code></pre>
+    </div>
+    <p>The API surface groups into:</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Group</th><th>Representative methods</th></tr></thead>
+        <tbody>
+          <tr><td>Lookups</td><td><code>findByNameOrId</code>, <code>findByShortId</code>, <code>getShortId</code>, <code>exists</code>, <code>isSpawned</code>, <code>getEntityUuid</code>, <code>listAllIds</code>, <code>listIdsInWorld</code>, <code>getSnapshot</code></td></tr>
+          <tr><td>Lifecycle</td><td><code>spawn</code>, <code>despawn</code>, <code>respawn</code>, <code>move</code></td></tr>
+          <tr><td>Appearance</td><td><code>setEquipment</code>, <code>setNameplateText</code></td></tr>
+          <tr><td>Animation</td><td><code>playAnimation</code>, <code>clearAnimation</code></td></tr>
+          <tr><td>Behavior</td><td><code>overrideAttitudeTowardPlayer</code>, <code>swapRole</code>, <code>setLookAt</code></td></tr>
+          <tr><td>Quest assignment</td><td><code>getAssignedQuests</code>, <code>setAssignedQuests</code>, <code>addAssignedQuest</code>, <code>removeAssignedQuest</code>, <code>getInteractionMode</code>, <code>setInteractionMode</code>, <code>isBoard</code>, <code>setBoard</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Lookups return lightweight <code>Snapshot</code> / <code>QuestAssignment</code> records so
+      callers never need the Denizens classes themselves.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>
