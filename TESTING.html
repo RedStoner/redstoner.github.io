@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QuestLinesMMO — Testing Plan</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a22;
+    --panel-2: #1d222d;
+    --border: #2b313e;
+    --text: #e7eaf0;
+    --muted: #8d95a6;
+    --accent: #6aa9ff;
+    --pass: #2ea043;
+    --pass-bg: #1a3a23;
+    --fail: #f85149;
+    --fail-bg: #3a1d1d;
+    --skip: #4a5160;
+    --skip-bg: #232732;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  code, .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.92em; background: rgba(255,255,255,0.04); padding: 0 4px; border-radius: 3px;
+  }
+
+  header.app-header {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+  }
+  header.app-header h1 { margin: 0 0 4px; font-size: 19px; }
+  header.app-header .sub { color: var(--muted); margin-bottom: 12px; font-size: 13px; }
+  .meta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .meta-row label {
+    font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 3px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .meta-row input {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 8px; border-radius: 4px; min-width: 160px; font: inherit;
+  }
+
+  .layout {
+    display: grid; grid-template-columns: 260px 1fr; gap: 18px;
+    max-width: 1240px; margin: 0 auto; padding: 18px;
+  }
+
+  aside.sidebar {
+    position: sticky; top: 12px; align-self: start;
+    max-height: calc(100vh - 24px); display: flex; flex-direction: column;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden;
+  }
+  .sidebar .stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px;
+  }
+  .sidebar .stats .pill { padding: 3px 8px; border-radius: 999px; text-align: center; font-weight: 600; }
+  .sidebar .stats .pill.pass { background: var(--pass-bg); color: var(--pass); }
+  .sidebar .stats .pill.fail { background: var(--fail-bg); color: var(--fail); }
+  .sidebar .stats .pill.skip { background: var(--skip-bg); color: var(--muted); }
+  .sidebar .stats .pill.total { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+  nav.nav-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+  nav.nav-list ul { list-style: none; margin: 0; padding: 0; }
+  nav.nav-list li {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 7px 12px; cursor: pointer; font-size: 13px; color: var(--text);
+    border-left: 3px solid transparent;
+  }
+  nav.nav-list li:hover { background: var(--panel-2); }
+  nav.nav-list li.active { background: var(--panel-2); border-left-color: var(--accent); color: var(--accent); }
+  nav.nav-list li .nav-counts { display: inline-flex; gap: 4px; font-size: 11px; }
+  nav.nav-list li .nav-counts span { padding: 0 5px; border-radius: 3px; font-weight: 600; min-width: 18px; text-align: center; }
+  nav.nav-list li .nav-counts .p { background: var(--pass-bg); color: var(--pass); }
+  nav.nav-list li .nav-counts .f { background: var(--fail-bg); color: var(--fail); }
+  nav.nav-list li.complete .nav-title::before { content: "✓ "; color: var(--pass); }
+
+  .sidebar .footer-actions {
+    display: grid; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--border);
+  }
+  .sidebar .footer-actions button {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 10px; border-radius: 4px; cursor: pointer; font: inherit; font-size: 13px;
+  }
+  .sidebar .footer-actions button.primary { background: var(--accent); color: #06121e; border-color: var(--accent); font-weight: 600; }
+  .sidebar .footer-actions button:hover { filter: brightness(1.15); }
+
+  main.content { min-width: 0; }
+
+  section.section { display: none; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
+  section.section.active { display: block; }
+  section.section > .head {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  section.section h2 { margin: 0; font-size: 16px; }
+  .section-sub { color: var(--muted); font-size: 12px; }
+  .section-actions { display: flex; gap: 6px; }
+  .section-actions button {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    padding: 4px 10px; border-radius: 4px; cursor: pointer; font: inherit; font-size: 12px;
+  }
+  .section-actions button:hover { filter: brightness(1.15); }
+  section.section .body { padding: 14px 18px; }
+
+  .intro {
+    background: var(--panel-2); border-left: 3px solid var(--accent);
+    padding: 10px 12px; margin-bottom: 14px; font-size: 13px; color: var(--muted);
+    white-space: pre-wrap; border-radius: 0 4px 4px 0;
+  }
+  .subhead { font-weight: 600; color: var(--accent); margin: 16px 0 6px; font-size: 13px; }
+  .row {
+    display: grid; grid-template-columns: 1fr 200px; gap: 14px;
+    padding: 9px 0; border-bottom: 1px dashed var(--border); align-items: start;
+  }
+  .row:last-of-type { border-bottom: none; }
+  .row .label { color: var(--text); white-space: pre-wrap; }
+  .row .label .id { color: var(--accent); font-family: ui-monospace, monospace; margin-right: 6px; font-weight: 600; }
+  .toggle { display: inline-flex; gap: 0; justify-self: end; }
+  .toggle button {
+    background: var(--skip-bg); color: var(--muted); border: 1px solid var(--border);
+    padding: 5px 12px; font-size: 12px; min-width: 60px; cursor: pointer;
+    border-radius: 0; border-right-width: 0; font: inherit; font-weight: 500;
+  }
+  .toggle button:first-child { border-radius: 4px 0 0 4px; }
+  .toggle button:last-child { border-radius: 0 4px 4px 0; border-right-width: 1px; }
+  .toggle button.active.skip { background: var(--skip); color: #fff; border-color: var(--skip); }
+  .toggle button.active.pass { background: var(--pass); color: #fff; border-color: var(--pass); }
+  .toggle button.active.fail { background: var(--fail); color: #fff; border-color: var(--fail); }
+  .field { margin-top: 10px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .field input, .field textarea {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 9px; border-radius: 4px; font: inherit;
+  }
+  .field textarea { min-height: 80px; resize: vertical; font-family: inherit; }
+  .feedback { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  .pager {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 12px 18px; border-top: 1px solid var(--border);
+    background: var(--panel-2); border-radius: 0 0 8px 8px;
+  }
+  .pager button {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 14px; border-radius: 4px; cursor: pointer; font: inherit;
+  }
+  .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pager button:not(:disabled):hover { filter: brightness(1.15); }
+  .pager .pos { font-size: 12px; color: var(--muted); }
+
+  .modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  .modal.open { display: flex; }
+  .modal .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column;
+  }
+  .modal .panel-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .modal .panel-head h2 { margin: 0; font-size: 16px; }
+  .modal button {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 12px; border-radius: 4px; cursor: pointer; font: inherit;
+  }
+  .modal button.primary { background: var(--accent); color: #06121e; border-color: var(--accent); font-weight: 600; }
+  .modal button:hover { filter: brightness(1.15); }
+  .modal textarea {
+    flex: 1; min-height: 400px; background: var(--panel-2); border: 0;
+    color: var(--text); padding: 12px 16px;
+    font-family: ui-monospace, monospace; font-size: 12px; line-height: 1.5;
+    resize: none; outline: none;
+  }
+  .modal .panel-foot {
+    display: flex; gap: 8px; padding: 10px 16px; justify-content: flex-end;
+    border-top: 1px solid var(--border);
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #06121e; padding: 8px 16px; border-radius: 4px;
+    font-weight: 600; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; }
+    aside.sidebar { position: static; max-height: none; }
+    nav.nav-list { max-height: 200px; }
+    .row { grid-template-columns: 1fr; }
+    .toggle { justify-self: start; }
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <h1>QuestLinesMMO &mdash; Testing Plan</h1>
+  <div class="sub">Start on the <strong>Setup</strong> slide to enter your name(s) and the build under test &mdash; those names then replace Alice / Bob / Carol in the test steps. After that, walk through each section: tick each test as <strong>Pass</strong>, <strong>Fail</strong>, or leave as <strong>Skip</strong>. Progress auto-saves. When you&rsquo;re done, click <em>Generate Report</em> in the sidebar.</div>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="stats">
+      <span class="pill pass" id="stat-pass">0 pass</span>
+      <span class="pill fail" id="stat-fail">0 fail</span>
+      <span class="pill skip" id="stat-skip">0 skip</span>
+      <span class="pill total" id="stat-total">0 total</span>
+    </div>
+    <nav class="nav-list"><ul id="nav-list"></ul></nav>
+    <div class="footer-actions">
+      <button class="primary" id="report-btn">Generate Report</button>
+      <button id="pass-all-btn">Mark all pass</button>
+      <button id="skip-all-btn">Mark all skip</button>
+      <button id="reset-btn">Reset all</button>
+    </div>
+  </aside>
+  <main class="content" id="root"></main>
+</div>
+<div class="modal" id="report-modal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Test Report</h2>
+      <button id="close-report">Close</button>
+    </div>
+    <textarea id="report-output" readonly spellcheck="false"></textarea>
+    <div class="panel-foot">
+      <button id="copy-report" class="primary">Copy to clipboard</button>
+      <button id="download-report">Download .md</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------------
+// Test data
+// ---------------------------------------------------------------------------
+//
+// item types:
+//   test     { id, desc }                 — a tickable test
+//   subhead  { text }                     — visual sub-section header
+//   field    { id, label }                — free-text input (e.g. "config mode")
+//
+// Each section gets an implicit feedback textarea at the bottom.
+// Sections covering features that are not yet wired (skeleton-only paths,
+// blocked tests) have been removed; restore them once those features land.
+
+const SECTIONS = [
+  {
+    id: -1,
+    kind: "setup",
+    title: "Setup",
+    navLabel: "Setup",
+    intro: "Fill these in first. The names below replace Alice, Bob, and Carol in every test step (and in the report). Leave a slot blank to keep the placeholder name.",
+    items: []
+  },
+  {
+    id: 0,
+    title: "0. Prerequisites",
+    navLabel: "Prerequisites",
+    items: [
+      { type: "test", id: "P0.1", desc: "Hytale dev server is running with the plugin jar deployed to `server/mods/QuestLinesMMO/` and `questlines-mmo-1.0.0-dev.jar` present in `server/mods/`." },
+      { type: "test", id: "P0.2", desc: "Two player accounts available (Alice = test player, Bob = second player). Bonus: Carol for 3-player flows." },
+      { type: "test", id: "P0.3", desc: "Permission grants (edit `server/permissions.json`). Model is **default-deny** — every `qlmmo.*` node is registered with the framework and must be granted explicitly; without grants, NO qlmmo commands work for any player.\n• Alice: `qlmmo.*` (full — admin + all player commands)\n• Bob, Carol: `qlmmo.party.*`, `qlmmo.guild.*`, `qlmmo.friend.*`, `qlmmo.dungeon.*`, `qlmmo.lfg.*`, `qlmmo.poi.info`, `qlmmo.poi.list`, `qlmmo.ui`, `qlmmo.help`, `qlmmo.info`, `qlmmo.discoveries` (player commands; no admin)\nNote on wildcards: the trailing `.*` is required to grant a subtree — `qlmmo.admin` alone matches only the literal node. Negative-permission tests (T6.6 etc.) revoke a specific node with `-qlmmo.X.Y.Z`; the exact negative overrides the broader positive wildcard." },
+      { type: "test", id: "P0.4", desc: "Config sanity check — confirm under `server/mods/QuestLinesMMO/config/`:\n• guildHalls/templates/ contains stone_keep.json, marble_hall.json, volcanic_bastion.json\n• guildHalls/biomes/ contains void_arena.json (at minimum)\n• config.json → guildHall.mode is set to either PREFAB or BUILD (note which, tests branch on it)" },
+      { type: "test", id: "P0.5", desc: "Starter registry content shipped under config/ (tests in §9–§13 use these):\n• dungeons/test_keep.json\n• events/definitions/goblin_raid.json, events/regions/spawn_meadow.json\n• events/bosses/forest_warden.json, events/bosses/ancient_golem.json\n• bosses/ancient_golem.json (world-boss scheduler entry)" },
+      { type: "test", id: "P0.6", desc: "Optional: QuestLinesClaims plugin installed (needed for §6 claim tests; §5 hall protection still functions without it but skips Claims-mediated build gating)." },
+      { type: "field", id: "config_mode", label: "Config mode under test (PREFAB / BUILD)" },
+      { type: "field", id: "claims_installed", label: "QuestLinesClaims installed (yes / no)" }
+    ]
+  },
+  {
+    id: 1,
+    title: "1. Preflight — Plugin Load",
+    navLabel: "Preflight",
+    items: [
+      { type: "test", id: "T1.1", desc: "Start server; server log shows plugin load banner with no stack traces." },
+      { type: "test", id: "T1.2", desc: "`/qlmmo help` prints the subcommand list." },
+      { type: "test", id: "T1.3", desc: "`/qlmmo info` prints plugin version 1.0.0 and author RedStoner." },
+      { type: "test", id: "T1.4", desc: "`/qlmmo ui` (alias `/qlmmo dashboard` or `/qlmmo gui`) opens the Dashboard with Party, Guild, LFG tabs." },
+      { type: "test", id: "T1.5", desc: "`/qlmmo reload` completes without error; re-runs T1.2 still work." },
+      { type: "test", id: "T1.6", desc: "Default-deny gate — log in as a fresh player with NO `qlmmo.*` grant; run `/party invite Alice` → framework rejects with a 'no permission' message (and `execute` is never called, so the friendly QLMMO message does not fire). Confirms each leaf command's `requirePermission(\"qlmmo.X.Y.Z\")` is wired correctly. Restore the grant from P0.3 before continuing." }
+    ]
+  },
+  {
+    id: 2,
+    title: "2. Party System",
+    navLabel: "Party",
+    items: [
+      { type: "test", id: "T2.1",  desc: "Invite — Alice: `/party invite Bob`. Bob sees invite prompt." },
+      { type: "test", id: "T2.2",  desc: "Accept — Bob: `/party accept`. Both see party-join notice." },
+      { type: "test", id: "T2.3",  desc: "List — Both: `/party list` shows Alice (LEADER) and Bob (MEMBER)." },
+      { type: "test", id: "T2.4",  desc: "Decline — Alice invites Carol → Carol: `/party decline` → invite cleared." },
+      { type: "test", id: "T2.5",  desc: "Kick — Alice: `/party kick Bob` → Bob removed, receives notice." },
+      { type: "test", id: "T2.6",  desc: "Transfer — Re-add Bob. Alice: `/party transfer Bob` → Bob is LEADER." },
+      { type: "test", id: "T2.7",  desc: "Leave — Alice: `/party leave` → Alice removed; Bob still in solo party." },
+      { type: "test", id: "T2.8",  desc: "Disband — Bob: `/party disband` → party gone; `/party list` errors." },
+      { type: "test", id: "T2.9",  desc: "Invite expiry — Alice invites Bob; Bob waits party.inviteExpirySeconds (default 60s) then runs `/party accept` → rejected (expired)." },
+      { type: "test", id: "T2.10", desc: "Max size — fill a party to party.maxSize (default 5); next invite rejected." },
+      { type: "test", id: "T2.11", desc: "PartyUI HUD — With a party, Dashboard → Party tab shows member list with HP bars, roles, leader controls." }
+    ]
+  },
+  {
+    id: 3,
+    title: "3. Friend System",
+    navLabel: "Friends",
+    items: [
+      { type: "test", id: "T3.1", desc: "Add — Alice: `/friend add Bob`. Alice friend list shows Bob." },
+      { type: "test", id: "T3.2", desc: "List — `/friend list` prints Bob with online/offline indicator." },
+      { type: "test", id: "T3.3", desc: "Remove — `/friend remove Bob` → list empty." },
+      { type: "test", id: "T3.4", desc: "Persistence — Re-add Bob, restart server, `/friend list` still shows Bob. File should exist under `server/mods/QuestLinesMMO/friends/`." }
+    ]
+  },
+  {
+    id: 4,
+    title: "4. Guild Core",
+    navLabel: "Guild Core",
+    items: [
+      { type: "test", id: "T4.1",  desc: "Create — Alice: `/guild create Wolfpack WOLF` → success message." },
+      { type: "test", id: "T4.2",  desc: "Name validation — try names below/above length limits, and an already-used name → rejected with clear messages." },
+      { type: "test", id: "T4.3",  desc: "Invite / accept — `/guild invite Bob` → Bob `/guild accept` → Bob joins as RECRUIT." },
+      { type: "test", id: "T4.4",  desc: "Info / roster — `/guild info`, `/guild roster` both show correct data." },
+      { type: "test", id: "T4.5",  desc: "MOTD — Alice: `/guild motd \"Welcome to Wolfpack\"` → broadcast to online members. Bob relogs → login message shows MOTD (if `broadcast_motd_on_login` feature is unlocked at the current hall level)." },
+      { type: "test", id: "T4.6",  desc: "Promote / demote — `/guild promote Bob` → MEMBER → OFFICER. `/guild demote Bob` reverses." },
+      { type: "test", id: "T4.7",  desc: "Kick / leave — `/guild kick Bob`. Re-invite. Bob: `/guild leave`." },
+      { type: "test", id: "T4.8",  desc: "Transfer — re-invite Bob, `/guild transfer Bob` → Bob becomes OWNER." },
+      { type: "test", id: "T4.9",  desc: "Disband — Bob: `/guild disband` → guild gone, data removed." },
+      { type: "test", id: "T4.10", desc: "Bare /guild — `/guild` (no subcommand) opens the GuildShortcutsUI quick-action menu." },
+      { type: "test", id: "T4.11", desc: "/guild ui — `/guild ui` opens the full GuildUI (roster / info / treasury / etc. tabs)." },
+      { type: "test", id: "T4.12", desc: "Permission matrix — `/guild perms list` → grid. `/guild perms set OFFICER INVITE false` → officer can no longer `/guild invite`." },
+      { type: "test", id: "T4.13", desc: "Player override — `/guild perms player Bob INVITE true` → Bob can invite regardless of rank setting. `/guild perms player Bob clear` removes override." },
+      { type: "test", id: "T4.14", desc: "Bank deposit — `/guild bank deposit 100` → treasury balance increases by 100 (visible in Treasury tab). Gated: if `guild_bank` feature not unlocked, command is rejected and Treasury tab is hidden." }
+    ]
+  },
+  {
+    id: 5,
+    title: "5. Guild Hall",
+    navLabel: "Guild Hall",
+    intro: "Command shape: teleport into / out of the hall is /guild home (toggle). /guild hall is the management collection — its children are upgrade, setspawn, visit. Bare /guild hall opens the GuildShortcutsUI quick-action menu (same UI as bare /guild).",
+    items: [
+      { type: "test", id: "T5.1", desc: "Creation flow (owner) — Fresh guild, Alice: `/guild home` → CreationUI opens (because the hall is uninitialised). Biome panel populated; template panel disabled until biome chosen; Confirm disabled until both selected." },
+      { type: "test", id: "T5.2", desc: "Mode label — Footer shows active mode pulled from config — not selectable." },
+      { type: "test", id: "T5.3", desc: "Non-owner pre-init — Bob (MEMBER) `/guild home` before init → \"Waiting for owner to set up the guild hall\" message." },
+      { type: "test", id: "T5.4", desc: "Confirm — Alice selects void_arena + stone_keep + Confirm → hall initialises, Alice teleported to spawn, world generates / structure pastes." },
+      { type: "test", id: "T5.5", desc: "Toggle out / back — Alice (now inside the hall) `/guild home` → teleports back to where she was before entering. `/guild home` again → teleports back into the hall." },
+      { type: "test", id: "T5.6", desc: "Member teleport — Bob `/guild home` → teleports into guild's hall." },
+      { type: "test", id: "T5.7", desc: "setspawn — Alice stands somewhere inside hall → `/guild hall setspawn` → next `/guild home` teleports to new spawn." },
+      { type: "test", id: "T5.8", desc: "Visit — With VISIT_OPEN granted to the RECRUIT rank (BUILD halls also need the `visitor_access` feature unlocked), Carol (non-member): `/guild hall visit Wolfpack` → teleports in. Without VISIT_OPEN → denied." },
+      { type: "test", id: "T5.9", desc: "Unload grace — All players leave hall. After guildHall.unloadGraceMinutes (default 5), hall unloads (check server log / memory)." },
+      { type: "subhead", text: "5a. PREFAB mode (skip if BUILD)" },
+      { type: "test", id: "T5a.1", desc: "Block-deny — Try placing / breaking a block inside hall → denied with message \"hall is managed — no building allowed\"." },
+      { type: "test", id: "T5a.2", desc: "Upgrade UI — `/guild hall upgrade` → current tier preview + next tier card with cost. Max tier shows \"Max Tier\" label." },
+      { type: "test", id: "T5a.3", desc: "Upgrade apply — Credit currency via `/qlmmo admin guild currency Wolfpack 10000`. Click Upgrade → structure repastes at next tier, chest positions updated." },
+      { type: "subhead", text: "5b. BUILD mode (skip if PREFAB)" },
+      { type: "test", id: "T5b.1", desc: "Permission build — Alice (OWNER with BUILD perm) places a block inside hall → allowed. Bob (no BUILD perm) → denied." },
+      { type: "test", id: "T5b.2", desc: "Claims-gated build — When QuestLinesClaims is installed, Bob (member but no guild BUILD perm) can build inside a chunk that has been claimed by the guild and whose claim flags / trust list permit him. See §6 for the claim flow this depends on." },
+      { type: "test", id: "T5b.3", desc: "Upgrade UI — `/guild hall upgrade` → current level + next level diff list (chest sections, member cap, plots, features)." },
+      { type: "test", id: "T5b.4", desc: "Upgrade apply — Credit currency, click Upgrade → mechanical unlocks take effect (e.g. chest gains a section, member cap raises)." }
+    ]
+  },
+  {
+    id: 6,
+    title: "6. Claims (chunk-based hall protection)",
+    navLabel: "Claims",
+    intro: "Hall protection is driven by QuestLinesClaims — guild owners claim whole chunks of the hall world; the Claims plugin handles per-chunk trust, flags, and build gating. The visual map UI lives in Claims itself (/claim); QLMMO adds thin convenience wrappers under /guild claim.\n\n6b: rent/sale plots inside the hall use the same Claims wand and rent/buy region machinery, but live in their own guild-hall store (separate from server admin regions). Owner-side commands (/guild hall plot ...) only ever expose the caller's own guild's plots; renters see them via /claim rentbuy when standing in the hall. Guild plots intentionally skip the prefab capture/restore that admin rent/buy regions use — turnover only flips ownership, never resets the world geometry.\n\nSkip this section if QuestLinesClaims is not installed — /guild claim * and /guild hall plot * commands print \"QuestLinesClaims is not installed.\" and §5b.2 is N/A.",
+    items: [
+      { type: "test", id: "T6.1", desc: "Out-of-hall reject — Alice runs `/guild claim add` while standing outside her guild's hall world → rejected with \"You must be inside your guild's hall to claim chunks.\"" },
+      { type: "test", id: "T6.2", desc: "Claim chunk — Alice (OWNER) inside her hall, on a previously unclaimed chunk: `/guild claim add` → success message including chunk coordinates and updated guild claim total." },
+      { type: "test", id: "T6.3", desc: "Claim duplicate — Re-run `/guild claim add` on the same chunk → rejected (chunk is already claimed)." },
+      { type: "test", id: "T6.4", desc: "Release chunk — `/guild claim remove` on a claimed chunk → success message; chunk reverts to wilderness." },
+      { type: "test", id: "T6.5", desc: "Visual UI — `/claim` (the Claims plugin's command, not a QLMMO wrapper) opens the Claims map UI; the chunks claimed in T6.2 appear in the guild's colour and show the guild name as the owner." },
+      { type: "test", id: "T6.6", desc: "Permission gate — Bob (MEMBER without `qlmmo.guild.claim.add` or without ownership/manage rights inside Claims) tries `/guild claim add` → rejected." },
+      { type: "test", id: "T6.7", desc: "BUILD-mode flow — In a BUILD hall: claim a chunk for the guild, grant Bob trust through the Claims UI, then verify Bob can build inside the trusted chunk even without the guild-wide BUILD permission (cross-references T5b.2)." },
+      { type: "test", id: "T6.8", desc: "Claims absent — On a server with the Claims plugin removed, `/guild claim add` and `/guild claim remove` both no-op cleanly with the \"QuestLinesClaims is not installed.\" message — no stack traces." },
+      { type: "subhead", text: "6b. Guild Hall Rent/Sale Plots (skip if Claims is not installed)" },
+      { type: "test", id: "T6b.1", desc: "Out-of-hall reject — Alice runs `/guild hall plot rent shop1 100 7` while standing outside her guild's hall world → rejected with \"You must be inside your guild's hall to define a plot.\"" },
+      { type: "test", id: "T6b.2", desc: "No wand selection — Inside hall, no wand corners set → `/guild hall plot rent shop1 100 7` → \"Set both wand corners first (use the /claim wand).\" No region created." },
+      { type: "test", id: "T6b.3", desc: "Permission gate — Bob (MEMBER without MANAGE_PLOTS) inside hall, valid wand selection → `/guild hall plot rent shop1 100 7` → \"You don't have permission to manage guild hall plots.\" No region created." },
+      { type: "test", id: "T6b.4", desc: "Create rent plot — Alice inside hall: select two corners with the Claims wand, then `/guild hall plot rent shop1 100 7` → \"Created rent plot 'shop1' (id=...).\" Wand session is cleared after success." },
+      { type: "test", id: "T6b.5", desc: "Create buy plot — Alice inside hall: re-select two corners with the wand, then `/guild hall plot buy lot1 5000` → \"Created sale plot 'lot1' (id=...).\"" },
+      { type: "test", id: "T6b.6", desc: "Overlap reject — Select corners that overlap a chunk owned by a different (player) claim → command returns \"selection overlaps a player claim.\" No region created." },
+      { type: "test", id: "T6b.7", desc: "List — `/guild hall plot list` shows both plots with id, type, price, and state (\"available\" / \"for sale\"). Output only includes the caller's guild — Bob in another guild sees nothing under his own guild list." },
+      { type: "test", id: "T6b.8", desc: "Renter browser — Carol enters Alice's hall via `/guild hall visit Wolfpack`, then opens `/claim rentbuy` → both shop1 and lot1 are listed alongside any admin rent/buy regions. From outside any guild hall world, Carol's `/claim rentbuy` shows admin regions but not other guilds' plots." },
+      { type: "test", id: "T6b.9", desc: "Rent flow — Carol rents shop1 from the browser → her balance is debited the listed price, status flips to \"rented\", and Alice's guild treasury (`/guild info`) shows an increase equal to the rent price." },
+      { type: "test", id: "T6b.10", desc: "Tenant access — Inside shop1, Carol can build / break / use containers (per default rent flags). Outside shop1 but still inside the hall, normal hall protection rules apply. Bob (no tenancy, no guild build perm) cannot modify blocks inside shop1." },
+      { type: "test", id: "T6b.11", desc: "Buy flow — A second tester, Dave, opens `/claim rentbuy` inside the hall and buys lot1 → balance debited; Alice's treasury increases by the sale price; lot1 status flips to \"owned\"." },
+      { type: "test", id: "T6b.12", desc: "No prefab capture — After T6b.4 / T6b.5, the rent/buy plot files in the schematics directory should NOT have been written for these guild plots (admin rent/buy plots still capture). Confirm by listing the schematic directory before and after." },
+      { type: "test", id: "T6b.13", desc: "No prefab restore on lease end — Set shop1 duration to a few minutes, let lease expire and grace period end, OR force via /qlmmo admin tooling. Tenancy clears but the world geometry inside the plot is NOT reset (any blocks the tenant placed remain). This is intentional — guild plots skip the prefab restore." },
+      { type: "test", id: "T6b.14", desc: "No prefab restore on buy re-list — Dave (lot1 owner) opens `/claim rentbuy`, clicks Sell on lot1 → ownership clears and the plot lists as \"for sale\" again, but blocks Dave placed remain in the world." },
+      { type: "test", id: "T6b.15", desc: "Cross-guild delete reject — Alice runs `/guild hall plot delete <id>` with another guild's plot id → \"No plot with that id belongs to your guild.\" No deletion." },
+      { type: "test", id: "T6b.16", desc: "Delete — Alice runs `/guild hall plot delete shop1` → \"Deleted plot shop1.\" `/guild hall plot list` no longer lists it. Tenant Carol's `/claim rentbuy` no longer shows it either." },
+      { type: "test", id: "T6b.17", desc: "World map — Open `/claim` map UI inside the hall → guild plots render in the rent/buy overlay colour, distinct from the guild-claim colour for ordinary hall chunks." },
+      { type: "test", id: "T6b.18", desc: "Persistence — Restart the server. `/guild hall plot list` still shows the surviving plots; tenancies / ownership are preserved; treasury balance is preserved." }
+    ]
+  },
+  {
+    id: 7,
+    title: "7. Guild Chest",
+    navLabel: "Guild Chest",
+    items: [
+      { type: "test", id: "T7.1", desc: "Open — Alice: `/guild chest` → GuildChestUI opens with section tabs." },
+      { type: "test", id: "T7.2", desc: "Deposit / withdraw — Deposit items into a section, withdraw them back. Inventory updates in real time." },
+      { type: "test", id: "T7.3", desc: "Permission gate — view — Bob with no CHEST_VIEW → UI refused." },
+      { type: "test", id: "T7.4", desc: "Permission gate — withdraw — Bob with VIEW but not WITHDRAW → slots show lock icon; Withdraw button disabled." },
+      { type: "test", id: "T7.5", desc: "Section count — Number of tabs matches current mode/level unlock (PREFAB tier's section count / BUILD level's section count)." },
+      { type: "test", id: "T7.6", desc: "Chest block intercept — Interact with a guild chest block inside hall → opens GuildChestUI, not vanilla chest." },
+      { type: "test", id: "T7.7", desc: "Persistence — Deposit distinctive item, restart server, reopen → item still there. File in `server/mods/QuestLinesMMO/guilds/<id>/chest.json` (or similar)." }
+    ]
+  },
+  {
+    id: 8,
+    title: "8. LFG (Looking for Group)",
+    navLabel: "LFG",
+    intro: "Flag-style args: /lfg list and /lfg join use named flags (--contentId=…, --role=…), not positional args. /lfg join takes the 1-based index printed by /lfg list, not the listing's content id. Author-side accept/decline of join requests is UI-only — open /lfg ui.",
+    items: [
+      { type: "test", id: "T8.1", desc: "Post — Alice: `/lfg post stone_keep_run --description=\"Need tank + healer\"` → listing created. (The description is a flag — `--description=` prefix is required.)" },
+      { type: "test", id: "T8.2", desc: "List — Bob: `/lfg list` shows Alice's listing. `/lfg list --contentId=stone_keep_run --role=TANK` filters." },
+      { type: "test", id: "T8.3", desc: "UI — Bob: `/lfg ui` → LfgBrowserUI with filters, search, listing detail." },
+      { type: "test", id: "T8.4", desc: "Join request — Bob: `/lfg join 1 --role=TANK` (or click \"Request to Join\" as TANK in the UI) → Alice sees pending request notification." },
+      { type: "test", id: "T8.5", desc: "Accept — Alice opens `/lfg ui`, accepts the pending request → Bob auto-joins Alice's party." },
+      { type: "test", id: "T8.6", desc: "Cancel — Alice: `/lfg cancel` → listing removed." },
+      { type: "test", id: "T8.7", desc: "Auto-cancel on party full — Post a listing, fill party to max via invites → listing auto-cancels." },
+      { type: "test", id: "T8.8", desc: "Auto-cancel on author disconnect — Post listing, author logs out → listing removed within a reasonable grace." }
+    ]
+  },
+  {
+    id: 9,
+    title: "9. Dungeons — Core Loop",
+    navLabel: "Dungeons",
+    intro: "The entry, death, respawn, rejoin, wipe, and admin paths covered below all exercise real code. Dungeon-boss spawning and natural completion (objective tracking, phase transitions) are not yet wired — those tests will be added when that work lands.",
+    items: [
+      { type: "test", id: "S9",   desc: "test_keep loaded (verified via `DungeonRegistry loaded 1 definition(s)` log line)." },
+      { type: "test", id: "T9.1", desc: "Enter — Alice (party leader): `/dungeon enter test_keep` → full party teleported into instance." },
+      { type: "test", id: "T9.2", desc: "Non-leader rejected — Bob (not leader): `/dungeon enter test_keep` → rejected with message." },
+      { type: "test", id: "T9.3", desc: "Party size cap — Party over maxPartySize → entry rejected." },
+      { type: "test", id: "T9.4", desc: "Death — Kill Bob inside dungeon → CheckpointUI appears with respawn button + countdown (dungeon.respawnDelaySeconds, default 3s)." },
+      { type: "test", id: "T9.5", desc: "Respawn — Click respawn → Bob teleported to last checkpoint." },
+      { type: "test", id: "T9.6", desc: "Leave instance — Click \"Return to world\" → Bob exits instance." },
+      { type: "test", id: "T9.7", desc: "Rejoin grace — Bob logs out mid-run, logs back in within dungeon.rejoinGraceSeconds (default 300s) → rejoins instance." },
+      { type: "test", id: "T9.8", desc: "Wipe — Kill entire party → instance enters CLEANUP, all teleported out." },
+      { type: "test", id: "T9.10", desc: "Admin debug — `/qlmmo admin instance debug Alice` prints instance state." },
+      { type: "test", id: "T9.11", desc: "Admin cleanup — Start a run, `/qlmmo admin instance cleanup <id>` → instance torn down immediately." }
+    ]
+  },
+  {
+    id: 11,
+    title: "11. Event Bosses",
+    navLabel: "Event Bosses",
+    intro: "Event bosses are loaded from per-id files under config/events/bosses/<id>.json. Two are shipped by default (forest_warden, ancient_golem); add more files and run /qlmmo reload to register them.",
+    items: [
+      { type: "test", id: "S11",   desc: "Sample event boss definitions present (forest_warden.json, ancient_golem.json) and `EventBossRegistry loaded 2 definition(s)` shows in the log." },
+      { type: "test", id: "T11.1", desc: "Spawn via admin — `/qlmmo admin spawnboss <bossId> --x=<x> --y=<y> --z=<z>` → boss spawns at the given coords (omitting any flag defaults that axis to 0/64/0)." },
+      { type: "test", id: "T11.2", desc: "Participation window — Alice + Bob + Carol damage boss; one player does zero damage (or < eventBossMinDamageThreshold, default 50.0)." },
+      { type: "test", id: "T11.3", desc: "Damage tracking — ParticipationTracker records each player's contribution (check via admin debug / log)." },
+      { type: "test", id: "T11.4", desc: "Rewards on kill — Kill boss → contributors above threshold receive rewards; zero-damage player receives none." },
+      { type: "test", id: "T11.5", desc: "Guild currency routing — If RewardTable.guildCurrencyAmount > 0 and a contributor is in a guild → that guild's treasury increases." }
+    ]
+  },
+  {
+    id: 12,
+    title: "12. Dynamic Events",
+    navLabel: "Dynamic Events",
+    intro: "Tests below cover the broadcast / cooldown / persistence / player-count gating paths only — those are the parts wired up today. Mob spawning and objective tracking belong to concrete event subclasses that don't exist yet, so success-reward delivery is excluded for now.\n\nConfig already loaded: goblin_raid event + spawn_meadow trigger (minPlayers: 2, region ±100 around origin).",
+    items: [
+      { type: "test", id: "S12",   desc: "goblin_raid + spawn_meadow loaded (check the `DynamicEventManager started; 1 region trigger(s)` log line)." },
+      { type: "test", id: "T12.1", desc: "Player-count gate — With only 1 player online, wait for the dynamicEventCheckIntervalMinutes roll (default 10min) → no event fires (minPlayers: 2 not met)." },
+      { type: "test", id: "T12.2", desc: "Trigger broadcast — With 2+ players online, wait for a roll → server-wide chat broadcast \"[Dynamic Event] Goblin Raid has begun at ...\". EventTrackerUI overlay shows name + placeholder objective." },
+      { type: "test", id: "T12.4", desc: "Timeout + cooldown — After the random [min, max] duration elapses → \"ended without success\" broadcast; cooldown applied equal to maxDurationSeconds." },
+      { type: "test", id: "T12.5", desc: "Cooldown persistence — Restart server; file events/region_cooldowns.json contains spawn_meadow entry; next roll skips the region until cooldown expires." }
+    ]
+  },
+  {
+    id: 13,
+    title: "13. World Boss Scheduling",
+    navLabel: "World Boss",
+    items: [
+      { type: "test", id: "T13.1", desc: "Countdown announcement — Approaching spawn time → BossAnnouncer broadcasts server-wide countdown." },
+      { type: "test", id: "T13.2", desc: "Force spawn — `/qlmmo admin forceboss <worldBossId>` → boss spawns at configured location immediately." },
+      { type: "test", id: "T13.3", desc: "Kill + rewards — Same reward rules as event bosses (§11.4–11.5)." },
+      { type: "test", id: "T13.4", desc: "Schedule state persistence — Check bosses/schedule_state.json contains last spawn timestamp after spawn. Restart server → scheduler resumes, doesn't immediately re-spawn." }
+    ]
+  },
+  {
+    id: 14,
+    title: "14. POI / Discoveries",
+    navLabel: "POI / Discoveries",
+    intro: "POIs are world locations players \"discover\" by walking inside their radius. Definitions live as per-id files under config/pois/<id>.json and reload on /qlmmo reload. Players see a marker on the world map and a discovery toast + reward when they enter the radius for the first time.\n\nAuthoring lives under /qlmmo poi <here|remove|list|info|tp|grant|revoke|reset> (admin). Players use /discoveries (alias /poi) to browse what they've found so far.",
+    items: [
+      { type: "subhead", text: "14a. Authoring" },
+      { type: "test", id: "S14",     desc: "No POIs ship by default — `PoiRegistry loaded 0 definition(s)` is the expected baseline log line on a fresh install." },
+      { type: "test", id: "T14a.1",  desc: "Create here — Alice: `/qlmmo poi here test_camp 12 \"Test Camp\"` → message confirming the POI saved at her current coords with radius 12 and the given world. File appears at `config/pois/test_camp.json`." },
+      { type: "test", id: "T14a.2",  desc: "Default values — `/qlmmo poi here naked_camp` (no radius / name) → POI saved with radius 16, displayName falls back to id." },
+      { type: "test", id: "T14a.3",  desc: "Reject bad id — `/qlmmo poi here \"bad id!\"` → rejected with the letters/digits/underscores message; no file written." },
+      { type: "test", id: "T14a.4",  desc: "Overwrite in place — `/qlmmo poi here test_camp 30 \"Renamed\"` → same id is overwritten; radius now 30; description / icon / hidden / rewards reset to defaults." },
+      { type: "test", id: "T14a.5",  desc: "List — `/qlmmo poi list` → both POIs appear with their ids, worlds, centers, radii." },
+      { type: "test", id: "T14a.6",  desc: "Info — `/qlmmo poi info test_camp` → all fields print (name, world, center, radius, icon, category, hidden, description)." },
+      { type: "test", id: "T14a.7",  desc: "Teleport — `/qlmmo poi tp test_camp` → Alice teleports to the POI's center. If the world is unloaded, error message printed." },
+      { type: "test", id: "T14a.8",  desc: "Remove — `/qlmmo poi remove naked_camp` → file deleted from `config/pois/`; subsequent `/qlmmo poi list` no longer shows it." },
+      { type: "subhead", text: "14b. Player discovery flow" },
+      { type: "test", id: "T14b.1",  desc: "Walk-in discovery — Bob walks inside test_camp's radius for the first time. Within poi.proximityCheckIntervalSeconds (default 2s) Bob sees a toast: \"Discovered: Test Camp\" (or a custom discoverMessage if set on the entry)." },
+      { type: "test", id: "T14b.2",  desc: "Idempotent — Bob walks back outside and re-enters → no second toast, no duplicate reward." },
+      { type: "test", id: "T14b.3",  desc: "Reward delivery — Edit `config/pois/test_camp.json` to add a reward (xp/currency/guildCurrency or items), `/qlmmo reload`, run T14b.1 again with a fresh player → rewards delivered (XP/currency toast; guild currency credited to the player's guild treasury if any)." },
+      { type: "test", id: "T14b.4",  desc: "World gate — Set world to a different world name, reload, walk inside the radius in the original world → no discovery (world mismatch)." },
+      { type: "test", id: "T14b.5",  desc: "Hidden marker — Set hidden: true, reload — undiscovered POI has no marker on the map. After discovery, marker appears." },
+      { type: "test", id: "T14b.6",  desc: "/discoveries UI — `/discoveries` (or `/poi`) → DiscoveriesUI lists everything Bob has discovered with category filters." },
+      { type: "subhead", text: "14c. Admin grant / revoke / reset" },
+      { type: "test", id: "T14c.1",  desc: "Grant — `/qlmmo poi grant Bob test_camp` → success when Bob is online and the id exists; \"already discovered\" message on a re-grant." },
+      { type: "test", id: "T14c.2",  desc: "Revoke — `/qlmmo poi revoke Bob test_camp` → discovery cleared (verify via `/discoveries` afterwards)." },
+      { type: "test", id: "T14c.3",  desc: "Reset — `/qlmmo poi reset Bob` → wipes all of Bob's discoveries." }
+    ]
+  },
+  {
+    id: 15,
+    title: "15. Persistence / Restart tests",
+    navLabel: "Persistence",
+    intro: "Run the following end-to-end, then restart the server and verify each item survived.",
+    items: [
+      { type: "test", id: "T15.1",  desc: "Friend relationship (§3)" },
+      { type: "test", id: "T15.2",  desc: "Guild membership + roster + MOTD + ranks + permission overrides (§4)" },
+      { type: "test", id: "T15.3",  desc: "Guild hall: mode, template, biome, current tier/level, spawn point (§5)" },
+      { type: "test", id: "T15.4",  desc: "Guild chunk claims (§6) — claim count and per-chunk ownership survive (data lives in the QuestLinesClaims plugin's own files; QLMMO holds the guild id only)" },
+      { type: "test", id: "T15.4b", desc: "Guild hall rent/sale plots (§6b) — plot definitions, current tenancies, and current owners all survive a restart; the guild treasury reflects all rent/buy income that landed before the restart." },
+      { type: "test", id: "T15.5",  desc: "Guild chest contents per section (§7)" },
+      { type: "test", id: "T15.6",  desc: "Guild currency balance (§4.14)" },
+      { type: "test", id: "T15.7",  desc: "Player progress: dungeon clear history, last checkpoint (§9)" },
+      { type: "test", id: "T15.8",  desc: "World boss schedule state (§13.4)" },
+      { type: "test", id: "T15.9",  desc: "Region cooldowns (§12.5)" },
+      { type: "test", id: "T15.10", desc: "POI definitions (config/pois/) and per-player discovery state (§14) survive restart." }
+    ]
+  },
+  {
+    id: 16,
+    title: "16. Integration flows (happy paths)",
+    navLabel: "Integration",
+    items: [
+      { type: "test", id: "F1", desc: "Raid night — `/lfg post` → second player `/lfg join <#>` → author accepts via `/lfg ui` → party auto-forms → party leader `/dungeon enter` → players return to world; dungeon instance cleaned up after grace period (skip the full \"clear objective + rewards\" beat until dungeon-boss completion is wired)." },
+      { type: "test", id: "F2", desc: "Founding a guild — `/guild create` → `/guild invite` × 2 → owner opens CreationUI via `/guild home` → picks biome + template → Confirm → hall generates → `/guild hall setspawn` → owner claims interior chunks via `/guild claim add` (and trusts a member through `/claim`) → member deposits items into chest → owner `/guild bank deposit 1000` → treasury visible to members with correct perm → owner triggers upgrade." },
+      { type: "test", id: "F3", desc: "World event → guild reward — Trigger a world boss (§13). Participant contributes damage, receives personal reward, and their guild treasury is credited with guildCurrencyAmount. Verify in `/guild ui` → Treasury." },
+      { type: "test", id: "F4", desc: "Discover-then-teleport — Author creates a POI with `/qlmmo poi here capital 32 \"Capital\"`, sets a small XP/currency reward, reloads. Player walks into the radius → toast + reward fires; player runs `/discoveries` → entry visible. Admin `/qlmmo poi tp capital` warps to the centre." },
+      { type: "test", id: "F5", desc: "Guild plot lifecycle — Owner with the Claims wand selects a corner of the hall, runs `/guild hall plot rent shop1 100 7` and then `/guild hall plot buy lot1 5000` for a second area. A second player visits the hall, opens `/claim rentbuy`, rents shop1 and buys lot1 → both transactions credit the guild treasury (balance up by 5100). Tenant builds a marker block inside shop1 and confirms it persists across a server restart. Owner runs `/guild hall plot delete lot1` → plot removed; tenant's shop1 lease still active." }
+    ]
+  },
+  {
+    id: 17,
+    title: "17. Edge cases & failure modes",
+    navLabel: "Edge cases",
+    items: [
+      { type: "test", id: "E1",  desc: "Party invite to player already in another party → rejected cleanly." },
+      { type: "test", id: "E2",  desc: "Guild invite to player already in a guild → rejected cleanly." },
+      { type: "test", id: "E3",  desc: "Two players trigger `/guild hall upgrade` simultaneously → one succeeds, the other gets \"upgrade already in progress\" (state = UPGRADING)." },
+      { type: "test", id: "E4",  desc: "Player disconnects during dungeon entry teleport → does not corrupt instance state." },
+      { type: "test", id: "E5",  desc: "Player disconnects mid-upgrade inside hall → on rejoin, hall state sane." },
+      { type: "test", id: "E6",  desc: "PREFAB mode during UPGRADING → block events still denied." },
+      { type: "test", id: "E7",  desc: "Admin credits negative amount via `/qlmmo admin guild currency` → balance decreases, never goes below 0 (or per config)." },
+      { type: "test", id: "E8",  desc: "`/qlmmo reload` while a dungeon instance is active → active instance survives; registries refresh for future entries." },
+      { type: "test", id: "E9",  desc: "Empty registries (no dungeons, no bosses, no POIs) at startup → plugin still loads cleanly, commands referencing missing IDs fail with clear messages." },
+      { type: "test", id: "E10", desc: "`/guild claim add` from outside the guild's hall world → rejected with the in-hall-only message (no Claims call made)." },
+      { type: "test", id: "E11", desc: "QuestLinesClaims uninstalled at runtime → `/guild claim *` no-ops with a clean error; hall block-event listeners fall back to QLMMO's own permission gating with no stack traces." },
+      { type: "test", id: "E12", desc: "POI with an unloaded world set on its world field → discovery scan skips it (no NPE); `/qlmmo poi tp` errors cleanly with \"POI's world is not loaded\"." },
+      { type: "test", id: "E13", desc: "Guild plot delete while rented — Alice deletes a guild rent plot that currently has a tenant → plot is removed, tenant's `/claim rentbuy` no longer lists it. No leftover ghost tenancy in the database after a restart." },
+      { type: "test", id: "E14", desc: "Guild disband with active plots — Disband a guild that has rent/sale plots defined → plots either tear down with the hall or are surfaced as a clear error before disband proceeds (whichever the implementation chose). No orphaned rows referencing the dead guild id after restart." }
+    ]
+  }
+];
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+
+const STORAGE_KEY = "qlmmo-test-state-v2";
+const STATES = ["skip", "pass", "fail"];
+const STATE_LABELS = { skip: "Skip", pass: "Pass", fail: "Fail" };
+
+const state = {
+  meta: { tester: "", build: "", date: "", partner: "", partner2: "" },
+  results: {},
+  fields: {},
+  feedback: {},
+  active: SECTIONS[0].id
+};
+
+// Default placeholder names used in test descriptions; replaced by the values
+// the tester enters on the Setup slide. Plain word-boundary regex — none of
+// the test descriptions reference these strings as anything other than these
+// three placeholder players.
+const NAME_DEFAULTS = { tester: "Alice", partner: "Bob", partner2: "Carol" };
+
+function substituteNames(s) {
+  if (!s) return s;
+  let out = String(s);
+  if (state.meta.tester)   out = out.replace(/\bAlice\b/g, state.meta.tester);
+  if (state.meta.partner)  out = out.replace(/\bBob\b/g,   state.meta.partner);
+  if (state.meta.partner2) out = out.replace(/\bCarol\b/g, state.meta.partner2);
+  return out;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed.meta) Object.assign(state.meta, parsed.meta);
+    if (parsed.results) Object.assign(state.results, parsed.results);
+    if (parsed.fields) Object.assign(state.fields, parsed.fields);
+    if (parsed.feedback) Object.assign(state.feedback, parsed.feedback);
+    if (parsed.active != null && SECTIONS.some(s => s.id === parsed.active)) {
+      state.active = parsed.active;
+    }
+  } catch (e) { /* ignore corrupt state */ }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* quota etc */ }
+}
+function resetState() {
+  state.meta = { tester: "", build: "", date: "", partner: "", partner2: "" };
+  state.results = {};
+  state.fields = {};
+  state.feedback = {};
+  state.active = SECTIONS[0].id;
+  saveState();
+}
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function renderDesc(s) {
+  return esc(substituteNames(s)).replace(/`([^`]+)`/g, (_, m) => "<code>" + m + "</code>");
+}
+
+function refreshSubstitutedText() {
+  // Test row labels
+  for (const s of SECTIONS) {
+    for (const item of s.items || []) {
+      if (item.type !== "test") continue;
+      const labelEl = document.querySelector(
+        '.row[data-test="' + cssEscape(item.id) + '"] .label'
+      );
+      if (labelEl) {
+        labelEl.innerHTML = '<span class="id">' + esc(item.id) + '</span>' + renderDesc(item.desc);
+      }
+    }
+  }
+  // Section intros
+  document.querySelectorAll('section.section .intro').forEach(el => {
+    const sid = el.closest('section.section').dataset.section;
+    const sec = SECTIONS.find(x => String(x.id) === String(sid));
+    if (sec && sec.intro) el.textContent = substituteNames(sec.intro);
+  });
+}
+function cssEscape(s) { return String(s).replace(/(["\\])/g, "\\$1"); }
+
+function buildSection(s, index, total) {
+  const sec = document.createElement("section");
+  sec.className = "section";
+  sec.dataset.section = s.id;
+  if (s.id === state.active) sec.classList.add("active");
+
+  const head = document.createElement("div");
+  head.className = "head";
+  if (s.kind === "setup") {
+    head.innerHTML = '<div><h2>' + esc(s.title) + '</h2></div>';
+  } else {
+    head.innerHTML =
+      '<div>' +
+        '<h2>' + esc(s.title) + '</h2>' +
+        '<div class="section-sub" data-section-stats="' + s.id + '"></div>' +
+      '</div>' +
+      '<div class="section-actions">' +
+        '<button data-section-action="pass" data-section="' + s.id + '">Pass section</button>' +
+        '<button data-section-action="skip" data-section="' + s.id + '">Skip section</button>' +
+        '<button data-section-action="fail" data-section="' + s.id + '">Fail section</button>' +
+      '</div>';
+  }
+  sec.appendChild(head);
+
+  const body = document.createElement("div");
+  body.className = "body";
+
+  if (s.intro) {
+    const intro = document.createElement("div");
+    intro.className = "intro";
+    intro.textContent = substituteNames(s.intro);
+    body.appendChild(intro);
+  }
+
+  if (s.kind === "setup") {
+    body.appendChild(buildSetupForm());
+  } else {
+    for (const item of s.items) {
+      if (item.type === "subhead") body.appendChild(buildSubhead(item));
+      else if (item.type === "test") body.appendChild(buildTestRow(item));
+      else if (item.type === "field") body.appendChild(buildFieldRow(item));
+    }
+
+    const fb = document.createElement("div");
+    fb.className = "feedback field";
+    fb.innerHTML =
+      '<label>Feedback for this section (optional — empty notes are dropped from the report)</label>' +
+      '<textarea data-feedback="' + s.id + '" placeholder="Anything notable to flag here?"></textarea>';
+    body.appendChild(fb);
+  }
+
+  sec.appendChild(body);
+
+  // Pager
+  const pager = document.createElement("div");
+  pager.className = "pager";
+  pager.innerHTML =
+    '<button data-nav-step="-1" data-section="' + s.id + '"' + (index === 0 ? ' disabled' : '') + '>← Previous</button>' +
+    '<span class="pos">' + (index + 1) + ' of ' + total + ' &middot; ' + esc(s.navLabel || s.title) + '</span>' +
+    '<button data-nav-step="1" data-section="' + s.id + '"' + (index === total - 1 ? ' disabled' : '') + '>Next →</button>';
+  sec.appendChild(pager);
+
+  return sec;
+}
+
+function buildSetupForm() {
+  const wrap = document.createElement("div");
+  wrap.innerHTML =
+    '<div class="field">' +
+      '<label>Your name <span style="color:var(--muted)">— replaces "Alice" in steps</span></label>' +
+      '<input type="text" data-meta="tester" placeholder="Alice">' +
+    '</div>' +
+    '<div class="field">' +
+      '<label>Partner name <span style="color:var(--muted)">— replaces "Bob" in steps</span></label>' +
+      '<input type="text" data-meta="partner" placeholder="Bob">' +
+    '</div>' +
+    '<div class="field">' +
+      '<label>Third tester <span style="color:var(--muted)">— optional, replaces "Carol" in steps</span></label>' +
+      '<input type="text" data-meta="partner2" placeholder="Carol (leave blank if testing solo or in a pair)">' +
+    '</div>' +
+    '<div class="field">' +
+      '<label>Build under test</label>' +
+      '<input type="text" data-meta="build" placeholder="e.g. 1.0.0-dev">' +
+    '</div>' +
+    '<div class="field">' +
+      '<label>Date</label>' +
+      '<input type="date" data-meta="date">' +
+    '</div>';
+  return wrap;
+}
+function buildSubhead(item) {
+  const sh = document.createElement("div");
+  sh.className = "subhead";
+  sh.textContent = item.text;
+  return sh;
+}
+function buildTestRow(item) {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.dataset.test = item.id;
+
+  const label = document.createElement("div");
+  label.className = "label";
+  label.innerHTML = '<span class="id">' + esc(item.id) + '</span>' + renderDesc(item.desc);
+
+  const toggle = document.createElement("div");
+  toggle.className = "toggle";
+  for (const st of STATES) {
+    const b = document.createElement("button");
+    b.className = "state-" + st;
+    b.dataset.state = st;
+    b.dataset.test = item.id;
+    b.type = "button";
+    b.textContent = STATE_LABELS[st];
+    toggle.appendChild(b);
+  }
+  row.appendChild(label);
+  row.appendChild(toggle);
+  return row;
+}
+function buildFieldRow(item) {
+  const row = document.createElement("div");
+  row.className = "field";
+  row.innerHTML =
+    '<label>' + esc(item.label) + '</label>' +
+    '<input type="text" data-field="' + esc(item.id) + '" placeholder="">';
+  return row;
+}
+
+function renderNav() {
+  const ul = document.getElementById("nav-list");
+  ul.innerHTML = "";
+  SECTIONS.forEach((s, i) => {
+    const li = document.createElement("li");
+    li.dataset.nav = s.id;
+    if (s.id === state.active) li.classList.add("active");
+    li.innerHTML =
+      '<span class="nav-title">' + esc(s.navLabel || s.title) + '</span>' +
+      '<span class="nav-counts" data-nav-counts="' + s.id + '"></span>';
+    ul.appendChild(li);
+  });
+}
+
+function renderAll() {
+  const root = document.getElementById("root");
+  root.innerHTML = "";
+  SECTIONS.forEach((s, i) => root.appendChild(buildSection(s, i, SECTIONS.length)));
+  renderNav();
+
+  for (const tId in state.results) applyTestVisual(tId, state.results[tId]);
+  for (const fId in state.fields) {
+    const el = document.querySelector('input[data-field="' + cssEscape(fId) + '"]');
+    if (el) el.value = state.fields[fId];
+  }
+  for (const sId in state.feedback) {
+    const el = document.querySelector('textarea[data-feedback="' + cssEscape(sId) + '"]');
+    if (el) el.value = state.feedback[sId];
+  }
+  document.querySelectorAll('[data-meta]').forEach(el => {
+    el.value = state.meta[el.dataset.meta] || "";
+  });
+
+  // default skip visual on tests with no recorded state
+  for (const s of SECTIONS) {
+    for (const item of s.items) {
+      if (item.type !== "test") continue;
+      if (!(item.id in state.results)) applyTestVisual(item.id, "skip");
+    }
+  }
+  refreshAllStats();
+}
+
+function applyTestVisual(testId, st) {
+  document.querySelectorAll('.toggle button[data-test="' + cssEscape(testId) + '"]').forEach(b => {
+    if (b.dataset.state === st) b.classList.add("active", st);
+    else b.classList.remove("active", "skip", "pass", "fail");
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------------
+
+function setActiveSection(id) {
+  state.active = id;
+  saveState();
+  document.querySelectorAll("section.section").forEach(el => {
+    el.classList.toggle("active", parseInt(el.dataset.section, 10) === id);
+  });
+  document.querySelectorAll("nav.nav-list li").forEach(el => {
+    el.classList.toggle("active", parseInt(el.dataset.nav, 10) === id);
+  });
+  // Scroll content area to top
+  const contentEl = document.querySelector("main.content");
+  if (contentEl) contentEl.scrollIntoView({ behavior: "instant", block: "start" });
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function stepSection(currentId, dir) {
+  const idx = SECTIONS.findIndex(s => s.id === currentId);
+  const next = SECTIONS[idx + dir];
+  if (next) setActiveSection(next.id);
+}
+
+// ---------------------------------------------------------------------------
+// Test state mutation
+// ---------------------------------------------------------------------------
+
+function getTestIdsInSection(sectionId) {
+  const s = SECTIONS.find(x => x.id === sectionId);
+  if (!s) return [];
+  return s.items.filter(i => i.type === "test").map(i => i.id);
+}
+function setTestState(testId, st) {
+  state.results[testId] = st;
+  applyTestVisual(testId, st);
+  refreshSectionStats(findSectionByTest(testId));
+  refreshTopStats();
+  saveState();
+}
+function findSectionByTest(testId) {
+  for (const s of SECTIONS) {
+    if (s.items.some(i => i.type === "test" && i.id === testId)) return s.id;
+  }
+  return null;
+}
+function setSectionAll(sectionId, st) {
+  for (const tid of getTestIdsInSection(sectionId)) {
+    state.results[tid] = st;
+    applyTestVisual(tid, st);
+  }
+  refreshSectionStats(sectionId);
+  refreshTopStats();
+  saveState();
+}
+function setAll(st) {
+  for (const s of SECTIONS) {
+    for (const tid of getTestIdsInSection(s.id)) {
+      state.results[tid] = st;
+      applyTestVisual(tid, st);
+    }
+    refreshSectionStats(s.id);
+  }
+  refreshTopStats();
+  saveState();
+}
+
+// ---------------------------------------------------------------------------
+// Stats
+// ---------------------------------------------------------------------------
+
+function tallySection(sectionId) {
+  let pass = 0, fail = 0, skip = 0;
+  const ids = getTestIdsInSection(sectionId);
+  for (const tid of ids) {
+    const st = state.results[tid] || "skip";
+    if (st === "pass") pass++;
+    else if (st === "fail") fail++;
+    else skip++;
+  }
+  return { pass, fail, skip, total: ids.length };
+}
+function refreshSectionStats(sectionId) {
+  const t = tallySection(sectionId);
+  const sub = document.querySelector('[data-section-stats="' + sectionId + '"]');
+  if (sub) sub.textContent = t.pass + " pass · " + t.fail + " fail · " + t.skip + " skip (" + t.total + " total)";
+
+  const navCounts = document.querySelector('[data-nav-counts="' + sectionId + '"]');
+  if (navCounts) {
+    let html = "";
+    if (t.pass) html += '<span class="p">' + t.pass + '</span>';
+    if (t.fail) html += '<span class="f">' + t.fail + '</span>';
+    navCounts.innerHTML = html;
+  }
+  const navLi = document.querySelector('nav.nav-list li[data-nav="' + sectionId + '"]');
+  if (navLi) navLi.classList.toggle("complete", t.total > 0 && t.skip === 0 && t.fail === 0);
+}
+function refreshAllStats() {
+  for (const s of SECTIONS) refreshSectionStats(s.id);
+  refreshTopStats();
+}
+function refreshTopStats() {
+  let pass = 0, fail = 0, skip = 0, total = 0;
+  for (const s of SECTIONS) {
+    const t = tallySection(s.id);
+    pass += t.pass; fail += t.fail; skip += t.skip; total += t.total;
+  }
+  document.getElementById("stat-pass").textContent = pass + " pass";
+  document.getElementById("stat-fail").textContent = fail + " fail";
+  document.getElementById("stat-skip").textContent = skip + " skip";
+  document.getElementById("stat-total").textContent = total + " total";
+}
+
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+
+function bindEvents() {
+  // Test toggles, section bulk actions, pager
+  document.getElementById("root").addEventListener("click", (ev) => {
+    const tBtn = ev.target.closest('.toggle button[data-test]');
+    if (tBtn) { setTestState(tBtn.dataset.test, tBtn.dataset.state); return; }
+    const sAct = ev.target.closest('[data-section-action]');
+    if (sAct) { setSectionAll(parseInt(sAct.dataset.section, 10), sAct.dataset.sectionAction); return; }
+    const step = ev.target.closest('[data-nav-step]');
+    if (step && !step.disabled) {
+      stepSection(parseInt(step.dataset.section, 10), parseInt(step.dataset.navStep, 10));
+      return;
+    }
+  });
+
+  // Field + feedback + setup-meta inputs
+  document.getElementById("root").addEventListener("input", (ev) => {
+    const m = ev.target.closest('[data-meta]');
+    if (m) {
+      state.meta[m.dataset.meta] = ev.target.value;
+      saveState();
+      // Names changing = re-substitute Alice/Bob/Carol in visible labels.
+      if (m.dataset.meta === "tester" || m.dataset.meta === "partner" || m.dataset.meta === "partner2") {
+        refreshSubstitutedText();
+      }
+      return;
+    }
+    const f = ev.target.closest('[data-field]');
+    if (f) { state.fields[f.dataset.field] = f.value; saveState(); return; }
+    const fb = ev.target.closest('[data-feedback]');
+    if (fb) { state.feedback[fb.dataset.feedback] = fb.value; saveState(); return; }
+  });
+
+  // Sidebar nav clicks
+  document.getElementById("nav-list").addEventListener("click", (ev) => {
+    const li = ev.target.closest('li[data-nav]');
+    if (li) setActiveSection(parseInt(li.dataset.nav, 10));
+  });
+
+  // Sidebar actions
+  document.getElementById("report-btn").addEventListener("click", openReport);
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    if (!confirm("Reset every test, every field, and every feedback note?")) return;
+    resetState();
+    renderAll();
+  });
+  document.getElementById("pass-all-btn").addEventListener("click", () => {
+    if (!confirm("Mark every test as Pass?")) return;
+    setAll("pass");
+  });
+  document.getElementById("skip-all-btn").addEventListener("click", () => {
+    if (!confirm("Mark every test as Skip?")) return;
+    setAll("skip");
+  });
+
+  // Modal
+  document.getElementById("close-report").addEventListener("click", closeReport);
+  document.getElementById("copy-report").addEventListener("click", copyReport);
+  document.getElementById("download-report").addEventListener("click", downloadReport);
+  document.getElementById("report-modal").addEventListener("click", (ev) => {
+    if (ev.target.id === "report-modal") closeReport();
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") closeReport();
+    // ← / → navigate sections when not typing in an input/textarea
+    const tag = (ev.target && ev.target.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (ev.key === "ArrowLeft") stepSection(state.active, -1);
+    else if (ev.key === "ArrowRight") stepSection(state.active, +1);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Report generation
+// ---------------------------------------------------------------------------
+
+function statTagFor(st) {
+  if (st === "pass") return "PASS";
+  if (st === "fail") return "FAIL";
+  return "SKIP";
+}
+function collapseLines(s) { return String(s).replace(/\s*\n\s*/g, " ").trim(); }
+
+function generateReport() {
+  const lines = [];
+  const meta = state.meta;
+  const today = new Date().toISOString().slice(0, 10);
+
+  lines.push("# QuestLinesMMO — Test Report");
+  lines.push("");
+  const headerParts = [
+    "**Tester:** " + (meta.tester || "_(unset)_")
+  ];
+  if (meta.partner)  headerParts.push("**Partner:** " + meta.partner);
+  if (meta.partner2) headerParts.push("**Third:** " + meta.partner2);
+  headerParts.push("**Build:** " + (meta.build || "_(unset)_"));
+  headerParts.push("**Date:** " + (meta.date || today));
+  lines.push(headerParts.join("  ·  "));
+  lines.push("");
+
+  // Summary
+  let pass = 0, fail = 0, skip = 0;
+  for (const s of SECTIONS) {
+    const t = tallySection(s.id);
+    pass += t.pass; fail += t.fail; skip += t.skip;
+  }
+  lines.push("**" + pass + " pass · " + fail + " fail** _(" + skip + " skipped)_");
+  lines.push("");
+
+  // Failures — IDs only
+  const failureIds = [];
+  for (const s of SECTIONS) {
+    for (const item of s.items) {
+      if (item.type !== "test") continue;
+      if ((state.results[item.id] || "skip") === "fail") failureIds.push(item.id);
+    }
+  }
+  if (failureIds.length) {
+    lines.push("## Failures");
+    lines.push("");
+    lines.push(failureIds.join(", "));
+    lines.push("");
+  }
+
+  // Configuration / fields (skip empty)
+  const fieldEntries = [];
+  for (const s of SECTIONS) {
+    for (const item of s.items) {
+      if (item.type !== "field") continue;
+      const v = (state.fields[item.id] || "").trim();
+      if (!v) continue;
+      fieldEntries.push({ label: item.label, value: v });
+    }
+  }
+  if (fieldEntries.length) {
+    lines.push("## Configuration");
+    lines.push("");
+    for (const f of fieldEntries) lines.push("- **" + f.label + ":** " + f.value);
+    lines.push("");
+  }
+
+  // Feedback (skip empty)
+  const feedbackBlocks = [];
+  for (const s of SECTIONS) {
+    const txt = (state.feedback[s.id] || "").trim();
+    if (!txt) continue;
+    feedbackBlocks.push({ title: s.title, text: txt });
+  }
+  if (feedbackBlocks.length) {
+    lines.push("## Feedback");
+    lines.push("");
+    for (const f of feedbackBlocks) {
+      lines.push("### " + f.title);
+      lines.push("");
+      lines.push(f.text);
+      lines.push("");
+    }
+  }
+
+  // Tested results — only pass/fail, grouped by section. Sections with no
+  // tested items are dropped entirely.
+  const sectionLines = [];
+  for (const s of SECTIONS) {
+    const tested = [];
+    for (const item of s.items) {
+      if (item.type !== "test") continue;
+      const st = state.results[item.id] || "skip";
+      if (st === "skip") continue;
+      tested.push(item.id + " " + (st === "pass" ? "PASS" : "FAIL"));
+    }
+    if (tested.length === 0) continue;
+    sectionLines.push("### " + s.title);
+    sectionLines.push("");
+    for (const t of tested) sectionLines.push("- " + t);
+    sectionLines.push("");
+  }
+  if (sectionLines.length) {
+    lines.push("## Results");
+    lines.push("");
+    for (const l of sectionLines) lines.push(l);
+  }
+
+  return lines.join("\n").replace(/\n+$/, "") + "\n";
+}
+
+function openReport() {
+  document.getElementById("report-output").value = generateReport();
+  document.getElementById("report-modal").classList.add("open");
+}
+function closeReport() { document.getElementById("report-modal").classList.remove("open"); }
+
+function copyReport() {
+  const ta = document.getElementById("report-output");
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  if (!ok && navigator.clipboard) {
+    navigator.clipboard.writeText(ta.value)
+      .then(() => toast("Copied to clipboard"))
+      .catch(() => toast("Copy failed — please select and copy manually"));
+  } else if (ok) {
+    toast("Copied to clipboard");
+  } else {
+    toast("Copy failed — please select and copy manually");
+  }
+}
+function downloadReport() {
+  const text = document.getElementById("report-output").value;
+  const tester = (state.meta.tester || "anon").replace(/[^a-zA-Z0-9_-]+/g, "_");
+  const date = state.meta.date || new Date().toISOString().slice(0, 10);
+  const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "qlmmo-test-report_" + tester + "_" + date + ".md";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+}
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+
+loadState();
+renderAll();
+bindEvents();
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+interactionHints.talk = Press [{key}] to talk
+
+# QuestLines plugin strings
+
+# Quest notifications
+questlines.notification.queststarted = Quest Started
+questlines.notification.questcompleted = Quest Completed
+questlines.notification.itemreceived = Item Received
+questlines.notification.itemreceivedbody = {qty}x {item}
+
+# Quest Journal UI
+questlines.ui.journal.title = Quest Journal
+questlines.ui.journal.activequests = ACTIVE QUESTS
+questlines.ui.journal.completedquests = COMPLETED QUESTS
+questlines.ui.journal.selectquest = Select a quest
+questlines.ui.journal.track = Track
+questlines.ui.journal.untrack = Untrack
+questlines.ui.journal.beginprompt = (Talk to the quest NPC to begin.)
+
+# Quest Goal HUD
+questlines.ui.hud.noactivegoal = (No active goal)
+
+# Command messages
+questlines.command.nopermission = You do not have permission to do that.
+questlines.command.errorplayer = Error: Could not get Player component.
+questlines.command.questnotfound = Quest '{id}' not found.
+questlines.command.npcassigned = Assigned quest '{quest}' to NPC '{npc}'.
+questlines.command.editoropening = Opening Quest Editor...
+questlines.command.editoropened = Dashboard opened. Press ESC to close.
+questlines.command.erroreditor = Error opening dashboard: {error}
+questlines.command.reloadstart = Reloading Quest Lines...
+questlines.command.reloaddone = Quest Lines reloaded successfully!
+questlines.command.errornotloaded = Error: Plugin not loaded
+questlines.command.errorjournal = Error opening journal: {error}
+questlines.command.wizardopening = Opening Quest Creation Wizard...
+questlines.command.wizardopened = Wizard opened. Press ESC to close.
+questlines.command.errorwizard = Error opening wizard: {error}
+questlines.command.wandstart = Punch an NPC to assign quest '{quest}' to it. /ql wandcancel to cancel
+questlines.command.wandcancel = Assignment cancelled.
+questlines.command.errorconfig = Error opening settings: {error}
+
+# Editor notifications (used in Java Lang.get() calls)
+questlines.editor.pluginname = Quest Lines
+questlines.editor.questnotfound = Quest not found: {id}
+questlines.editor.questidempty = Quest ID cannot be empty.
+questlines.editor.pagenotfound = Page not found: {id}
+questlines.editor.pageidempty = Page ID cannot be empty.
+questlines.editor.pagesaved = Page saved: {id}
+questlines.editor.playernotfound = Player not found: {uuid}
+questlines.editor.playernameempty = Player name cannot be empty.
+questlines.editor.playernotonline = Player not found online: {name}
+questlines.editor.playersaved = Player saved: {name}
+questlines.editor.npcnoselection = No NPC selected.
+questlines.editor.npcsaved = NPC saved: {id}
+questlines.editor.npcnogroup = No group selected.
+
+# Creation wizard (used in Java Lang.get() calls)
+questlines.wizard.steplabel = STEP {step} OF {total}
+questlines.wizard.builder.titleaction = ADD ACTION
+questlines.wizard.builder.titlereq = ADD REQUIREMENT
+questlines.wizard.builder.selecthint = Select a type above.
+questlines.wizard.builder.empty = (empty)
+questlines.wizard.error.emptyid = Quest ID cannot be empty.
+questlines.wizard.error.duplicateid = A quest with ID '{id}' already exists.
+questlines.wizard.error.notype = Select a type first.
+questlines.wizard.pageheading = PAGE {num}
+questlines.wizard.pagesstatusnone = 0 page(s) added
+questlines.wizard.pagesstatus = {count} page(s) added: {pages}
+questlines.wizard.review.quest = Quest: {id}
+questlines.wizard.review.titleline = Title:
+questlines.wizard.review.requirementsline = Requirements:
+questlines.wizard.review.actionsline = Actions:
+questlines.wizard.review.pagesheading = Pages ({count}):
+
+# Player Config UI
+questlines.ui.config.title = Quest Settings
+questlines.ui.config.languagelabel = Language
+questlines.ui.config.autotracklabel = Auto-track new quests
+questlines.ui.config.save = Save
+questlines.ui.config.saved = Settings saved!
+
+# Tracking progress notifications
+questlines.notification.killprogress = Kill Progress
+questlines.notification.blockprogress = Block Progress
+questlines.tracking.killwithtotal = {current}/{total} {name} killed
+questlines.tracking.killnototal = {current} {name} killed
+questlines.tracking.breakwithtotal = {current}/{total} {name} broken
+questlines.tracking.breaknototal = {current} {name} broken
+questlines.tracking.placewithtotal = {current}/{total} {name} placed
+questlines.tracking.placenototal = {current} {name} placed
+questlines.notification.playerkillprogress = Player Kill Progress
+questlines.tracking.playerkillwithtotal = {current}/{total} players killed
+questlines.tracking.playerkillnototal = {current} players killed
+
+# Editor UI static labels (registered via GenerateDefaultLanguageEvent for %server.key resolution)
+questlines.editor.ui.load = Load
+questlines.editor.ui.save = Save
+questlines.editor.ui.add = ADD
+questlines.editor.ui.remove = REMOVE
+questlines.editor.ui.addshort = +
+questlines.editor.ui.removeshort = X
+questlines.editor.ui.select = Select
+questlines.editor.ui.enabled = Enabled
+questlines.editor.ui.requirements = Requirements
+questlines.editor.ui.actions = Actions
+questlines.editor.ui.quest = Quest
+questlines.editor.ui.description = Description
+questlines.editor.ui.npcname = NPC Name
+questlines.editor.ui.dialog = Dialog
+questlines.editor.ui.goaltext = Goal Text
+questlines.editor.ui.loadactions = Load Actions
+questlines.editor.ui.responsebuttons = Response Buttons
+questlines.editor.ui.type = Type
+
+questlines.editor.nav.quests = QUESTS
+questlines.editor.nav.pages = PAGES
+questlines.editor.nav.users = USERS
+questlines.editor.nav.npcs = NPCS
+questlines.editor.nav.options = OPTIONS
+questlines.editor.nav.title = Quest Lines Editor
+
+questlines.editor.quests.selectorlabel = Quests
+questlines.editor.quests.sectiontitle = Quest Info
+questlines.editor.quests.fieldid = Quest ID
+questlines.editor.quests.fieldtitle = Quest Title
+questlines.editor.quests.fieldnpcid = NPC ID
+questlines.editor.quests.selectpage = Select Page
+
+questlines.editor.pages.selectorquest = Quest
+questlines.editor.pages.selectorlabel = Pages
+questlines.editor.pages.sectiontitle = Page Info
+questlines.editor.pages.fieldid = Page ID
+questlines.editor.pages.fieldtitle = Page Title
+questlines.editor.pages.fieldnpcname = NPC Name
+questlines.editor.pages.response1 = Response 1
+questlines.editor.pages.response2 = Response 2
+questlines.editor.pages.response3 = Response 3
+questlines.editor.pages.response4 = Response 4
+
+questlines.editor.players.selectorlabel = Players
+questlines.editor.players.sectiontitle = Player Info
+questlines.editor.players.fieldname = Player Name
+questlines.editor.players.datatitle = Player Data
+questlines.editor.players.addquest = Add Quest
+questlines.editor.players.addcompleted = Add Completed
+questlines.editor.players.addstarted = Add Started
+questlines.editor.players.completedquests = Completed Quests
+questlines.editor.players.startedquests = Started Quests
+questlines.editor.players.tags = Tags
+
+questlines.editor.npc.selectorlabel = NPC
+questlines.editor.npc.groupstitle = Random Quest Groups
+questlines.editor.npc.addgroup = ADD GROUP
+questlines.editor.npc.removegroup = REMOVE GROUP
+questlines.editor.npc.queststitle = Quests in Selected Group
+questlines.editor.npc.questlabel = Quest
+questlines.editor.npc.addquest = ADD
+questlines.editor.npc.removequest = REMOVE
+
+questlines.wizard.title = Quest Creation Wizard
+questlines.wizard.helpbutton = ? HELP
+questlines.wizard.cancel = CANCEL
+questlines.wizard.step1.sectiontitle = Quest Details
+questlines.wizard.step1.fieldid = Quest ID *
+questlines.wizard.step1.fieldidtooltip = Unique identifier — lowercase letters, numbers, underscores. Example: lost_sword
+questlines.wizard.step1.fieldtitle = Title
+questlines.wizard.step1.fieldtitletooltip = Display name shown to players. Example: The Lost Sword
+questlines.wizard.step1.fieldrequirements = Requirements
+questlines.wizard.step1.fieldrequirementstooltip = Comma-separated requirements. Click [+] to open the builder.
+questlines.wizard.step1.fieldactions = Actions
+questlines.wizard.step1.fieldactionstooltip = Comma-separated actions. Click [+] to open the builder.
+questlines.wizard.step1.fielddescription = Description
+questlines.wizard.step1.fielddescriptiontooltip = Optional description shown in the quest journal.
+questlines.wizard.step1.nextbutton = NEXT: ADD PAGES
+questlines.wizard.step2.fieldnpcname = NPC Name
+questlines.wizard.step2.fieldnpcnametooltip = NPC display name shown above the dialogue text.
+questlines.wizard.step2.fieldrequirementstooltip = Shown only when ALL requirements pass. Click [+] to open the builder.
+questlines.wizard.step2.fieldloadactions = Load Actions
+questlines.wizard.step2.fieldloadactionstooltip = Actions run when this page is shown. Click [+] to open the builder.
+questlines.wizard.step2.fielddialog = Dialog
+questlines.wizard.step2.fielddialogtooltip = NPC speech. Supports {username} {npcname} {questname} and {b}bold{/} {i}italic{/} {#FF0000}colored{/}
+questlines.wizard.step2.responsestitle = Responses
+questlines.wizard.step2.responselabel = Response {num}
+questlines.wizard.step2.responsetooltip = Button label shown to the player. Leave empty to hide.
+questlines.wizard.step2.reqtooltip = Player must meet ALL of these for this button to appear. Click [+] to open the builder.
+questlines.wizard.step2.actionstooltip = Executed when the player clicks this button. Click [+] to open the builder.
+questlines.wizard.step2.backbutton = < BACK
+questlines.wizard.step2.addpagebutton = ADD ANOTHER PAGE
+questlines.wizard.step2.donepagesbutton = DONE WITH PAGES >
+questlines.wizard.step3.openeditorbutton = EDIT IN FULL EDITOR
+questlines.wizard.step3.createanotherbutton = CREATE ANOTHER
+questlines.wizard.help.title = QUEST LINES REFERENCE
+questlines.wizard.help.close = CLOSE
+questlines.wizard.help.reqheading = REQUIREMENTS
+questlines.wizard.help.actionsheading = ACTIONS
+questlines.wizard.help.dialogheading = DIALOG VARIABLES & FORMATTING
+questlines.wizard.builder.builtsofar = Built so far:
+questlines.wizard.builder.param1 = Param 1
+questlines.wizard.builder.param2 = Param 2
+questlines.wizard.builder.param3 = Param 3
+questlines.wizard.builder.insert = INSERT

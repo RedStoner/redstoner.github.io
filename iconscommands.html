@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NpcQuestIcons — Plugin Documentation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #c9d1d9;
+      line-height: 1.6;
+    }
+
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    nav {
+      width: 240px;
+      flex-shrink: 0;
+      background: #161b22;
+      border-right: 1px solid #30363d;
+      padding: 2rem 1rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    nav h2 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8b949e;
+      margin-bottom: 0.75rem;
+      padding-left: 0.5rem;
+    }
+
+    nav ul { list-style: none; }
+
+    nav ul li a {
+      display: block;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      color: #8b949e;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    nav ul li a:hover,
+    nav ul li a.active {
+      background: #21262d;
+      color: #c9d1d9;
+      text-decoration: none;
+    }
+
+    nav ul li + li { margin-top: 2px; }
+
+    nav .section-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8b949e;
+      padding: 1rem 0.5rem 0.4rem;
+    }
+
+    main {
+      flex: 1;
+      max-width: 860px;
+      padding: 3rem 2.5rem;
+    }
+
+    /* ── Typography ─────────────────────────────────────────────── */
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #e6edf3;
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle {
+      color: #8b949e;
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #e6edf3;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 0.4rem;
+      margin: 2.5rem 0 1rem;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #e6edf3;
+      margin: 1.75rem 0 0.5rem;
+    }
+
+    p { margin-bottom: 0.75rem; }
+
+    /* ── Code & Badges ──────────────────────────────────────────── */
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.85em;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      color: #79c0ff;
+    }
+
+    pre {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 0.875rem;
+      color: #e6edf3;
+    }
+
+    .comment { color: #8b949e; }
+    .cmd     { color: #79c0ff; }
+    .arg     { color: #ffa657; }
+    .val     { color: #a5d6ff; }
+
+    /* ── Command Cards ──────────────────────────────────────────── */
+    .cmd-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .cmd-card .signature {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 1rem;
+      color: #79c0ff;
+      margin-bottom: 0.5rem;
+    }
+
+    .cmd-card .description {
+      color: #c9d1d9;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .cmd-card .notes {
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Param Table ────────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      margin: 0.5rem 0 0.75rem;
+    }
+
+    th {
+      text-align: left;
+      color: #8b949e;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid #30363d;
+    }
+
+    td {
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid #21262d;
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    td:first-child code { color: #ffa657; }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15em 0.5em;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-left: 0.4rem;
+    }
+
+    .badge-opt   { background: #1f4068; color: #79c0ff; }
+    .badge-req   { background: #3d2f00; color: #ffa657; }
+    .badge-wand  { background: #1a3326; color: #3fb950; }
+
+    /* ── Info / Warning callouts ────────────────────────────────── */
+    .callout {
+      border-left: 3px solid;
+      padding: 0.75rem 1rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.875rem;
+      margin: 1rem 0;
+    }
+
+    .callout-info    { border-color: #58a6ff; background: #0d1b2e; }
+    .callout-tip     { border-color: #3fb950; background: #0d2318; }
+    .callout-warning { border-color: #d29922; background: #2a1f00; }
+
+    .callout strong { display: block; margin-bottom: 0.25rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .callout-info    strong { color: #58a6ff; }
+    .callout-tip     strong { color: #3fb950; }
+    .callout-warning strong { color: #d29922; }
+
+    /* ── Animation type table ───────────────────────────────────── */
+    .anim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin: 0.75rem 0;
+    }
+
+    .anim-box {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+    }
+
+    .anim-box .anim-name {
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #79c0ff;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .anim-box p {
+      font-size: 0.8rem;
+      color: #8b949e;
+      margin: 0;
+    }
+
+    /* ── State table colors ─────────────────────────────────────── */
+    .state-available  { color: #ffa657; }
+    .state-inprogress { color: #79c0ff; }
+    .state-completed  { color: #3fb950; }
+    .state-unknown    { color: #d2a8ff; }
+
+    hr { border: none; border-top: 1px solid #30363d; margin: 2rem 0; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar navigation -->
+  <nav>
+    <h2>NpcQuestIcons</h2>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#how-it-works">How it works</a></li>
+    </ul>
+
+    <div class="section-label">Commands</div>
+    <ul>
+      <li><a href="#cmd-icon">icon</a></li>
+      <li><a href="#cmd-offset">offset</a></li>
+      <li><a href="#cmd-scale">scale</a></li>
+      <li><a href="#cmd-rotation">rotation</a></li>
+      <li><a href="#cmd-animate">animate</a></li>
+      <li><a href="#cmd-list">list</a></li>
+      <li><a href="#cmd-reload">reload</a></li>
+    </ul>
+
+    <div class="section-label">Config</div>
+    <ul>
+      <li><a href="#config-icons-json">icons.json</a></li>
+      <li><a href="#config-quest-states">Quest states</a></li>
+      <li><a href="#config-anim-defaults">Default animations</a></li>
+    </ul>
+
+    <div class="section-label">API</div>
+    <ul>
+      <li><a href="#api-provider">QuestStatusProvider</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main content -->
+  <main>
+
+    <h1>NpcQuestIcons</h1>
+    <p class="subtitle">Floating quest-icon holograms above NPCs — command reference &amp; configuration guide</p>
+
+    <!-- ── Overview ─────────────────────────────────────────────── -->
+    <h2 id="overview">Overview</h2>
+    <p>
+      NpcQuestIcons spawns floating 3-D item entities above NPCs to communicate quest status to players.
+      Each NPC can show a different icon depending on the player's quest progress, and every visual
+      property — icon item, height, scale, rotation, and animation — can be tuned per NPC via in-game
+      commands without restarting the server.
+    </p>
+    <p>The root command is <code>/icons</code> (alias: <code>/i</code>).</p>
+
+    <div class="callout callout-info">
+      <strong>Wand mechanic</strong>
+      Most subcommands work as a "wand": run the command to queue a pending assignment, then
+      <em>click any NPC</em> to apply it. The pending assignment expires when you log out or
+      run the command again with different values.
+    </div>
+
+    <!-- ── How it works ─────────────────────────────────────────── -->
+    <h2 id="how-it-works">How it works</h2>
+    <p>
+      When integrated with QuestLines, each QuestLines NPC gets <strong>four</strong> icon entities
+      spawned above it — one per quest state. Each tick, <code>PerPlayerQuestIconSystem</code> filters
+      each player's visible-entity set so they only see the icon matching their current quest progress.
+      This is purely a visibility filter; the entities always exist in the world.
+    </p>
+    <p>
+      For NPCs <em>not</em> in QuestLines, a single static icon entity is used instead, showing the
+      same item to every player.
+    </p>
+
+    <hr>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!--  COMMANDS                                                  -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <h2 id="commands">Commands</h2>
+
+    <!-- icon -->
+    <h3 id="cmd-icon">/icons icon</h3>
+    <div class="cmd-card">
+      <div class="signature">/icons icon [--itemid &lt;itemId&gt;] [--state &lt;state&gt;]</div>
+      <div class="description">
+        Queues an icon assignment. Click an NPC to apply it.
+        If <code>itemId</code> is omitted, the item currently held in your active hotbar slot is used.
+        An empty hand sets the icon to <code>none</code> (hidden).
+      </div>
+
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>--itemid</code> <span class="badge badge-opt">optional</span></td>
+            <td>string</td>
+            <td>
+              Item ID to display, <code>default</code> to clear the per-NPC override (falls back to
+              the global default), or <code>none</code> to disable the icon for this NPC.
+              Omit to use the held item.
+            </td>
+          </tr>
+          <tr>
+            <td><code>--state</code> <span class="badge badge-opt">optional</span></td>
+            <td>string</td>
+            <td>
+              Quest state to target: <code>available</code>, <code>inprogress</code>,
+              <code>completed</code>, <code>unknown</code>.
+              When provided, the icon is stored as a per-state entry
+              (<code>NpcQuestIconStates</code>) rather than the NPC-level override
+              (<code>NpcQuestIcons</code>). Omit to set the icon at the NPC level.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code><span class="comment"># Use the item in your hand (NPC-level)</span>
+<span class="cmd">/icons icon</span>
+
+<span class="comment"># Explicit item ID</span>
+<span class="cmd">/icons icon</span> <span class="arg">--itemid</span> <span class="val">Icons_Exclamation</span>
+
+<span class="comment"># Hide the icon for this NPC</span>
+<span class="cmd">/icons icon</span> <span class="arg">--itemid</span> <span class="val">none</span>
+
+<span class="comment"># Remove the per-NPC override (revert to global default)</span>
+<span class="cmd">/icons icon</span> <span class="arg">--itemid</span> <span class="val">default</span>
+
+<span class="comment"># Set the icon shown only when the player's quest is in progress</span>
+<span class="cmd">/icons icon</span> <span class="arg">--itemid</span> <span class="val">Icons_Dots</span> <span class="arg">--state</span> <span class="val">inprogress</span>
+
+<span class="comment"># Set the "available" state icon using the held item</span>
+<span class="cmd">/icons icon</span> <span class="arg">--state</span> <span class="val">available</span></code></pre>
+
+      <p class="notes">
+        Changes are saved immediately to <code>mods/Icons/icons.json</code>.
+        Without a <code>state</code> argument, sets <code>NpcQuestIcons</code> (NPC-level override, shown
+        to all players regardless of quest state). With a <code>state</code> argument, sets
+        <code>NpcQuestIconStates</code> (per-player, per-state — only visible when the player's quest
+        matches that state).
+      </p>
+    </div>
+
+    <!-- offset -->
+    <h3 id="cmd-offset">/icons offset</h3>
+    <div class="cmd-card">
+      <div class="signature">/icons offset --offset &lt;offset&gt;</div>
+      <div class="description">
+        Queues a Y-offset assignment. Click an NPC to apply it.
+        The offset is added on top of the base height (<code>NpcHologramManager.QUEST_ICON_Y_OFFSET</code>).
+      </div>
+
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>--offset</code> <span class="badge badge-req">required</span></td>
+            <td>double</td>
+            <td>Y-offset in blocks (positive = higher). Pass <code>0</code> to clear the override.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code><span class="comment"># Raise the icon 0.5 blocks above the default height</span>
+<span class="cmd">/icons offset</span> <span class="arg">--offset</span> <span class="val">0.5</span>
+
+<span class="comment"># Lower the icon</span>
+<span class="cmd">/icons offset</span> <span class="arg">--offset</span> <span class="val">-0.3</span>
+
+<span class="comment"># Clear the override</span>
+<span class="cmd">/icons offset</span> <span class="arg">--offset</span> <span class="val">0</span></code></pre>
+    </div>
+
+    <!-- scale -->
+    <h3 id="cmd-scale">/icons scale</h3>
+    <div class="cmd-card">
+      <div class="signature">/icons scale --scale &lt;scale&gt;</div>
+      <div class="description">
+        Queues a scale assignment. Click an NPC to apply it.
+      </div>
+
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>--scale</code> <span class="badge badge-req">required</span></td>
+            <td>float</td>
+            <td>Scale multiplier. <code>1.0</code> = default size. Pass <code>1.0</code> to clear the override.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code><span class="comment"># Double the icon size</span>
+<span class="cmd">/icons scale</span> <span class="arg">--scale</span> <span class="val">2.0</span>
+
+<span class="comment"># Half size</span>
+<span class="cmd">/icons scale</span> <span class="arg">--scale</span> <span class="val">0.5</span>
+
+<span class="comment"># Reset to default</span>
+<span class="cmd">/icons scale</span> <span class="arg">--scale</span> <span class="val">1.0</span></code></pre>
+    </div>
+
+    <!-- rotation -->
+    <h3 id="cmd-rotation">/icons rotation</h3>
+    <div class="cmd-card">
+      <div class="signature">/icons rotation --degrees &lt;degrees&gt;</div>
+      <div class="description">
+        Queues a Y-axis rotation assignment. Click an NPC to apply it.
+        This sets a fixed starting rotation; combine with the <code>rotate</code> animation for continuous spin.
+      </div>
+
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>--degrees</code> <span class="badge badge-req">required</span></td>
+            <td>float</td>
+            <td>Y rotation in degrees (0–360). Pass <code>0</code> to clear the override.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code><span class="comment"># Rotate 45 degrees on spawn</span>
+<span class="cmd">/icons rotation</span> <span class="arg">--degrees</span> <span class="val">45</span>
+
+<span class="comment"># Clear the override</span>
+<span class="cmd">/icons rotation</span> <span class="arg">--degrees</span> <span class="val">0</span></code></pre>
+    </div>
+
+    <!-- animate -->
+    <h3 id="cmd-animate">/icons animate</h3>
+    <div class="cmd-card">
+      <div class="signature">/icons animate --animation &lt;animation&gt; [--state &lt;state&gt;]</div>
+      <div class="description">
+        Queues an animation assignment. Click an NPC to apply it.
+        Multiple animation types can be active on the same icon simultaneously — running the
+        command again with a different type <em>adds</em> it rather than replacing the existing ones.
+      </div>
+
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>--animation</code> <span class="badge badge-req">required</span></td>
+            <td>string</td>
+            <td>
+              Animation specifier — see format below.
+            </td>
+          </tr>
+          <tr>
+            <td><code>--state</code> <span class="badge badge-opt">optional</span></td>
+            <td>string</td>
+            <td>
+              Quest state to target: <code>available</code>, <code>inprogress</code>,
+              <code>completed</code>, <code>unknown</code>.
+              Omit to apply the animation at the NPC level (all states).
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Animation format</h3>
+      <p>
+        <code>&lt;type&gt;[:<span style="color:#ffa657">speed</span>[:<span style="color:#a5d6ff">amplitude</span>]]</code>
+        &nbsp;— speed and amplitude are optional and have per-type defaults.
+      </p>
+
+      <div class="anim-grid">
+        <div class="anim-box">
+          <div class="anim-name">bob</div>
+          <p>Moves the icon up and down.<br>Speed: Hz &nbsp;|&nbsp; Amplitude: blocks<br>Defaults: speed=1.0, amplitude=0.2</p>
+        </div>
+        <div class="anim-box">
+          <div class="anim-name">rotate</div>
+          <p>Continuously spins on the Y axis.<br>Speed: degrees/sec<br>Default: speed=45</p>
+        </div>
+        <div class="anim-box">
+          <div class="anim-name">pulsate</div>
+          <p>Smoothly oscillates the scale.<br>Speed: Hz &nbsp;|&nbsp; Amplitude: scale delta<br>Defaults: speed=1.0, amplitude=0.2</p>
+        </div>
+        <div class="anim-box">
+          <div class="anim-name">sway</div>
+          <p>Rocks side-to-side on the Z axis.<br>Speed: Hz &nbsp;|&nbsp; Amplitude: degrees<br>Defaults: speed=1.0, amplitude=15</p>
+        </div>
+        <div class="anim-box">
+          <div class="anim-name">orbit</div>
+          <p>Circles horizontally around the NPC.<br>Speed: Hz &nbsp;|&nbsp; Amplitude: radius in blocks<br>Defaults: speed=0.5, amplitude=0.5</p>
+        </div>
+        <div class="anim-box">
+          <div class="anim-name">ping</div>
+          <p>Brief sharp scale pop (like a notification).<br>Speed: Hz &nbsp;|&nbsp; Amplitude: max scale delta<br>Defaults: speed=0.5, amplitude=0.4</p>
+        </div>
+      </div>
+
+      <h3>Clearing animations</h3>
+      <table>
+        <thead><tr><th>Syntax</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>none</code></td><td>Remove all animations from this NPC</td></tr>
+          <tr><td><code>none:&lt;type&gt;</code></td><td>Remove only the specified animation type (e.g. <code>none:rotate</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code><span class="comment"># Bob at default speed and amplitude</span>
+<span class="cmd">/icons animate</span> <span class="arg">--animation</span> <span class="val">bob</span>
+
+<span class="comment"># Spin at 90 degrees/sec</span>
+<span class="cmd">/icons animate</span> <span class="arg">--animation</span> <span class="val">rotate:90</span>
+
+<span class="comment"># Orbit at 0.5 Hz with 1.5 block radius</span>
+<span class="cmd">/icons animate</span> <span class="arg">--animation</span> <span class="val">orbit:0.5:1.5</span>
+
+<span class="comment"># Sway ±20 degrees at 1 Hz</span>
+<span class="cmd">/icons animate</span> <span class="arg">--animation</span> <span class="val">sway:1:20</span>
+
+<span class="comment"># Scale-pop twice per second on the "available" state icon only</span>
+<span class="cmd">/icons animate</span> <span class="arg">--animation</span> <span class="val">ping:2:0.3</span> <span class="arg">--state</span> <span class="val">available</span>
+
+<span class="comment"># Remove the rotate animation from this NPC</span>
+<span class="cmd">/icons animate</span> <span class="arg">--animation</span> <span class="val">none:rotate</span>
+
+<span class="comment"># Remove all animations</span>
+<span class="cmd">/icons animate</span> <span class="arg">--animation</span> <span class="val">none</span></code></pre>
+
+      <p class="notes">
+        When a <code>state</code> is specified the animation is stored in
+        <code>NpcStateAnimations</code> and overrides both the NPC-level animation
+        and the global <code>DefaultQuestStateAnimations</code> for that state.
+      </p>
+    </div>
+
+    <!-- list -->
+    <h3 id="cmd-list">/icons list</h3>
+    <div class="cmd-card">
+      <div class="signature">/icons list</div>
+      <div class="description">
+        Lists every NPC that has an icon configured — either via a QuestLines quest assignment,
+        a QuestLines random-group assignment, or an explicit <code>/icons icon</code> override.
+        Prints the icon override, Y-offset, scale, and active animations for each NPC.
+      </div>
+
+      <pre><code><span class="cmd">/icons list</span></code></pre>
+
+      <p class="notes">
+        Output includes a header line showing the global default item ID and base Y-offset,
+        then one line per NPC annotated with any non-default values. Quest-assigned NPCs show
+        <code>[quest=&lt;questId&gt;]</code>; random-group NPCs show <code>[group=&lt;groupId&gt;]</code>.
+        Per-NPC icon, offset, scale, and animation overrides are appended when set.
+      </p>
+    </div>
+
+    <!-- reload -->
+    <h3 id="cmd-reload">/icons reload</h3>
+    <div class="cmd-card">
+      <div class="signature">/icons reload</div>
+      <div class="description">
+        Reloads <code>mods/Icons/icons.json</code> and the QuestLines <code>mods/QuestLines/npcs.json</code>
+        mirror, despawns all currently active icon entities, and re-queues item updates for every
+        configured NPC. Use this after manually editing <code>icons.json</code> or after NPC quest
+        assignments change in QuestLines.
+      </div>
+
+      <pre><code><span class="cmd">/icons reload</span></code></pre>
+    </div>
+
+    <hr>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!--  CONFIG                                                    -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <h2 id="config-icons-json">icons.json</h2>
+    <p>Located at <code>mods/Icons/icons.json</code>. Created automatically on first save. All keys are optional.</p>
+
+    <pre><code>{
+  <span class="comment">// Global fallback item when no per-NPC override is set</span>
+  "DefaultIconItemId": "Recipe_Page",
+
+  <span class="comment">// Per-NPC icon overrides  (npcId → itemId | "none")</span>
+  "NpcQuestIcons": {
+    "Blacksmith": "Icons_Exclamation",
+    "TavernKeeper": "none"
+  },
+
+  <span class="comment">// Per-NPC per-state item overrides  (npcId → stateName → itemId)</span>
+  "NpcQuestIconStates": {
+    "Blacksmith": {
+      "available":   "Icons_Exclamation",
+      "inprogress":  "Icons_Dots",
+      "completed":   "Icons_Checkmark",
+      "unknown":     "Icons_QuestionMark"
+    }
+  },
+
+  <span class="comment">// Global default item per quest state (overrides built-in defaults)</span>
+  "DefaultQuestStateIcons": {
+    "available":  "Icons_Exclamation",
+    "inprogress": "Icons_Dots",
+    "completed":  "Icons_Checkmark",
+    "unknown":    "Icons_QuestionMark"
+  },
+
+  <span class="comment">// Per-NPC Y-offset adjustments (blocks, added to base height)</span>
+  "NpcQuestIconOffsets": {
+    "Blacksmith": 0.5
+  },
+
+  <span class="comment">// Per-NPC scale overrides (1.0 = default)</span>
+  "NpcQuestIconScales": {
+    "Blacksmith": 1.5
+  },
+
+  <span class="comment">// Per-NPC Y-rotation in degrees</span>
+  "NpcQuestIconRotations": {
+    "Blacksmith": 45.0
+  },
+
+  <span class="comment">// Per-NPC animations  (npcId → animType → {speed, amplitude})</span>
+  "NpcAnimations": {
+    "Blacksmith": {
+      "bob":    { "speed": 1.0, "amplitude": 0.2 },
+      "rotate": { "speed": 45.0, "amplitude": 0.0 }
+    }
+  },
+
+  <span class="comment">// Per-NPC per-state animation overrides</span>
+  <span class="comment">// When set, completely replaces NPC-level animations for that state's icon</span>
+  "NpcStateAnimations": {
+    "Blacksmith": {
+      "available": {
+        "ping": { "speed": 0.5, "amplitude": 0.4 },
+        "bob":  { "speed": 0.5, "amplitude": 0.12 }
+      }
+    }
+  },
+
+  <span class="comment">// Global default animations per quest state</span>
+  <span class="comment">// Overrides built-in defaults; overridden in turn by NpcStateAnimations</span>
+  "DefaultQuestStateAnimations": {
+    "available": {
+      "ping": { "speed": 0.5, "amplitude": 0.4 },
+      "bob":  { "speed": 0.5, "amplitude": 0.12 }
+    },
+    "inprogress": {
+      "rotate": { "speed": 4.0, "amplitude": 0.0 }
+    }
+  }
+}</code></pre>
+
+    <!-- Quest states -->
+    <h2 id="config-quest-states">Quest states</h2>
+    <p>
+      When integrated with QuestLines, four icon entities are maintained per NPC — one for each
+      quest state. Only the entity matching the player's current state is shown to them.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>State name</th><th>Meaning</th><th>Default item</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="state-available">available</code></td>
+          <td>The player has not yet started the NPC's quest</td>
+          <td><code>Icons_Exclamation</code></td>
+        </tr>
+        <tr>
+          <td><code class="state-inprogress">inprogress</code></td>
+          <td>The player has accepted the quest and it is in progress</td>
+          <td><code>Icons_Dots</code></td>
+        </tr>
+        <tr>
+          <td><code class="state-completed">completed</code></td>
+          <td>The player has completed every quest this NPC offers</td>
+          <td><code>Icons_Checkmark</code></td>
+        </tr>
+        <tr>
+          <td><code class="state-unknown">unknown</code></td>
+          <td>Quest state is not yet known for this player/NPC pair</td>
+          <td><code>Icons_QuestionMark</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Default animations -->
+    <h2 id="config-anim-defaults">Default animations</h2>
+    <p>
+      Built-in defaults are applied when no per-NPC or <code>DefaultQuestStateAnimations</code>
+      entry overrides them. They can be replaced entirely via <code>DefaultQuestStateAnimations</code>
+      in <code>icons.json</code>.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>State</th><th>Built-in animation</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="state-available">available</code></td>
+          <td>ping (0.5 Hz, amp 0.4) + bob (0.5 Hz, amp 0.12)</td>
+        </tr>
+        <tr>
+          <td><code class="state-inprogress">inprogress</code></td>
+          <td>rotate (4.0 deg/s)</td>
+        </tr>
+        <tr>
+          <td><code class="state-completed">completed</code></td>
+          <td>rotate (3.0 deg/s)</td>
+        </tr>
+        <tr>
+          <td><code class="state-unknown">unknown</code></td>
+          <td>orbit (0.4 Hz, radius 0.5)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-tip">
+      <strong>Priority order (highest to lowest)</strong>
+      <ol style="padding-left:1.2rem; margin-top:0.25rem; font-size:0.875rem;">
+        <li>Per-NPC per-state animation (<code>NpcStateAnimations</code> in icons.json)</li>
+        <li>Global default per-state animation (<code>DefaultQuestStateAnimations</code> in icons.json)</li>
+        <li>Built-in plugin defaults (listed above)</li>
+      </ol>
+    </div>
+
+    <hr>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!--  API                                                       -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <h2 id="api-provider">QuestStatusProvider API</h2>
+    <p>
+      External plugins (e.g. QuestLines) can drive per-player icon visibility by registering a
+      <code>QuestStatusProvider</code> with the plugin instance.
+    </p>
+
+    <pre><code><span class="comment">// Implement the interface</span>
+public class MyQuestProvider implements QuestStatusProvider {
+
+    @Override
+    @Nullable
+    public QuestState getQuestState(UUID playerUuid, String npcTypeId) {
+        <span class="comment">// Return null to leave all states visible for this player/NPC pair</span>
+        <span class="comment">// (useful when your system doesn't track this NPC)</span>
+        if (!tracksNpc(npcTypeId)) return null;
+
+        return switch (lookupState(playerUuid, npcTypeId)) {
+            case NOT_STARTED -> QuestState.AVAILABLE;
+            case IN_PROGRESS -> QuestState.IN_PROGRESS;
+            case DONE        -> QuestState.COMPLETED;
+            default          -> QuestState.UNKNOWN;
+        };
+    }
+}
+
+<span class="comment">// Register it with the plugin</span>
+NpcQuestIconsPlugin icons = NpcQuestIconsPlugin.getInstance();
+if (icons != null) {
+    icons.setQuestStatusProvider(new MyQuestProvider());
+}</code></pre>
+
+    <div class="callout callout-warning">
+      <strong>Null return behaviour</strong>
+      Returning <code>null</code> from <code>getQuestState</code> means "I have no data for this pair —
+      leave all icon entities visible." It does <em>not</em> hide the icon entirely. To hide an icon
+      for a specific NPC entirely, set its icon to <code>none</code> via <code>/icons icon none</code>.
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>
