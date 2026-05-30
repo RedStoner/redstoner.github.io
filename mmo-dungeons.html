@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; Dungeons &amp; LFG</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">Dungeons &amp; LFG</h1>
+      <p class="page-subtitle">
+        Instanced PvE encounters with checkpoints, boss phases, and timed
+        objectives &mdash; plus the Looking-For-Group browser that fills them.
+      </p>
+    </div>
+
+    <!-- Dungeons -->
+    <div data-section-body="Dungeons">
+    <h2 data-section="Dungeons">Dungeons</h2>
+    <p>
+      Dungeons are instanced PvE encounters defined as JSON files under
+      <code>mods/QuestLinesMMO/dungeons/</code>. Each definition names a world
+      template, an instance spawn point, a recommended level, a list of
+      objective IDs, an optional list of boss phases keyed to HP thresholds,
+      and a completion reward.
+    </p>
+
+    <h3 data-section="Entering">Entering an Instance</h3>
+    <p>
+      The party leader runs <code>/dungeon enter &lt;dungeonId&gt;</code>. The
+      manager validates that the leader is in a party of at least one and at
+      most <code>maxPartySize</code> members, copies the dungeon&rsquo;s world
+      template into a fresh world named
+      <code>dungeon_&lt;dungeonId&gt;_&lt;uuid&gt;</code>, and teleports every
+      online member to the instance spawn. Offline party members are not pulled
+      in.
+    </p>
+
+    <h3 data-section="Member State">Member State</h3>
+    <p>
+      Each player in an instance has one of three states &mdash;
+      <strong>ALIVE</strong>, <strong>DEAD</strong>, or
+      <strong>DISCONNECTED</strong> &mdash; tracked by the instance. Death and
+      disconnect both pause the player&rsquo;s active participation, but they
+      behave differently:
+    </p>
+    <ul>
+      <li>
+        <strong>Death</strong> &mdash; opens the Checkpoint UI with a respawn
+        countdown (<code>config.dungeon.respawnDelaySeconds</code>, default
+        <code>3</code>). Respawning teleports back to the instance&rsquo;s last
+        activated checkpoint, or the instance spawn if none.
+      </li>
+      <li>
+        <strong>Disconnect</strong> &mdash; the instance starts a rejoin grace
+        timer of <code>config.dungeon.rejoinGraceSeconds</code> seconds
+        (default <code>300</code>). Reconnecting within that window restores
+        the player to the instance at the last checkpoint.
+      </li>
+    </ul>
+    <p>
+      A wipe (every member DEAD or DISCONNECTED) flags the instance for cleanup
+      after <code>config.dungeon.postCompleteCleanupSeconds</code> seconds and
+      teleports any remaining members out.
+    </p>
+
+    <h3 data-section="Boss Phases">Boss Phases</h3>
+    <p>
+      A dungeon definition may declare an ordered list of boss phases, each with
+      an HP threshold (a fraction between 1.0 and 0.0) and a list of ability
+      IDs the boss should use during that phase. The
+      <code>BossPhaseController</code> watches the boss entity&rsquo;s HP during
+      combat and advances phases as thresholds are crossed.
+    </p>
+
+    <h3 data-section="Timed Objectives">Timed Objectives</h3>
+    <p>
+      Objectives can be timed: a script (or another listener) starts a
+      <code>TimedObjective</code> with a timeout and a callback. The Dungeon
+      HUD shows the countdown for every active timed objective in the instance.
+      Failing to complete in time fires the failure callback and typically ends
+      the run.
+    </p>
+
+    <h3 data-section="Completion">Completion</h3>
+    <p>
+      When all required objectives are completed, the instance moves to the
+      <code>COMPLETED</code> state and grants the dungeon&rsquo;s
+      <code>completionReward</code> (XP, currency, guild currency, items) to
+      every still-alive member. After
+      <code>postCompleteCleanupSeconds</code> the instance world is unloaded
+      and deleted.
+    </p>
+    </div>
+
+    <!-- LFG -->
+    <div data-section-body="LFG Browser">
+    <h2 data-section="LFG Browser">LFG Browser</h2>
+    <p>
+      The Looking-For-Group browser lets parties advertise that they need
+      additional players for a piece of content (a dungeon ID or a
+      world-event ID). Listings have a TTL, default
+      <code>config.lfg.listingTtlMinutes</code> = <code>30</code>; expired
+      listings are pruned every
+      <code>config.lfg.listingExpiryCheckIntervalSeconds</code> seconds.
+    </p>
+    <p>
+      Run <code>/lfg</code> to open the browser. Every action lives in the UI:
+    </p>
+    <ul>
+      <li><strong>Create Listing</strong> &mdash; click the button on the
+          top-right of the browser when you don&rsquo;t already have a listing.
+          Pick content from the paginated list (dungeons + events), type an
+          optional description, toggle which roles you need (<code>ANY</code>,
+          <code>TANK</code>, <code>HEALER</code>, <code>DPS</code>), and press
+          <strong>Post Listing</strong>.</li>
+      <li><strong>Browse</strong> &mdash; the list view shows up to six
+          listings per page with <code>&lt;</code> / <code>&gt;</code>
+          pagination. Use the role filter row at the top and the search field
+          to narrow results.</li>
+      <li><strong>Join</strong> &mdash; click any listing row to open it, then
+          pick a role button (<em>Join as Tank</em>, <em>Join as Healer</em>,
+          <em>Join as DPS</em>, or <em>Join</em> for any role).</li>
+      <li><strong>Manage your listing</strong> &mdash; the
+          <strong>Manage My Listing</strong> button (replaces
+          <em>Create Listing</em> while you have one active) opens your own
+          listing&rsquo;s detail view. Accept or decline incoming join
+          requests, or press <strong>Cancel Listing</strong> to remove it.</li>
+    </ul>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          Dungeon registry fields and dungeon/LFG config keys live on
+          <a href="mmo-config.html">Configuration</a>; the command tables are on
+          <a href="mmo-interface.html">UI &amp; Commands</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

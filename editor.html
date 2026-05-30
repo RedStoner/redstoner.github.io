@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines &mdash; Web Editor</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="editor" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Tools</div>
+      <h1 class="page-title">Web Editor</h1>
+      <p class="page-subtitle">
+        A browser-based authoring tool for QuestLines configs. Drop in your
+        <code>mods/QuestLines/</code> folder, edit quests with live validation,
+        and export a zip you can drop straight back onto the server.
+        Everything happens in your browser &mdash; no upload, no account, no
+        backend.
+      </p>
+    </div>
+
+    <p style="margin: 24px 0;">
+      <a class="btn primary" href="../editor/" style="font-size: 16px; padding: 12px 24px;">
+        Open the Editor &rarr;
+      </a>
+    </p>
+
+    <!-- ======================== WORKFLOW ======================== -->
+    <div data-section-body="Workflow">
+    <h2 data-section="Workflow">Workflow</h2>
+    <ol>
+      <li>
+        <strong>Import.</strong> Click <em>Choose folder</em> and select your
+        <code>mods/QuestLines/</code> directory, or drop in a zip of it.
+        The editor recognises <code>quests/</code>, <code>macros/</code>,
+        <code>achievements/</code>, and <code>npcs.json</code>; everything else
+        is carried along untouched.
+      </li>
+      <li>
+        <strong>Edit.</strong> Pick a quest from the left pane to open its
+        pages. Each page exposes the full Hytale codec surface: title, dialog,
+        requirements, load actions, responses, objectives, portrait overrides,
+        and the journal-text override. Validator chips in the sidebar show
+        which quests have errors before you even open them.
+      </li>
+      <li>
+        <strong>Export.</strong> Click <em>Export zip</em>. You get a
+        <code>QuestLines-YYYY-MM-DD.zip</code> with the same layout you imported.
+        Unzip it into <code>mods/</code> on your server, then run
+        <code>/ql reload</code>.
+      </li>
+    </ol>
+    </div>
+
+    <!-- ======================== BYTE-IDENTICAL ROUND-TRIP ======================== -->
+    <div data-section-body="Round-Trip Guarantee">
+    <h2 data-section="Round-Trip Guarantee">Round-Trip Guarantee</h2>
+    <p>
+      Files you don't touch come back out byte-for-byte identical to the input.
+      That means git diffs only ever show the quests you actually edited &mdash;
+      no spurious whitespace, no key reordering, and no accidental rewrites of
+      <code>LocalizedText</code> bare strings into <code>{ "en-US": "..." }</code>
+      objects until you add a second locale.
+    </p>
+    </div>
+
+    <!-- ======================== STORAGE ======================== -->
+    <div data-section-body="Auto-Save">
+    <h2 data-section="Auto-Save">Auto-Save</h2>
+    <p>
+      Your work is autosaved to <code>localStorage</code> 1 second after each
+      change. Reload the page and you pick up where you left off. To start
+      fresh, clear your browser's site data or re-import a folder &mdash; the
+      new import replaces the in-browser state.
+    </p>
+    <p>
+      <strong>localStorage is not a substitute for export.</strong> If you
+      switch browsers, clear site data, or use a private window, your draft is
+      gone. Export to zip when you stop for the day.
+    </p>
+    </div>
+
+    <!-- ======================== GRAPH VIEW ======================== -->
+    <div data-section-body="Graph View">
+    <h2 data-section="Graph View">Graph View</h2>
+    <p>
+      Each quest can be edited in two complementary views, toggled by the
+      <em>Form</em> / <em>Graph</em> tabs at the top of the inspector:
+    </p>
+    <ul>
+      <li><strong>Form</strong> &mdash; the per-page editor you opened in Phase 1.
+        Best for tuning text, requirements, actions, and individual responses.</li>
+      <li><strong>Graph</strong> &mdash; an auto-laid-out node-and-edge canvas
+        of the quest's pages. Best for understanding (and reshaping) the
+        dialogue flow.</li>
+    </ul>
+    <p>In Graph view:</p>
+    <ul>
+      <li><strong>Nodes</strong> are pages. They show the page id, NPC name, a
+        snippet of the dialog, and the count of responses + outgoing links.
+        The currently-selected page glows gold.</li>
+      <li><strong>Edges</strong> are derived from <code>page:targetId</code>
+        actions on responses. They flow left-to-right.</li>
+      <li><strong>Missing pages</strong> &mdash; if a response navigates to a
+        page id that has no <code>PageData</code>, you'll see a red dashed
+        node so you can spot the dead link.</li>
+      <li><strong>Click</strong> a node to switch back to the Form tab on
+        that page.</li>
+      <li><strong>Drag</strong> from a node's right-edge handle onto another
+        node to create a navigation link. A new response is added to the
+        source page with a <code>page:target</code> action and a placeholder
+        label you can rename in the Form tab.</li>
+      <li><strong>Click an edge</strong> and press Delete (or Backspace) to
+        remove the underlying <code>page:</code> action from the response.</li>
+      <li><strong>+ Add page</strong> creates an empty page with the id you
+        type and selects it.</li>
+      <li><strong>Auto-layout</strong> re-runs dagre on the whole graph if the
+        positions have drifted &mdash; useful after a flurry of edits.</li>
+    </ul>
+    <p>
+      Node positions are saved to <code>localStorage</code>, keyed by quest
+      id. They are <em>not</em> written into the quest JSON, so a clean
+      git diff after an Export zip will only show actual content changes.
+    </p>
+    </div>
+
+    <!-- ======================== AUTOCOMPLETE ======================== -->
+    <div data-section-body="Autocomplete">
+    <h2 data-section="Autocomplete">Schema-Aware Autocomplete</h2>
+    <p>
+      Every requirement and action input opens a context-aware completion
+      popup as you type. The editor knows the argument shape of the most
+      common ~50 types and sources suggestions from the right catalog:
+    </p>
+    <ul>
+      <li><code>kill:</code> &rarr; entity IDs (340+ baked from <code>npc_catalog.json</code>).</li>
+      <li><code>item:</code> / <code>break:</code> / <code>craft:</code> &rarr; item IDs (3,014 baked from <code>all_item_ids.txt</code>).</li>
+      <li><code>page:</code> &rarr; page IDs in the current quest.</li>
+      <li><code>questCompleted:</code>, <code>queststarted:</code> &rarr; quest IDs in the project.</li>
+      <li><code>macro:</code> &rarr; macro names in the project.</li>
+      <li><code>grantachievement:</code> / <code>achievement:</code> &rarr; achievement IDs in the project.</li>
+      <li><code>addTag:</code> / <code>hasTag:</code> &rarr; tags that already exist anywhere in the project (best-effort discovery).</li>
+      <li><code>timeOfDay:</code>, <code>moonPhase:</code>, <code>variable:</code> &rarr; fixed enum values.</li>
+    </ul>
+    <p>
+      Keyboard nav: <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> moves the selection,
+      <kbd>Enter</kbd> or <kbd>Tab</kbd> inserts, <kbd>Esc</kbd> dismisses.
+      An empty input shows every available type grouped by category
+      (<em>Quest</em>, <em>Tracking</em>, <em>Inventory</em>, <em>Time</em>,
+      <em>World</em>, etc.) so you can discover types without leaving the
+      tool.
+    </p>
+    <p>
+      Refreshing the baked item / entity catalogs after Hytale ships new
+      content:
+    </p>
+    <pre><code>cd Tools&amp;Bots/questeditor
+node scripts/bake-catalogs.mjs
+</code></pre>
+    </div>
+
+    <!-- ======================== MODE SWITCHER ======================== -->
+    <div data-section-body="Achievements & Macros">
+    <h2 data-section="Achievements & Macros">Achievements &amp; Macros</h2>
+    <p>
+      The left pane has three tabs: <strong>Quests</strong>,
+      <strong>Achievements</strong>, and <strong>Macros</strong>. Each opens
+      a list with validator chips and a per-item editor in the right pane.
+    </p>
+    <h3>Achievement editor</h3>
+    <ul>
+      <li>Edit Id, Title, Description, Category, Icon (item ID),
+        Hidden flag, Points, Rewards rich text.</li>
+      <li>Single-stage achievements expose <em>Criteria</em> and
+        <em>Unlock Actions</em> directly, both with autocomplete.</li>
+      <li>One-click <em>Convert to staged achievement</em> migrates the
+        single-stage fields into the first stage and adds an empty second
+        stage. Add / remove stages from the form.</li>
+      <li>Staged achievements support per-stage Title, Description, Points,
+        Rewards, Criteria, and Unlock Actions. Empty Title falls back to
+        parent + roman numeral (e.g. <code>Slayer III</code>).</li>
+      <li>Validator panel surfaces the same warnings as
+        <code>/ql validate</code>: missing fields, stateful-requirement
+        criteria, reserved-prefix tracker collisions, etc.</li>
+    </ul>
+    <h3>Macro editor</h3>
+    <ul>
+      <li>Edit Type (<code>action</code> or <code>requirement</code>),
+        AnyMode (OR logic for requirement macros), and the Entries list.</li>
+      <li>Entries get autocomplete based on the macro type &mdash; an
+        action macro suggests action types, a requirement macro suggests
+        requirement types.</li>
+    </ul>
+    </div>
+
+    <!-- ======================== /qleditor ======================== -->
+    <div data-section-body="In-Game /qleditor">
+    <h2 data-section="In-Game /qleditor">In-Game <code>/qleditor</code></h2>
+    <p>
+      Any admin with <code>questlines.admin</code> can type <code>/qleditor</code>
+      to receive a one-click link to the hosted web editor, already paired with
+      the current server.
+    </p>
+    <p>What happens under the hood:</p>
+    <ol>
+      <li>The plugin holds a persistent outbound WebSocket to the QuestLines
+        editor relay at <code>wss://editor.evilcraft.net:8443/relay/agent</code> (set
+        on plugin startup). No inbound port is opened on the Hytale
+        server &mdash; works behind any NAT or firewall.</li>
+      <li><code>/qleditor</code> asks the relay for a fresh 8-character
+        <strong>pair code</strong>, valid for 60 seconds and single use.</li>
+      <li>The plugin DMs the admin a link of the form
+        <code>https://editor.evilcraft.net:8443/?code=K3F92Q4</code>.</li>
+      <li>The browser redeems the code at the relay, opens its own
+        WebSocket to the relay, and the editor pulls the server's current
+        state immediately. The code is scrubbed from the address bar so it
+        doesn't sit in browser history.</li>
+      <li>Sessions live for one hour after redemption; closing the tab
+        and re-opening the editor in that window restores the connection
+        without a new <code>/qleditor</code> call.</li>
+    </ol>
+
+    <h3>One-time setup</h3>
+    <p>
+      <code>relay_enabled=true</code> ships as the default. On first run, the
+      plugin generates a per-server identity (<code>relay_server_id</code> +
+      <code>relay_server_key</code>) and persists it in
+      <code>QuestLines.conf</code> &mdash; nothing for admins to paste.
+    </p>
+    <pre><code># ── 13. Editor Relay ──
+relay_enabled=true
+relay_url=wss://editor.evilcraft.net:8443/relay/agent
+relay_server_id=&lt;auto-generated UUID&gt;
+relay_server_key=&lt;auto-generated 32-byte secret&gt;
+</code></pre>
+    <p>
+      Keep <code>relay_server_id</code> and <code>relay_server_key</code> stable
+      across restarts so editor sessions stay associated with this server.
+      Wiping both lines forces a fresh identity on the next save.
+    </p>
+
+    <h3>Self-hosting the relay</h3>
+    <p>
+      The relay is a small Node.js process (single file, no database, fine on
+      a Raspberry Pi 3b). The source lives in <code>Tools&amp;Bots/relay/</code> in the
+      QuestLines repo, alongside a Caddyfile and systemd unit. Self-hosters
+      point <code>relay_url</code> at their own relay and the editor at
+      <code>https://&lt;their-host&gt;/editor</code>. See
+      <code>Tools&amp;Bots/relay/README.md</code> in the repo for the install steps.
+    </p>
+
+    <h3>Troubleshooting</h3>
+    <ul>
+      <li><strong>"Editor relay is not connected"</strong> &mdash; the plugin
+        hasn't reached the relay yet. Reconnects run with exponential backoff;
+        check the server log for <code>[Relay]</code> entries to see the most
+        recent error. Common causes: outbound HTTPS blocked by firewall, DNS
+        failure on the relay host, or a typo in <code>relay_url</code>.</li>
+      <li><strong>"Server is offline"</strong> in the editor &mdash; the relay
+        reachable, but this server's plugin isn't connected to it. Check
+        the same <code>[Relay]</code> log on the server side.</li>
+      <li><strong>Pair code rejected</strong> &mdash; codes expire after 60
+        seconds and are single-use. Run <code>/qleditor</code> again.</li>
+      <li><strong>"Unsafe attempt to load URL"</strong> &mdash; the in-game
+        Hytale webview blocks some URL patterns. Copy the URL from the second
+        line of the <code>/qleditor</code> output into a real browser.</li>
+    </ul>
+    </div>
+
+    <!-- ======================== CONFLICT POLICY ======================== -->
+    <div data-section-body="Sync Behaviour">
+    <h2 data-section="Sync Behaviour">Sync Behaviour</h2>
+
+    <h3>What gets transferred</h3>
+    <p>
+      The server's <code>quests/</code>, <code>macros/</code>,
+      <code>achievements/</code> directories and <code>npcs.json</code>. Files
+      are sent as raw text over the relay, so the editor's byte-identical
+      round-trip guarantee carries through &mdash; unchanged files come back
+      exactly as they were.
+    </p>
+    <p>
+      Anything else in the plugin folder (players.json, portraits, the conf
+      file itself, wavearenas) is <strong>never</strong> read or written by
+      the relay.
+    </p>
+
+    <h3>Conflict policy</h3>
+    <p>
+      The relay is <strong>last-write wins</strong>. If two admins edit
+      simultaneously (one in-game via <code>/ql quest</code>, one in the
+      browser), the second push overwrites the first writer's changes.
+      Pull right before you push if anyone else might be editing.
+    </p>
+    </div>
+
+    <!-- ======================== ROADMAP ======================== -->
+    <div data-section-body="What's Here Now">
+    <h2 data-section="What's Here Now">What's Here Now</h2>
+    <p>Phases 1&ndash;4 ship:</p>
+    <ul>
+      <li>Folder + zip import (the whole <code>QuestLines/</code> tree).</li>
+      <li>Quest, page, and response editing across all leaf fields.</li>
+      <li>Visual page graph with drag-to-connect, auto-layout, missing-page detection, and position persistence.</li>
+      <li>Schema-aware autocomplete on requirement / action strings.</li>
+      <li>Achievement editor (single-stage + staged variants).</li>
+      <li>Macro editor.</li>
+      <li>Live validation backed by the same ruleset the in-game <code>/ql validate</code> command uses.</li>
+      <li>Zip export with byte-identical passthrough.</li>
+      <li>Editor relay: <code>/qleditor</code> pairs the browser editor with a running server through an outbound WebSocket relay (no inbound ports required).</li>
+    </ul>
+    <p>Coming next:</p>
+    <ul>
+      <li>Locale side-by-side editor with one-click "fill missing" translation.</li>
+      <li>Live in-game dialogue render preview.</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<script src="nav.js"></script>
+</body>
+</html>

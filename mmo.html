@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">QuestLines MMO</h1>
+      <p class="page-subtitle">
+        A standalone MMO feature suite for Hytale. Parties and friends, guilds with
+        ranks and a shared treasury, instanced guild halls, dungeon instances with
+        checkpoints and boss phases, an LFG browser, dynamic region events, world
+        boss schedules, and player-discoverable POIs &mdash; all served from a single
+        plugin.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">This documentation is split across pages</div>
+        <p>
+          The MMO plugin is large, so its docs are broken into focused pages &mdash;
+          use the MMO section in the sidebar. Start here for the high-level model,
+          then jump to
+          <a href="mmo-social.html">Parties &amp; Friends</a>,
+          <a href="mmo-guilds.html">Guilds &amp; Halls</a>,
+          <a href="mmo-dungeons.html">Dungeons &amp; LFG</a>,
+          <a href="mmo-events.html">Events &amp; Discoveries</a>,
+          <a href="mmo-interface.html">UI &amp; Commands</a>,
+          <a href="mmo-config.html">Configuration</a>, or
+          <a href="mmo-reference.html">Permissions &amp; Integrations</a>.
+        </p>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      QuestLines MMO is a self-contained plugin: it does not require QuestLines Core
+      and shares no APIs with the rest of the suite. Players use chat commands and
+      in-game UIs to form parties, run guilds, queue for content, and explore the
+      world; admins author dungeons, events, guild hall templates, and POIs as JSON
+      files in the plugin&rsquo;s data directory.
+    </p>
+    <p>
+      Most subsystems are built on the same pattern: an immutable <em>definition</em>
+      loaded from a folder under <code>mods/QuestLinesMMO/</code>, a <em>registry</em>
+      that hot-reloads from disk, a <em>manager</em> that holds runtime state, and
+      a set of listeners that drive the loop. Adding a new dungeon, event, or POI
+      is a matter of dropping a JSON file in the right folder and running
+      <code>/qlmmo reload</code>.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Standalone plugin</div>
+        <p>
+          QuestLines MMO ships as <code>questlines-mmo-{version}.jar</code> with its
+          data directory at <code>mods/QuestLinesMMO/</code>. It runs without any
+          other QuestLines plugin installed. <a href="claims.html">QuestLines Claims</a>
+          is an optional integration that, when present, lets guild halls delegate
+          chunk protection and rent/sale plots to Claims.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Feature Pillars -->
+    <div data-section-body="Feature Pillars">
+    <h2 data-section="Feature Pillars">Feature Pillars</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Pillar</th>
+            <th>Player command</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Parties</strong></td>
+            <td><code>/party</code></td>
+            <td>Short-lived groups for running content together. Leader-driven invites, kicks, transfers. <a href="mmo-social.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>Friends</strong></td>
+            <td><code>/friend</code></td>
+            <td>Persistent bidirectional friend list with online status. <a href="mmo-social.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>Guilds</strong></td>
+            <td><code>/guild</code></td>
+            <td>Long-lived player organisations with four ranks, permission overrides, MOTD, currency, and a tabbed shared chest. <a href="mmo-guilds.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>Guild Halls</strong></td>
+            <td><code>/guild home</code></td>
+            <td>Per-guild instanced world. PREFAB mode pastes upgrade tiers; BUILD mode lets members build inside claimed chunks. <a href="mmo-guilds.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>Dungeons</strong></td>
+            <td><code>/dungeon enter</code></td>
+            <td>Instanced PvE content with checkpoints, boss phases, timed objectives, and disconnect grace. <a href="mmo-dungeons.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>LFG Browser</strong></td>
+            <td><code>/lfg</code></td>
+            <td>Post and join group listings filtered by content and role (TANK / DPS / HEALER / ANY). <a href="mmo-dungeons.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>Dynamic Events</strong></td>
+            <td>(world-driven)</td>
+            <td>Region-triggered events that fire when player count is high enough; success rewards distributed by participation. <a href="mmo-events.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>Event &amp; World Bosses</strong></td>
+            <td>(world-driven)</td>
+            <td>Cron-scheduled world bosses with configurable announcements; event bosses spawn during dynamic events. <a href="mmo-events.html">Details</a></td>
+          </tr>
+          <tr>
+            <td><strong>Discoveries (POIs)</strong></td>
+            <td><code>/discoveries</code></td>
+            <td>Proximity-detected points of interest. Discovering one fires a notification, optional rewards, and adds the POI to the player&rsquo;s map. <a href="mmo-events.html">Details</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

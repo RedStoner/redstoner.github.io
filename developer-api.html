@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Developer API</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">For Developers</div>
+      <h1 class="page-title">Plugin API</h1>
+      <p class="page-subtitle">
+        QuestLines exposes a full extensibility API for other Hytale plugins: query player quest
+        state, evaluate requirements, execute actions, and register custom requirement types,
+        action types, and text variables.
+      </p>
+    </div>
+
+    <!-- ======================== GETTING THE INSTANCE ======================== -->
+    <div class="section-group">
+      <h2>Getting the API</h2>
+      <p>
+        Everything lives on <code>QuestLinesAPI</code>. Obtain it once after the server has
+        loaded plugins and store the reference in your plugin:
+      </p>
+      <pre class="code-block"><code><span class="hl-type">QuestLinesAPI</span> api <span class="hl-punc">=</span> <span class="hl-punc">((</span><span class="hl-kw">QuestLinesPlugin</span><span class="hl-punc">)</span> server.getPlugin<span class="hl-punc">(</span><span class="hl-str">"QuestLines"</span><span class="hl-punc">)).</span>getApi<span class="hl-punc">();</span></code></pre>
+
+      <p>
+        All integration — querying player data, checking requirements, executing actions,
+        registering custom types, and querying NPCs — goes through this single object.
+      </p>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">Register After Setup</div>
+          <p>
+            Call <code>api.registerRequirement</code>, <code>api.registerAction</code>, and
+            <code>api.registerTextVariable</code> <strong>after</strong> QuestLines has
+            completed its <code>setup()</code> phase — i.e. from your own plugin's
+            <code>setup()</code> or <code>start()</code>. Registering too early will
+            throw a <code>NullPointerException</code> because the managers are not yet
+            initialised.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== QUESTLINES API ======================== -->
+    <div class="section-group">
+      <h2>Player Data</h2>
+
+      <h3>Querying Player Data</h3>
+      <p>All query methods return safe, unmodifiable views. The player record is auto-created on first access.</p>
+      <pre class="code-block"><code><span class="hl-cmt">// Quest state</span>
+<span class="hl-kw">boolean</span> done    <span class="hl-punc">=</span> api.hasCompletedQuest<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"intro_quest"</span><span class="hl-punc">);</span>
+<span class="hl-kw">boolean</span> started <span class="hl-punc">=</span> api.hasStartedQuest<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"main_quest"</span><span class="hl-punc">);</span>
+<span class="hl-type">List</span>&lt;<span class="hl-type">String</span>&gt; completed <span class="hl-punc">=</span> api.getCompletedQuests<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+<span class="hl-type">List</span>&lt;<span class="hl-type">String</span>&gt; started  <span class="hl-punc">=</span> api.getStartedQuests<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Tags</span>
+<span class="hl-kw">boolean</span> vip  <span class="hl-punc">=</span> api.hasTag<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"vip"</span><span class="hl-punc">);</span>
+<span class="hl-type">List</span>&lt;<span class="hl-type">String</span>&gt; tags <span class="hl-punc">=</span> api.getTags<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Named tracker counts (keyed by tracker ID, e.g. "goblin_kills", "talk:Elder Maren")</span>
+<span class="hl-kw">int</span> kills <span class="hl-punc">=</span> api.getProgress<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"goblin_kills"</span><span class="hl-punc">);</span>
+<span class="hl-type">Map</span>&lt;<span class="hl-type">String</span><span class="hl-punc">,</span> <span class="hl-type">Integer</span>&gt; allProgress <span class="hl-punc">=</span> api.getAllProgress<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Named variables (set by variable: action)</span>
+<span class="hl-kw">double</span> score <span class="hl-punc">=</span> api.getVariable<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"score"</span><span class="hl-punc">);</span>
+<span class="hl-type">Map</span>&lt;<span class="hl-type">String</span><span class="hl-punc">,</span> <span class="hl-type">Double</span>&gt; allVars <span class="hl-punc">=</span> api.getAllVariables<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Timestamps (epoch ms; set by setTimestamp: / timedStart: actions)</span>
+<span class="hl-kw">long</span> ts <span class="hl-punc">=</span> api.getTimestamp<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"last_trade"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// HUD-tracked quests</span>
+<span class="hl-type">List</span>&lt;<span class="hl-type">String</span>&gt; tracked <span class="hl-punc">=</span> api.getTrackedQuests<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Preferred locale (e.g. "en-US", "de-DE"); defaults to "en-US"</span>
+<span class="hl-type">String</span> locale <span class="hl-punc">=</span> api.getPlayerLocale<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span></code></pre>
+
+      <h3>Mutating Player Data</h3>
+      <p>All mutators save automatically — no manual <code>savePlayerData</code> call needed.</p>
+      <pre class="code-block"><code><span class="hl-cmt">// Tags</span>
+api.addTag<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"vip"</span><span class="hl-punc">);</span>
+api.removeTag<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"vip"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Variables</span>
+api.setVariable<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"score"</span><span class="hl-punc">,</span> <span class="hl-num">42.0</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Named tracker counts (pass 0 to reset)</span>
+api.setProgress<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"goblin_kills"</span><span class="hl-punc">,</span> <span class="hl-num">5</span><span class="hl-punc">);</span>
+api.setProgress<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"goblin_kills"</span><span class="hl-punc">,</span> <span class="hl-num">0</span><span class="hl-punc">);</span>           <span class="hl-cmt">// resets counter</span></code></pre>
+
+      <h3>Checking Requirements</h3>
+      <p>
+        Accepts any colon-delimited requirement string that QuestLines understands. Unknown types
+        pass by default, consistent with internal behavior.
+      </p>
+      <pre class="code-block"><code><span class="hl-cmt">// Single requirement</span>
+<span class="hl-kw">boolean</span> passes <span class="hl-punc">=</span> api.meetsRequirement<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"questCompleted:intro_quest"</span><span class="hl-punc">);</span>
+<span class="hl-kw">boolean</span> hasKills <span class="hl-punc">=</span> api.meetsRequirement<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"track:zombie_kills:10"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Multiple requirements — all must pass (short-circuits on first failure)</span>
+<span class="hl-kw">boolean</span> eligible <span class="hl-punc">=</span> api.meetsRequirements<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span>
+    <span class="hl-str">"hasTag:vip"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"questCompleted:intro_quest"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"variable:score:greater:100"</span>
+<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// List form</span>
+<span class="hl-kw">boolean</span> ok <span class="hl-punc">=</span> api.meetsRequirements<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> List.of<span class="hl-punc">(</span><span class="hl-str">"hasTag:vip"</span><span class="hl-punc">,</span> <span class="hl-str">"track:zombie_kills:10"</span><span class="hl-punc">));</span></code></pre>
+
+      <h3>Executing Actions</h3>
+      <p>
+        Accepts any colon-delimited action string that QuestLines understands, including all
+        built-in types (<code>questStarted:</code>, <code>addTag:</code>, <code>economy:give:</code>,
+        <code>variable:</code>, etc.) and any custom actions you have registered.
+      </p>
+      <pre class="code-block"><code><span class="hl-cmt">// Single action</span>
+api.executeAction<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"addTag:vip"</span><span class="hl-punc">);</span>
+api.executeAction<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"questCompleted:bounty_quest"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Multiple actions — executed in order</span>
+api.executeActions<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span>
+    <span class="hl-str">"questCompleted:bounty_quest"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"economy:give:500"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"variable:score:add:10"</span>
+<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// List form</span>
+api.executeActions<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> List.of<span class="hl-punc">(</span><span class="hl-str">"track:zombie_kills:kill:zombie"</span><span class="hl-punc">,</span> <span class="hl-str">"questStarted:hunt"</span><span class="hl-punc">));</span></code></pre>
+    </div>
+
+    <!-- ======================== EVENT LISTENERS ======================== -->
+    <div class="section-group">
+      <h2>Event Listeners</h2>
+      <p>
+        Hook into quest lifecycle events from your own plugin. Listeners are invoked
+        synchronously on the server thread, in registration order. Exceptions thrown by a
+        listener are caught and logged &mdash; they do not interrupt quest state or other
+        listeners.
+      </p>
+
+      <h3>Quest Lifecycle</h3>
+      <p>
+        Three symmetric events cover the quest lifecycle. Each fires every time the matching
+        action runs (including the legacy aliases <code>questStarted:</code>,
+        <code>questCompleted:</code>, <code>questRemoved:</code>), even when the player was
+        already in that state &mdash; so repeatable quests will notify listeners on every
+        cycle.
+      </p>
+      <pre class="code-block"><code>api.onQuestStarted<span class="hl-punc">((</span>playerRef<span class="hl-punc">,</span> questId<span class="hl-punc">) -&gt;</span> <span class="hl-punc">{ ... });</span>     <span class="hl-cmt">// fires on startquest:</span>
+api.onQuestCompleted<span class="hl-punc">((</span>playerRef<span class="hl-punc">,</span> questId<span class="hl-punc">) -&gt;</span> <span class="hl-punc">{ ... });</span>   <span class="hl-cmt">// fires on completequest:</span>
+api.onQuestRemoved<span class="hl-punc">((</span>playerRef<span class="hl-punc">,</span> questId<span class="hl-punc">) -&gt;</span> <span class="hl-punc">{ ... });</span>     <span class="hl-cmt">// fires on removequest:</span>
+
+<span class="hl-cmt">// Announce every completion to the whole server</span>
+api.onQuestCompleted<span class="hl-punc">((</span>playerRef<span class="hl-punc">,</span> questId<span class="hl-punc">) -&gt;</span> <span class="hl-punc">{</span>
+    server.broadcast<span class="hl-punc">(</span>playerRef.getUsername<span class="hl-punc">() +</span> <span class="hl-str">" finished "</span> <span class="hl-punc">+</span> questId<span class="hl-punc">);</span>
+<span class="hl-punc">});</span>
+
+<span class="hl-cmt">// Roll back external side effects when a quest is reset</span>
+api.onQuestRemoved<span class="hl-punc">((</span>playerRef<span class="hl-punc">,</span> questId<span class="hl-punc">) -&gt;</span> <span class="hl-punc">{</span>
+    MyRewardSystem.revokeFor<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> questId<span class="hl-punc">);</span>
+<span class="hl-punc">});</span></code></pre>
+
+      <h3>Response Selection</h3>
+      <p>
+        Fires when a player commits to a dialogue response, right before its actions execute.
+        Useful for analytics, logging player choices, and cross-plugin side effects that
+        depend on the chosen branch. The event includes the quest and page context when
+        available (they may be <code>null</code> for pages opened via the <code>page:</code>
+        action or <code>/ql action</code> with no quest context).
+      </p>
+      <pre class="code-block"><code>api.onResponseSelected<span class="hl-punc">(</span>evt <span class="hl-punc">-&gt; {</span>
+    Analytics.record<span class="hl-punc">(</span>
+        evt.playerRef<span class="hl-punc">(),</span>
+        evt.questId<span class="hl-punc">(),</span>       <span class="hl-cmt">// may be null</span>
+        evt.pageId<span class="hl-punc">(),</span>        <span class="hl-cmt">// may be null</span>
+        evt.responseIndex<span class="hl-punc">(),</span>
+        evt.responseText<span class="hl-punc">()</span>  <span class="hl-cmt">// localised text the player saw</span>
+    <span class="hl-punc">);</span>
+<span class="hl-punc">});</span></code></pre>
+
+      <h3>Tracker Progress</h3>
+      <p>
+        Fires when a named tracker's count advances by one or more. A single in-world event
+        that matches multiple trackers produces one event per incremented tracker. The event
+        carries both the old and new values, so milestone logic can be written inline.
+      </p>
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Named Trackers Only</div>
+          <p>
+            This event only fires for trackers created by the
+            <code>track:id:type:[targets]</code> action. Legacy <code>tracking:*</code> tag
+            counters are not reported.
+          </p>
+        </div>
+      </div>
+      <pre class="code-block"><code>api.onTrackerProgress<span class="hl-punc">(</span>evt <span class="hl-punc">-&gt; {</span>
+    <span class="hl-cmt">// Milestone reward at every multiple of 10</span>
+    <span class="hl-kw">if</span> <span class="hl-punc">(</span>evt.newValue<span class="hl-punc">()</span> <span class="hl-punc">%</span> <span class="hl-num">10</span> <span class="hl-punc">==</span> <span class="hl-num">0</span><span class="hl-punc">) {</span>
+        MyReward.grant<span class="hl-punc">(</span>evt.playerRef<span class="hl-punc">(),</span> evt.trackerId<span class="hl-punc">() +</span> <span class="hl-str">"_milestone_"</span> <span class="hl-punc">+</span> evt.newValue<span class="hl-punc">());</span>
+    <span class="hl-punc">}</span>
+<span class="hl-punc">});</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">No Unregister</div>
+          <p>
+            Listeners persist for the lifetime of the QuestLines plugin. If your plugin is
+            reloaded independently, register idempotently (e.g. guard with a static flag) to
+            avoid double invocation.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== QUEST & HUD CONTROL ======================== -->
+    <div class="section-group">
+      <h2>Quest &amp; HUD Control</h2>
+
+      <h3>Quest Queries</h3>
+      <p>Check static quest configuration — does not depend on a specific player.</p>
+      <pre class="code-block"><code><span class="hl-cmt">// Check if a quest can be completed more than once</span>
+<span class="hl-kw">boolean</span> repeatable <span class="hl-punc">=</span> api.isQuestRepeatable<span class="hl-punc">(</span><span class="hl-str">"daily_bounty"</span><span class="hl-punc">);</span>  <span class="hl-cmt">// false if quest doesn't exist</span>
+
+<span class="hl-cmt">// Questline membership</span>
+<span class="hl-type">String</span> qlId    <span class="hl-punc">=</span> api.getQuestlineId<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">);</span>    <span class="hl-cmt">// "" if none</span>
+<span class="hl-type">String</span> qlTitle <span class="hl-punc">=</span> api.getQuestlineTitle<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">);</span> <span class="hl-cmt">// "" if none</span>
+
+<span class="hl-cmt">// All quests in a questline (unmodifiable)</span>
+<span class="hl-type">List</span>&lt;<span class="hl-type">String</span>&gt; questIds <span class="hl-punc">=</span> api.getQuestsInQuestline<span class="hl-punc">(</span><span class="hl-str">"main_story"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// All distinct questline IDs that have at least one quest</span>
+<span class="hl-type">Set</span>&lt;<span class="hl-type">String</span>&gt; questlines <span class="hl-punc">=</span> api.getQuestlineIds<span class="hl-punc">();</span>
+
+<span class="hl-cmt">// Localized quest text — resolves preferred locale, then server default, then any translation, then ""</span>
+<span class="hl-type">String</span> title <span class="hl-punc">=</span> api.getQuestTitle<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> <span class="hl-str">"en-US"</span><span class="hl-punc">);</span>
+<span class="hl-type">String</span> desc  <span class="hl-punc">=</span> api.getQuestDescription<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> <span class="hl-str">"de-DE"</span><span class="hl-punc">);</span>
+<span class="hl-type">String</span> rew   <span class="hl-punc">=</span> api.getQuestRewards<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> <span class="hl-str">"fr-FR"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// PlayerRef overloads — sugar for (questId, getPlayerLocale(playerRef))</span>
+<span class="hl-type">String</span> titleP <span class="hl-punc">=</span> api.getQuestTitle<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> playerRef<span class="hl-punc">);</span>
+<span class="hl-type">String</span> descP  <span class="hl-punc">=</span> api.getQuestDescription<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> playerRef<span class="hl-punc">);</span>
+<span class="hl-type">String</span> rewP   <span class="hl-punc">=</span> api.getQuestRewards<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> playerRef<span class="hl-punc">);</span></code></pre>
+
+      <h3>Quest Mutations</h3>
+      <p>
+        Assign or remove a quest's questline. Both the questline ID and title are updated
+        together and saved immediately. Changing the questline ID also changes the subdirectory
+        the quest's JSON file is written to on the next save.
+      </p>
+      <pre class="code-block"><code><span class="hl-cmt">// Assign to a questline</span>
+api.setQuestline<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> <span class="hl-str">"main_story"</span><span class="hl-punc">,</span> <span class="hl-str">"Main Story"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Remove from questline (pass empty strings)</span>
+api.setQuestline<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">,</span> <span class="hl-str">""</span><span class="hl-punc">,</span> <span class="hl-str">""</span><span class="hl-punc">);</span></code></pre>
+
+      <h3>HUD Control</h3>
+      <p>
+        Programmatically suppress or restore the quest-goal HUD for a player. Use this during
+        cutscenes, boss fights, or any context where the quest overlay would be distracting.
+      </p>
+      <pre class="code-block"><code><span class="hl-cmt">// Hide the HUD</span>
+api.setHudEnabled<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-kw">false</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Restore it</span>
+api.setHudEnabled<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-kw">true</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Query current state</span>
+<span class="hl-kw">boolean</span> visible <span class="hl-punc">=</span> api.isHudEnabled<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>  <span class="hl-cmt">// false only if explicitly suppressed</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Runtime Only</div>
+          <p>
+            HUD suppression is not persisted. If a player disconnects and reconnects, the HUD
+            returns to its normal state. Your plugin is responsible for re-suppressing it if needed.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== CUSTOM REQUIREMENTS ======================== -->
+    <div class="section-group">
+      <h2>Custom Requirements</h2>
+      <p>
+        Implement the <code>Requirement</code> interface and register it. Your type becomes
+        available in every requirement field — page requirements, response requirements, tracking
+        tags, and <code>any:</code> / <code>not:</code> wrappers.
+      </p>
+
+      <h3>Interface</h3>
+      <pre class="code-block"><code><span class="hl-kw">package</span> net.evilcraft.questlines.requirements<span class="hl-punc">;</span>
+
+<span class="hl-kw">public interface</span> <span class="hl-type">Requirement</span> <span class="hl-punc">{</span>
+    <span class="hl-cmt">/** The colon-delimited type key, e.g. "mycheck". Case is normalised — lowercase is stored. */</span>
+    <span class="hl-type">String</span> <span class="hl-fn">getType</span><span class="hl-punc">();</span>
+
+    <span class="hl-cmt">/**
+     * @param playerRef  the player being evaluated
+     * @param data       the player's quest data (never null — auto-created if missing)
+     * @param parts      colon-split tokens of the full requirement string;
+     *                   parts[0] is the type key, parts[1..] are the arguments
+     * @param plugin     the QuestLines plugin instance
+     * @param manager    the RequirementManager (use to evaluate sub-requirements)
+     * @return true if the player satisfies this requirement
+     */</span>
+    <span class="hl-kw">boolean</span> <span class="hl-fn">test</span><span class="hl-punc">(</span><span class="hl-type">PlayerRef</span> playerRef<span class="hl-punc">,</span> <span class="hl-type">PlayerData</span> data<span class="hl-punc">,</span> <span class="hl-type">String</span><span class="hl-punc">[]</span> parts<span class="hl-punc">,</span>
+               <span class="hl-type">QuestLinesPlugin</span> plugin<span class="hl-punc">,</span> <span class="hl-type">RequirementManager</span> manager<span class="hl-punc">);</span>
+
+    <span class="hl-cmt">/** Optional — return true if this requirement depends on NPC interaction context
+     *  (e.g. "which NPC opened dialogue"). Contextual requirements are skipped during
+     *  HUD resolution. Default: false. */</span>
+    <span class="hl-kw">default boolean</span> <span class="hl-fn">isContextual</span><span class="hl-punc">() {</span> <span class="hl-kw">return false</span><span class="hl-punc">; }</span>
+
+    <span class="hl-cmt">/** Optional — human-readable label shown in the HUD and journal objectives list.
+     *  Default falls back to the raw colon-joined string.
+     *  Prefer supplying this via RequirementDescriptor when registering through the API. */</span>
+    <span class="hl-kw">default</span> <span class="hl-type">String</span> <span class="hl-fn">describe</span><span class="hl-punc">(</span><span class="hl-type">String</span><span class="hl-punc">[]</span> parts<span class="hl-punc">,</span> <span class="hl-type">PlayerRef</span> playerRef<span class="hl-punc">,</span> <span class="hl-type">PlayerData</span> data<span class="hl-punc">,</span>
+                             <span class="hl-type">QuestLinesPlugin</span> plugin<span class="hl-punc">) {</span>
+        <span class="hl-kw">return</span> <span class="hl-type">String</span>.join<span class="hl-punc">(</span><span class="hl-str">":"</span><span class="hl-punc">,</span> parts<span class="hl-punc">);</span>
+    <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Example Implementation</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Requirement: "myrank:vip" — true if the player has VIP rank in your system</span>
+<span class="hl-kw">public class</span> <span class="hl-type">MyRankRequirement</span> <span class="hl-kw">implements</span> <span class="hl-type">Requirement</span> <span class="hl-punc">{</span>
+
+    <span class="hl-punc">@</span><span class="hl-type">Override</span>
+    <span class="hl-kw">public</span> <span class="hl-type">String</span> <span class="hl-fn">getType</span><span class="hl-punc">() {</span> <span class="hl-kw">return</span> <span class="hl-str">"myrank"</span><span class="hl-punc">; }</span>
+
+    <span class="hl-punc">@</span><span class="hl-type">Override</span>
+    <span class="hl-kw">public boolean</span> <span class="hl-fn">test</span><span class="hl-punc">(</span><span class="hl-type">PlayerRef</span> playerRef<span class="hl-punc">,</span> <span class="hl-type">PlayerData</span> data<span class="hl-punc">,</span> <span class="hl-type">String</span><span class="hl-punc">[]</span> parts<span class="hl-punc">,</span>
+                         <span class="hl-type">QuestLinesPlugin</span> plugin<span class="hl-punc">,</span> <span class="hl-type">RequirementManager</span> manager<span class="hl-punc">) {</span>
+        <span class="hl-kw">if</span> <span class="hl-punc">(</span>parts.length <span class="hl-punc">&lt;</span> <span class="hl-num">2</span><span class="hl-punc">)</span> <span class="hl-kw">return false</span><span class="hl-punc">;</span>
+        <span class="hl-kw">return</span> MyRankSystem.hasRank<span class="hl-punc">(</span>playerRef.getUuid<span class="hl-punc">(),</span> parts<span class="hl-punc">[</span><span class="hl-num">1</span><span class="hl-punc">]);</span>
+    <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Registration</h3>
+      <p>
+        Use the single-arg overload if your class already implements <code>describe()</code>,
+        or the two-arg overload to supply an objective label as a lambda:
+      </p>
+      <pre class="code-block"><code><span class="hl-cmt">// Simple — no HUD label (falls back to raw string)</span>
+api.registerRequirement<span class="hl-punc">(</span><span class="hl-kw">new</span> <span class="hl-type">MyRankRequirement</span><span class="hl-punc">());</span>
+
+<span class="hl-cmt">// With a RequirementDescriptor lambda — provides a label in the HUD / journal objectives</span>
+api.registerRequirement<span class="hl-punc">(</span><span class="hl-kw">new</span> <span class="hl-type">MyRankRequirement</span><span class="hl-punc">(),</span>
+    <span class="hl-punc">(</span>parts<span class="hl-punc">,</span> playerRef<span class="hl-punc">,</span> data<span class="hl-punc">) -&gt;</span> <span class="hl-str">"Rank required: "</span> <span class="hl-punc">+</span> parts<span class="hl-punc">[</span><span class="hl-num">1</span><span class="hl-punc">]</span>
+<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Descriptor with dynamic progress info</span>
+api.registerRequirement<span class="hl-punc">(</span><span class="hl-kw">new</span> <span class="hl-type">MyKillRequirement</span><span class="hl-punc">(),</span>
+    <span class="hl-punc">(</span>parts<span class="hl-punc">,</span> playerRef<span class="hl-punc">,</span> data<span class="hl-punc">) -&gt; {</span>
+        <span class="hl-kw">int</span> current <span class="hl-punc">=</span> data.getProgress<span class="hl-punc">(</span><span class="hl-str">"mykill:"</span> <span class="hl-punc">+</span> parts<span class="hl-punc">[</span><span class="hl-num">1</span><span class="hl-punc">]);</span>
+        <span class="hl-kw">int</span> target  <span class="hl-punc">=</span> parts.length <span class="hl-punc">&gt;</span> <span class="hl-num">2</span> <span class="hl-punc">?</span> <span class="hl-type">Integer</span>.parseInt<span class="hl-punc">(</span>parts<span class="hl-punc">[</span><span class="hl-num">2</span><span class="hl-punc">]) :</span> <span class="hl-num">1</span><span class="hl-punc">;</span>
+        <span class="hl-kw">return</span> <span class="hl-str">"Kill "</span> <span class="hl-punc">+</span> parts<span class="hl-punc">[</span><span class="hl-num">1</span><span class="hl-punc">] +</span> <span class="hl-str">": "</span> <span class="hl-punc">+</span> current <span class="hl-punc">+</span> <span class="hl-str">" / "</span> <span class="hl-punc">+</span> target<span class="hl-punc">;</span>
+    <span class="hl-punc">}</span>
+<span class="hl-punc">);</span></code></pre>
+
+      <p>
+        The descriptor receives the same <code>parts[]</code> array as <code>test()</code>, so
+        argument values (entity IDs, counts, etc.) are accessible at the expected indices.
+        Once registered, use the requirement in any quest JSON just like a built-in:
+      </p>
+      <pre class="code-block"><code><span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"myrank:vip"</span><span class="hl-punc">]</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Type Key Normalisation</div>
+          <p>
+            The type key returned by <code>getType()</code> is lowercased before storage.
+            At parse time the first colon-delimited token of the requirement string is also
+            lowercased before lookup. This means <code>"MyRank"</code>, <code>"myrank"</code>,
+            and <code>"MYRANK"</code> in JSON all resolve to the same requirement.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== CUSTOM ACTIONS ======================== -->
+    <div class="section-group">
+      <h2>Custom Actions</h2>
+      <p>
+        Implement the <code>Action</code> interface and register it. Your type can then be used
+        in any action list — response actions, load actions, and auto-trigger pages.
+      </p>
+
+      <h3>Interface</h3>
+      <pre class="code-block"><code><span class="hl-kw">package</span> net.evilcraft.questlines.actions<span class="hl-punc">;</span>
+
+<span class="hl-kw">public interface</span> <span class="hl-type">Action</span> <span class="hl-punc">{</span>
+    <span class="hl-cmt">/** The colon-delimited type key, e.g. "myreward". Case is normalised — lowercase is stored. */</span>
+    <span class="hl-type">String</span> <span class="hl-fn">getType</span><span class="hl-punc">();</span>
+
+    <span class="hl-cmt">/**
+     * @param playerRef     the player who triggered this action
+     * @param data          the player's quest data (never null — auto-created if missing)
+     * @param parts         colon-split tokens of the full action string;
+     *                      parts[0] is the type key, parts[1..] are the arguments
+     * @param plugin        the QuestLines plugin instance
+     * @param questManager  the QuestManager (player-data helpers, page resolution, etc.)
+     * @param actionManager the ActionManager (execute nested action strings if needed)
+     */</span>
+    <span class="hl-kw">void</span> <span class="hl-fn">execute</span><span class="hl-punc">(</span><span class="hl-type">PlayerRef</span> playerRef<span class="hl-punc">,</span> <span class="hl-type">PlayerData</span> data<span class="hl-punc">,</span> <span class="hl-type">String</span><span class="hl-punc">[]</span> parts<span class="hl-punc">,</span>
+               <span class="hl-type">QuestLinesPlugin</span> plugin<span class="hl-punc">,</span> <span class="hl-type">QuestManager</span> questManager<span class="hl-punc">,</span> <span class="hl-type">ActionManager</span> actionManager<span class="hl-punc">);</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Example Implementation</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Action: "myreward:daily" — grants the player a daily reward from your system</span>
+<span class="hl-kw">public class</span> <span class="hl-type">MyRewardAction</span> <span class="hl-kw">implements</span> <span class="hl-type">Action</span> <span class="hl-punc">{</span>
+
+    <span class="hl-punc">@</span><span class="hl-type">Override</span>
+    <span class="hl-kw">public</span> <span class="hl-type">String</span> <span class="hl-fn">getType</span><span class="hl-punc">() {</span> <span class="hl-kw">return</span> <span class="hl-str">"myreward"</span><span class="hl-punc">; }</span>
+
+    <span class="hl-punc">@</span><span class="hl-type">Override</span>
+    <span class="hl-kw">public void</span> <span class="hl-fn">execute</span><span class="hl-punc">(</span><span class="hl-type">PlayerRef</span> playerRef<span class="hl-punc">,</span> <span class="hl-type">PlayerData</span> data<span class="hl-punc">,</span> <span class="hl-type">String</span><span class="hl-punc">[]</span> parts<span class="hl-punc">,</span>
+                         <span class="hl-type">QuestLinesPlugin</span> plugin<span class="hl-punc">,</span> <span class="hl-type">QuestManager</span> questManager<span class="hl-punc">,</span>
+                         <span class="hl-type">ActionManager</span> actionManager<span class="hl-punc">) {</span>
+        <span class="hl-kw">if</span> <span class="hl-punc">(</span>parts.length <span class="hl-punc">&lt;</span> <span class="hl-num">2</span><span class="hl-punc">)</span> <span class="hl-kw">return</span><span class="hl-punc">;</span>
+        <span class="hl-type">String</span> rewardId <span class="hl-punc">=</span> parts<span class="hl-punc">[</span><span class="hl-num">1</span><span class="hl-punc">];</span>
+        MyRewardSystem.grant<span class="hl-punc">(</span>playerRef.getUuid<span class="hl-punc">(),</span> rewardId<span class="hl-punc">);</span>
+    <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Registration</h3>
+      <pre class="code-block"><code>api.registerAction<span class="hl-punc">(</span><span class="hl-kw">new</span> <span class="hl-type">MyRewardAction</span><span class="hl-punc">());</span></code></pre>
+
+      <p>Use it in any action list in quest JSON:</p>
+      <pre class="code-block"><code><span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questCompleted:daily_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"myreward:daily"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== CUSTOM TEXT VARIABLES ======================== -->
+    <div class="section-group">
+      <h2>Custom Text Variables</h2>
+      <p>
+        <code>TextVariable</code> is a <code>@FunctionalInterface</code>. Register a prefix
+        and a lambda (or full class). The variable can then appear inside any
+        <code>Dialog</code> or response <code>Text</code> field as <code>{prefix}</code> or
+        <code>{prefix:arg1:arg2:...}</code>.
+      </p>
+
+      <h3>Interface</h3>
+      <pre class="code-block"><code><span class="hl-punc">@</span><span class="hl-type">FunctionalInterface</span>
+<span class="hl-kw">public interface</span> <span class="hl-type">TextVariable</span> <span class="hl-punc">{</span>
+    <span class="hl-cmt">/**
+     * @param parts     colon-split contents of the placeholder;
+     *                  parts[0] is the prefix itself
+     *                  (e.g. {track:zombie_kills} → ["track", "zombie_kills"])
+     * @param playerRef the player for whom text is being resolved
+     * @param data      the player's quest data; may be null outside dialogue context
+     * @param page      the current dialogue page; may be null outside dialogue context
+     * @param plugin    the QuestLines plugin instance
+     * @return the string to substitute in place of the placeholder; never null
+     */</span>
+    <span class="hl-type">String</span> <span class="hl-fn">resolve</span><span class="hl-punc">(</span><span class="hl-type">String</span><span class="hl-punc">[]</span> parts<span class="hl-punc">,</span> <span class="hl-type">PlayerRef</span> playerRef<span class="hl-punc">,</span> <span class="hl-type">PlayerData</span> data<span class="hl-punc">,</span>
+               <span class="hl-type">Page</span> page<span class="hl-punc">,</span> <span class="hl-type">QuestLinesPlugin</span> plugin<span class="hl-punc">);</span>
+<span class="hl-punc">}</span></code></pre>
+
+      <h3>Example — Simple Variable</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Registers {myguild} — shows the player's guild name</span>
+api.registerTextVariable<span class="hl-punc">(</span><span class="hl-str">"myguild"</span><span class="hl-punc">, (</span>parts<span class="hl-punc">,</span> playerRef<span class="hl-punc">,</span> data<span class="hl-punc">,</span> page<span class="hl-punc">,</span> p<span class="hl-punc">) -></span>
+    MyGuildSystem.getGuildName<span class="hl-punc">(</span>playerRef.getUuid<span class="hl-punc">()));</span></code></pre>
+
+      <h3>Example — Variable With Arguments</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Registers {mystat:statName} — e.g. {mystat:wins}, {mystat:playtime}</span>
+api.registerTextVariable<span class="hl-punc">(</span><span class="hl-str">"mystat"</span><span class="hl-punc">, (</span>parts<span class="hl-punc">,</span> playerRef<span class="hl-punc">,</span> data<span class="hl-punc">,</span> page<span class="hl-punc">,</span> p<span class="hl-punc">) -> {</span>
+    <span class="hl-kw">if</span> <span class="hl-punc">(</span>parts.length <span class="hl-punc">&lt;</span> <span class="hl-num">2</span><span class="hl-punc">)</span> <span class="hl-kw">return</span> <span class="hl-str">"0"</span><span class="hl-punc">;</span>
+    <span class="hl-kw">return</span> MyStatsSystem.getStat<span class="hl-punc">(</span>playerRef.getUuid<span class="hl-punc">(),</span> parts<span class="hl-punc">[</span><span class="hl-num">1</span><span class="hl-punc">]);</span>
+<span class="hl-punc">});</span></code></pre>
+
+      <p>Then in dialogue JSON:</p>
+      <pre class="code-block"><code><span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Welcome back, {username}! Your guild is {myguild} and you have {mystat:wins} wins."</span></code></pre>
+    </div>
+
+    <!-- ======================== REFLECTION-FRIENDLY REGISTRATION ======================== -->
+    <div class="section-group">
+      <h2>Simplified / Reflection-Friendly Registration</h2>
+      <p>
+        If your plugin cannot depend on QuestLines at compile time, use the three
+        <code>registerSimple*</code> methods. They accept standard <code>java.util.function.*</code>
+        types from the JDK — no QuestLines interfaces required on the classpath.
+      </p>
+
+      <h3>Getting the API via Reflection</h3>
+      <pre class="code-block"><code><span class="hl-type">PluginBase</span> ql <span class="hl-punc">=</span> <span class="hl-type">HytaleServer</span>.get<span class="hl-punc">().</span>getPluginManager<span class="hl-punc">()</span>
+    .getPlugin<span class="hl-punc">(</span><span class="hl-kw">new</span> <span class="hl-type">PluginIdentifier</span><span class="hl-punc">(</span><span class="hl-str">"net.evilcraft"</span><span class="hl-punc">,</span> <span class="hl-str">"QuestLines"</span><span class="hl-punc">));</span>
+<span class="hl-kw">if</span> <span class="hl-punc">(</span>ql <span class="hl-punc">==</span> <span class="hl-kw">null</span><span class="hl-punc">)</span> <span class="hl-kw">return</span><span class="hl-punc">;</span> <span class="hl-cmt">// QuestLines not installed</span>
+<span class="hl-type">Object</span> api <span class="hl-punc">=</span> ql.getClass<span class="hl-punc">().</span>getMethod<span class="hl-punc">(</span><span class="hl-str">"getApi"</span><span class="hl-punc">).</span>invoke<span class="hl-punc">(</span>ql<span class="hl-punc">);</span></code></pre>
+
+      <h3>Methods</h3>
+      <table class="ref-table">
+        <thead>
+          <tr><th>Method</th><th>Functional type</th><th>Receives</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>registerSimpleRequirement(String key, BiPredicate&lt;PlayerRef,String&gt;)</code></td>
+            <td><code>BiPredicate&lt;PlayerRef, String&gt;</code></td>
+            <td>player + first argument (e.g. <code>"champion"</code> from <code>hasTitle:champion</code>)</td>
+          </tr>
+          <tr>
+            <td><code>registerSimpleRequirement(String key, BiPredicate&lt;PlayerRef,String&gt;, BiFunction&lt;PlayerRef,String,String&gt;)</code></td>
+            <td><code>BiPredicate</code> + <code>BiFunction</code></td>
+            <td>same as above; third arg is a descriptor — player + first argument → display label shown in HUD/journal objectives (e.g. <code>"Title: champion"</code>)</td>
+          </tr>
+          <tr>
+            <td><code>registerSimpleAction(String key, BiConsumer&lt;PlayerRef,String&gt;)</code></td>
+            <td><code>BiConsumer&lt;PlayerRef, String&gt;</code></td>
+            <td>player + first argument</td>
+          </tr>
+          <tr>
+            <td><code>registerSimpleTextVariable(String prefix, Function&lt;PlayerRef,String&gt;)</code></td>
+            <td><code>Function&lt;PlayerRef, String&gt;</code></td>
+            <td>player → display string</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Example</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Text variable: {title} — show player's active title, or empty string</span>
+<span class="hl-type">Function</span>&lt;<span class="hl-type">PlayerRef</span><span class="hl-punc">,</span> <span class="hl-type">String</span>&gt; titleFn <span class="hl-punc">=</span> playerRef <span class="hl-punc">-&gt;</span>
+    MyTitlesAPI.getActive<span class="hl-punc">(</span>playerRef.getUsername<span class="hl-punc">()).</span>orElse<span class="hl-punc">(</span><span class="hl-str">""</span><span class="hl-punc">);</span>
+api.getClass<span class="hl-punc">().</span>getMethod<span class="hl-punc">(</span><span class="hl-str">"registerSimpleTextVariable"</span><span class="hl-punc">,</span> <span class="hl-type">String</span>.class<span class="hl-punc">,</span> <span class="hl-type">Function</span>.class<span class="hl-punc">)</span>
+             .invoke<span class="hl-punc">(</span>api<span class="hl-punc">,</span> <span class="hl-str">"title"</span><span class="hl-punc">,</span> titleFn<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Requirement: hasTitle:&lt;id&gt; — true if the player owns the title (with HUD/journal label)</span>
+<span class="hl-type">BiPredicate</span>&lt;<span class="hl-type">PlayerRef</span><span class="hl-punc">,</span> <span class="hl-type">String</span>&gt; hasTitlePred <span class="hl-punc">=</span> <span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> titleId<span class="hl-punc">) -&gt;</span>
+    MyTitlesAPI.hasTitle<span class="hl-punc">(</span>playerRef.getUsername<span class="hl-punc">(),</span> titleId<span class="hl-punc">);</span>
+<span class="hl-type">BiFunction</span>&lt;<span class="hl-type">PlayerRef</span><span class="hl-punc">,</span> <span class="hl-type">String</span><span class="hl-punc">,</span> <span class="hl-type">String</span>&gt; hasTitleDesc <span class="hl-punc">=</span> <span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> titleId<span class="hl-punc">) -&gt;</span> <span class="hl-str">"Title: "</span> <span class="hl-punc">+</span> titleId<span class="hl-punc">;</span>
+api.getClass<span class="hl-punc">().</span>getMethod<span class="hl-punc">(</span><span class="hl-str">"registerSimpleRequirement"</span><span class="hl-punc">,</span> <span class="hl-type">String</span>.class<span class="hl-punc">,</span> <span class="hl-type">BiPredicate</span>.class<span class="hl-punc">,</span> <span class="hl-type">BiFunction</span>.class<span class="hl-punc">)</span>
+             .invoke<span class="hl-punc">(</span>api<span class="hl-punc">,</span> <span class="hl-str">"hasTitle"</span><span class="hl-punc">,</span> hasTitlePred<span class="hl-punc">,</span> hasTitleDesc<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Action: giveTitle:&lt;id&gt; — unlock the title for the player</span>
+<span class="hl-type">BiConsumer</span>&lt;<span class="hl-type">PlayerRef</span><span class="hl-punc">,</span> <span class="hl-type">String</span>&gt; giveTitleAction <span class="hl-punc">=</span> <span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> titleId<span class="hl-punc">) -&gt;</span>
+    MyTitlesAPI.unlockTitle<span class="hl-punc">(</span>playerRef.getUsername<span class="hl-punc">(),</span> titleId<span class="hl-punc">);</span>
+api.getClass<span class="hl-punc">().</span>getMethod<span class="hl-punc">(</span><span class="hl-str">"registerSimpleAction"</span><span class="hl-punc">,</span> <span class="hl-type">String</span>.class<span class="hl-punc">,</span> <span class="hl-type">BiConsumer</span>.class<span class="hl-punc">)</span>
+             .invoke<span class="hl-punc">(</span>api<span class="hl-punc">,</span> <span class="hl-str">"giveTitle"</span><span class="hl-punc">,</span> giveTitleAction<span class="hl-punc">);</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">No Extra Dependencies Needed</div>
+          <p>
+            <code>BiPredicate</code>, <code>BiConsumer</code>, <code>BiFunction</code>, and <code>Function</code> are all
+            in <code>java.util.function</code> (JDK). <code>PlayerRef</code> and
+            <code>PluginIdentifier</code> are part of the Hytale server API that every plugin
+            already has on its classpath.
+          </p>
+          <p>
+            If you need HUD / journal objective labels for a requirement registered this way,
+            use the full <code>registerRequirement(Requirement, RequirementDescriptor)</code>
+            overload with a direct dependency instead.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== NPC QUERIES ======================== -->
+    <div class="section-group">
+      <h2>NPC Queries</h2>
+      <p>
+        These methods let you inspect which NPCs have quests assigned and which quests belong
+        to a specific NPC. The NPC key is a HyCitizens citizen ID for HyCitizens NPCs, or an
+        entity UUID string for standard Hytale NPCs — both live in the same map.
+      </p>
+      <pre class="code-block"><code><span class="hl-cmt">// All NPC IDs that have at least one direct quest assignment</span>
+<span class="hl-type">Set</span>&lt;<span class="hl-type">String</span>&gt; npcIds <span class="hl-punc">=</span> api.getNpcsWithQuests<span class="hl-punc">();</span>
+
+<span class="hl-cmt">// The ordered quest IDs directly assigned to a specific NPC</span>
+<span class="hl-type">List</span>&lt;<span class="hl-type">String</span>&gt; quests <span class="hl-punc">=</span> api.getQuestsForNpc<span class="hl-punc">(</span><span class="hl-str">"citizen_123"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// All NPC IDs that have a specific quest directly assigned</span>
+<span class="hl-type">List</span>&lt;<span class="hl-type">String</span>&gt; npcsForQuest <span class="hl-punc">=</span> api.getNpcsForQuest<span class="hl-punc">(</span><span class="hl-str">"intro_quest"</span><span class="hl-punc">);</span></code></pre>
+
+    </div>
+
+    <!-- ======================== ACCESSING PLAYER DATA ======================== -->
+    <div class="section-group">
+      <h2>Accessing Player Data (Low-Level)</h2>
+      <p>
+        For most use cases, prefer <code>QuestLinesAPI</code> (see above). If you need direct
+        access to <code>PlayerData</code> — for example to read fields not exposed by the API —
+        use <code>QuestManager</code>. It auto-creates a record for new players and keeps the
+        username in sync.
+      </p>
+
+      <h3>Reading Data</h3>
+      <pre class="code-block"><code><span class="hl-type">QuestManager</span> qm <span class="hl-punc">=</span> ql.getQuestManager<span class="hl-punc">();</span>
+<span class="hl-type">PlayerData</span> data <span class="hl-punc">=</span> qm.getPlayerData<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Quest state</span>
+<span class="hl-kw">boolean</span> started   <span class="hl-punc">=</span> data.getStartedQuests<span class="hl-punc">().</span>contains<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">);</span>
+<span class="hl-kw">boolean</span> completed <span class="hl-punc">=</span> data.getCompletedQuests<span class="hl-punc">().</span>contains<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Tags</span>
+<span class="hl-kw">boolean</span> hasTag <span class="hl-punc">=</span> data.getTags<span class="hl-punc">().</span>contains<span class="hl-punc">(</span><span class="hl-str">"my_flag"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Named tracker counts (keyed by tracker ID)</span>
+<span class="hl-kw">int</span> kills <span class="hl-punc">=</span> data.getProgress<span class="hl-punc">().</span>getOrDefault<span class="hl-punc">(</span><span class="hl-str">"goblin_kills"</span><span class="hl-punc">,</span> <span class="hl-num">0</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Named variables</span>
+<span class="hl-kw">double</span> score <span class="hl-punc">=</span> data.getVariables<span class="hl-punc">().</span>getOrDefault<span class="hl-punc">(</span><span class="hl-str">"score"</span><span class="hl-punc">,</span> <span class="hl-num">0.0</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Timestamps (epoch ms; used by cooldown requirements)</span>
+<span class="hl-kw">long</span> ts <span class="hl-punc">=</span> data.getTimestamps<span class="hl-punc">().</span>getOrDefault<span class="hl-punc">(</span><span class="hl-str">"my_timer"</span><span class="hl-punc">,</span> <span class="hl-num">0L</span><span class="hl-punc">);</span></code></pre>
+
+      <h3>Mutating and Saving</h3>
+      <p>
+        Always call <code>savePlayerData</code> (or <code>plugin.getPlayerConfig().save()</code>)
+        after mutating a player's data — changes are in-memory only until saved.
+      </p>
+      <pre class="code-block"><code><span class="hl-type">PlayerData</span> data <span class="hl-punc">=</span> qm.getPlayerData<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+
+data.getTags<span class="hl-punc">().</span>add<span class="hl-punc">(</span><span class="hl-str">"my_custom_flag"</span><span class="hl-punc">);</span>
+data.getVariables<span class="hl-punc">().</span>put<span class="hl-punc">(</span><span class="hl-str">"score"</span><span class="hl-punc">,</span> <span class="hl-num">42.0</span><span class="hl-punc">);</span>
+data.getStartedQuests<span class="hl-punc">().</span>add<span class="hl-punc">(</span><span class="hl-str">"my_quest"</span><span class="hl-punc">);</span>
+
+qm.savePlayerData<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> data<span class="hl-punc">);</span>  <span class="hl-cmt">// persists to players.json</span></code></pre>
+
+      <h3>PlayerData Fields</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Type</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>getStartedQuests()</td><td>List&lt;String&gt;</td><td>Quest IDs the player has started but not completed</td></tr>
+            <tr><td>getCompletedQuests()</td><td>List&lt;String&gt;</td><td>Quest IDs the player has completed</td></tr>
+            <tr><td>getTags()</td><td>List&lt;String&gt;</td><td>Arbitrary string flags</td></tr>
+            <tr><td>getProgress()</td><td>Map&lt;String, Integer&gt;</td><td>Counter values keyed by named tracker ID (e.g. <code>"goblin_kills"</code>)</td></tr>
+            <tr><td>getTimestamps()</td><td>Map&lt;String, Long&gt;</td><td>Epoch-ms timestamps keyed by arbitrary key; used by <code>cooldown:</code></td></tr>
+            <tr><td>getVariables()</td><td>Map&lt;String, Double&gt;</td><td>Named numeric variables set by the <code>variable:</code> action</td></tr>
+            <tr><td>getTrackedQuests()</td><td>List&lt;String&gt;</td><td>Quest IDs currently shown on the player's Quest Goal HUD</td></tr>
+            <tr><td>getPreferredLanguage()</td><td>String</td><td>Locale string, e.g. <code>"en-US"</code></td></tr>
+            <tr><td>isAutoTrackQuests()</td><td>boolean</td><td>Whether new quests are auto-added to the HUD</td></tr>
+            <tr><td>getHudPosition()</td><td>String</td><td><code>"TopRight"</code>, <code>"TopLeft"</code>, <code>"BottomRight"</code>, or <code>"BottomLeft"</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======================== QUEST MANAGER UTILITIES ======================== -->
+    <div class="section-group">
+      <h2>QuestManager Utilities (Advanced)</h2>
+      <p>
+        <code>QuestManager</code> exposes lower-level helpers for advanced integrations —
+        page resolution, HUD management, and more. For requirement checking and action
+        execution, prefer <code>QuestLinesAPI</code>.
+      </p>
+
+      <h3>Page Resolution</h3>
+      <pre class="code-block"><code><span class="hl-type">QuestManager</span> qm <span class="hl-punc">=</span> ql.getQuestManager<span class="hl-punc">();</span>
+
+<span class="hl-cmt">// Find the first page (across all quests for an NPC) whose requirements pass</span>
+<span class="hl-type">QuestManager.PageResolution</span> res <span class="hl-punc">=</span> qm.resolvePageAndQuestForPlayer<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> npcKey<span class="hl-punc">);</span>
+<span class="hl-kw">if</span> <span class="hl-punc">(</span>res <span class="hl-punc">!=</span> <span class="hl-kw">null</span><span class="hl-punc">) {</span>
+    <span class="hl-type">String</span> questId <span class="hl-punc">=</span> res.questId<span class="hl-punc">;</span>
+    <span class="hl-type">String</span> pageId  <span class="hl-punc">=</span> res.pageId<span class="hl-punc">;</span>
+    <span class="hl-type">Page</span>   page    <span class="hl-punc">=</span> res.page<span class="hl-punc">;</span>
+<span class="hl-punc">}</span>
+
+<span class="hl-cmt">// Find the player's current page in a specific quest (used by HUD)</span>
+<span class="hl-type">Page</span> current <span class="hl-punc">=</span> qm.resolveCurrentPageForQuest<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> <span class="hl-str">"my_quest"</span><span class="hl-punc">);</span></code></pre>
+
+      <h3>Quest Tracking (HUD)</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Add/remove a quest from the player's goal HUD and refresh it</span>
+qm.trackQuest<span class="hl-punc">(</span>player<span class="hl-punc">,</span> playerRef<span class="hl-punc">,</span> <span class="hl-str">"my_quest"</span><span class="hl-punc">);</span>
+qm.untrackQuest<span class="hl-punc">(</span>player<span class="hl-punc">,</span> playerRef<span class="hl-punc">,</span> <span class="hl-str">"my_quest"</span><span class="hl-punc">);</span>
+
+<span class="hl-cmt">// Rebuild the HUD for a player (call after changing tracked quests or player data)</span>
+qm.refreshHud<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span></code></pre>
+
+      <h3>Evaluating Requirements Programmatically</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Test a single requirement string for a player</span>
+<span class="hl-type">RequirementManager</span> rm   <span class="hl-punc">=</span> qm.getRequirementManager<span class="hl-punc">();</span>
+<span class="hl-type">PlayerData</span>         data <span class="hl-punc">=</span> qm.getPlayerData<span class="hl-punc">(</span>playerRef<span class="hl-punc">);</span>
+<span class="hl-kw">boolean</span> passes <span class="hl-punc">=</span> rm.meetsRequirementPublic<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> data<span class="hl-punc">,</span> <span class="hl-str">"questCompleted:my_quest"</span><span class="hl-punc">);</span></code></pre>
+
+      <h3>Executing Actions Programmatically</h3>
+      <pre class="code-block"><code><span class="hl-cmt">// Execute an arbitrary list of action strings for a player</span>
+qm.executeActions<span class="hl-punc">(</span>playerRef<span class="hl-punc">,</span> List.of<span class="hl-punc">(</span>
+    <span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"track:goblin_kills:kill:Goblin"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"item:IronSword:1"</span>
+<span class="hl-punc">));</span></code></pre>
+    </div>
+
+    <!-- ======================== ACCESSING QUEST CONFIG ======================== -->
+    <div class="section-group">
+      <h2>Reading Quest &amp; Page Configs</h2>
+      <p>
+        The in-memory quest and page maps are accessible if you need to inspect quest
+        definitions at runtime.
+      </p>
+      <pre class="code-block"><code><span class="hl-cmt">// In-memory map of all quests, keyed by quest ID</span>
+<span class="hl-type">Map</span>&lt;<span class="hl-type">String</span>, <span class="hl-type">Quest</span>&gt; quests <span class="hl-punc">=</span> ql.getQuestConfig<span class="hl-punc">().</span>getQuestConfig<span class="hl-punc">().</span>getQuests<span class="hl-punc">();</span>
+
+<span class="hl-cmt">// In-memory map of all pages, keyed by page ID</span>
+<span class="hl-type">Map</span>&lt;<span class="hl-type">String</span>, <span class="hl-type">Page</span>&gt; pages <span class="hl-punc">=</span> ql.getPageConfig<span class="hl-punc">().</span>get<span class="hl-punc">().</span>getPages<span class="hl-punc">();</span>
+
+<span class="hl-cmt">// NPC → quest mappings</span>
+<span class="hl-type">NpcConfig</span> npcs <span class="hl-punc">=</span> ql.getNpcConfig<span class="hl-punc">().</span>get<span class="hl-punc">();</span></code></pre>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Read-Only Recommendation</div>
+          <p>
+            These maps are the live in-memory state. Treat them as read-only unless you also
+            call <code>plugin.getQuestConfig().save()</code> after any writes. Mutating them
+            without saving leaves the disk state out of sync.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== QUICK REFERENCE ======================== -->
+    <h2>API Quick Reference</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="2" style="font-weight:600;background:var(--surface-2,#f5f5f7)">QuestLinesAPI — ql.getApi()</td></tr>
+          <tr>
+            <td>api.hasCompletedQuest(playerRef, questId)</td>
+            <td>True if the player has completed the quest</td>
+          </tr>
+          <tr>
+            <td>api.hasStartedQuest(playerRef, questId)</td>
+            <td>True if the player has started but not completed the quest</td>
+          </tr>
+          <tr>
+            <td>api.hasTag(playerRef, tag)</td>
+            <td>True if the player has the given tag</td>
+          </tr>
+          <tr>
+            <td>api.getProgress(playerRef, key)</td>
+            <td>Named tracker count value (key = tracker ID, e.g. <code>"goblin_kills"</code>); 0 if not set</td>
+          </tr>
+          <tr>
+            <td>api.getVariable(playerRef, name)</td>
+            <td>Named variable value; 0.0 if not set</td>
+          </tr>
+          <tr>
+            <td>api.getTimestamp(playerRef, key)</td>
+            <td>Epoch-ms timestamp; 0 if not set</td>
+          </tr>
+          <tr>
+            <td>api.getCompletedQuests / getStartedQuests / getTags / getTrackedQuests(playerRef)</td>
+            <td>Unmodifiable list views of player quest state</td>
+          </tr>
+          <tr>
+            <td>api.getAllProgress / getAllVariables(playerRef)</td>
+            <td>Unmodifiable map views of counters / variables</td>
+          </tr>
+          <tr>
+            <td>api.getPlayerLocale(playerRef)</td>
+            <td>Player's preferred locale code (e.g. <code>"en-US"</code>); defaults to <code>"en-US"</code> when unset</td>
+          </tr>
+          <tr>
+            <td>api.addTag(playerRef, tag)</td>
+            <td>Add a tag and save</td>
+          </tr>
+          <tr>
+            <td>api.removeTag(playerRef, tag)</td>
+            <td>Remove a tag and save</td>
+          </tr>
+          <tr>
+            <td>api.setVariable(playerRef, name, value)</td>
+            <td>Set a named variable and save</td>
+          </tr>
+          <tr>
+            <td>api.setProgress(playerRef, key, value)</td>
+            <td>Set a progress counter and save (0 resets the key)</td>
+          </tr>
+          <tr>
+            <td>api.meetsRequirement(playerRef, requirementString)</td>
+            <td>Evaluate a single requirement string</td>
+          </tr>
+          <tr>
+            <td>api.meetsRequirements(playerRef, ...)</td>
+            <td>Evaluate multiple requirements — all must pass; accepts List or varargs</td>
+          </tr>
+          <tr>
+            <td>api.executeAction(playerRef, actionString)</td>
+            <td>Execute a single action string</td>
+          </tr>
+          <tr>
+            <td>api.executeActions(playerRef, ...)</td>
+            <td>Execute multiple action strings in order; accepts List or varargs</td>
+          </tr>
+          <tr>
+            <td>api.isQuestRepeatable(questId)</td>
+            <td>True if the quest is configured as repeatable; false if not found</td>
+          </tr>
+          <tr>
+            <td>api.getQuestlineId(questId)</td>
+            <td>Questline ID the quest belongs to; empty string if none or quest not found</td>
+          </tr>
+          <tr>
+            <td>api.getQuestlineTitle(questId)</td>
+            <td>Display title of the quest's questline; empty string if none or quest not found</td>
+          </tr>
+          <tr>
+            <td>api.getQuestTitle(questId, locale | playerRef)</td>
+            <td>Locale-aware quest title; falls back to server default locale, then any translation, then empty</td>
+          </tr>
+          <tr>
+            <td>api.getQuestDescription(questId, locale | playerRef)</td>
+            <td>Locale-aware quest description with the same fallback chain</td>
+          </tr>
+          <tr>
+            <td>api.getQuestRewards(questId, locale | playerRef)</td>
+            <td>Locale-aware rewards text with the same fallback chain</td>
+          </tr>
+          <tr>
+            <td>api.getQuestsInQuestline(questlineId)</td>
+            <td>Unmodifiable list of all quest IDs assigned to the given questline</td>
+          </tr>
+          <tr>
+            <td>api.getQuestlineIds()</td>
+            <td>Unmodifiable set of all distinct questline IDs that have at least one quest</td>
+          </tr>
+          <tr>
+            <td>api.setQuestline(questId, questlineId, questlineTitle)</td>
+            <td>Assign a quest to a questline and save; pass empty strings to clear</td>
+          </tr>
+          <tr>
+            <td>api.onQuestStarted((playerRef, questId) -&gt; ...)</td>
+            <td>Register a listener fired on every <code>startquest:</code> action</td>
+          </tr>
+          <tr>
+            <td>api.onQuestCompleted((playerRef, questId) -&gt; ...)</td>
+            <td>Register a listener fired on every <code>completequest:</code> action (including repeatable quests)</td>
+          </tr>
+          <tr>
+            <td>api.onQuestRemoved((playerRef, questId) -&gt; ...)</td>
+            <td>Register a listener fired on every <code>removequest:</code> action</td>
+          </tr>
+          <tr>
+            <td>api.onResponseSelected(event -&gt; ...)</td>
+            <td>Register a listener fired when a dialogue response is committed (before its actions run)</td>
+          </tr>
+          <tr>
+            <td>api.onTrackerProgress(event -&gt; ...)</td>
+            <td>Register a listener fired when a named tracker's count advances</td>
+          </tr>
+          <tr>
+            <td>api.setHudEnabled(playerRef, enabled)</td>
+            <td>Show or hide the quest-goal HUD for a player (runtime-only; cleared on disconnect)</td>
+          </tr>
+          <tr>
+            <td>api.isHudEnabled(playerRef)</td>
+            <td>True unless the HUD has been explicitly suppressed via <code>setHudEnabled</code></td>
+          </tr>
+          <tr>
+            <td>api.getNpcsWithQuests()</td>
+            <td>Unmodifiable set of all NPC IDs with direct quest assignments</td>
+          </tr>
+          <tr>
+            <td>api.getQuestsForNpc(npcId)</td>
+            <td>Ordered list of quest IDs directly assigned to the given NPC</td>
+          </tr>
+          <tr>
+            <td>api.getNpcsForQuest(questId)</td>
+            <td>All NPC IDs that have the given quest directly assigned</td>
+          </tr>
+          <tr>
+            <td>api.registerRequirement(r)</td>
+            <td>Register a custom <code>Requirement</code> implementation</td>
+          </tr>
+          <tr>
+            <td>api.registerRequirement(r, descriptor)</td>
+            <td>Register with a <code>RequirementDescriptor</code> lambda for HUD/journal objective labels</td>
+          </tr>
+          <tr>
+            <td>api.registerAction(a)</td>
+            <td>Register a custom <code>Action</code> implementation</td>
+          </tr>
+          <tr>
+            <td>api.registerTextVariable(prefix, fn)</td>
+            <td>Register a custom text variable substitution</td>
+          </tr>
+          <tr><td colspan="2" style="font-weight:600;background:var(--surface-2,#f5f5f7)">Advanced — QuestManager &amp; configs</td></tr>
+          <tr>
+            <td>ql.getQuestManager()</td>
+            <td>Access the <code>QuestManager</code> facade</td>
+          </tr>
+          <tr>
+            <td>ql.getTextFormatter()</td>
+            <td>Access the <code>TextFormatter</code> for manual variable substitution</td>
+          </tr>
+          <tr>
+            <td>ql.getQuestConfig()</td>
+            <td>Access the directory-backed quest config (in-memory + I/O)</td>
+          </tr>
+          <tr>
+            <td>ql.getPageConfig()</td>
+            <td>Access the page config (delegates to quest config)</td>
+          </tr>
+          <tr>
+            <td>ql.getPlayerConfig()</td>
+            <td>Access the player data config</td>
+          </tr>
+          <tr>
+            <td>ql.getNpcConfig()</td>
+            <td>Access the NPC → quest mapping config</td>
+          </tr>
+          <tr>
+            <td>qm.getPlayerData(playerRef)</td>
+            <td>Get (or auto-create) a player's <code>PlayerData</code></td>
+          </tr>
+          <tr>
+            <td>qm.savePlayerData(playerRef, data)</td>
+            <td>Persist a player's <code>PlayerData</code> to disk</td>
+          </tr>
+          <tr>
+            <td>qm.resolvePageAndQuestForPlayer(playerRef, npcKey)</td>
+            <td>Find the first passing page across all quests for an NPC; returns <code>PageResolution</code> or null</td>
+          </tr>
+          <tr>
+            <td>qm.resolveCurrentPageForQuest(playerRef, questId)</td>
+            <td>Find the player's current page in a specific quest</td>
+          </tr>
+          <tr>
+            <td>qm.executeActions(playerRef, actions)</td>
+            <td>Execute a list of action strings for a player</td>
+          </tr>
+          <tr>
+            <td>qm.getRequirementManager().meetsRequirementPublic(playerRef, data, req)</td>
+            <td>Evaluate a single requirement string programmatically</td>
+          </tr>
+          <tr>
+            <td>qm.trackQuest(player, playerRef, questId)</td>
+            <td>Add quest to player's HUD tracking list and refresh HUD</td>
+          </tr>
+          <tr>
+            <td>qm.untrackQuest(player, playerRef, questId)</td>
+            <td>Remove quest from player's HUD tracking list and refresh HUD</td>
+          </tr>
+          <tr>
+            <td>qm.refreshHud(playerRef)</td>
+            <td>Rebuild the Quest Goal HUD for a player</td>
+          </tr>
+          <tr>
+            <td>QuestLinesPlugin.getInstance()</td>
+            <td>Static singleton accessor (use sparingly — prefer the injected instance)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

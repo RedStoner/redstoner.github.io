@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Admin Regions</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">Admin Regions</h1>
+      <p class="page-subtitle">
+        Admin-defined protected zones drawn with the Claim Staff &mdash; rectangular
+        or polygonal, with numeric priority and per-flag exclusions.
+      </p>
+    </div>
+
+    <p>
+      Admins define protected regions with a wand workflow. Regions can be
+      <strong>rectangular</strong> (two corner clicks) or
+      <strong>polygonal</strong> (three or more vertex clicks).
+    </p>
+
+    <!-- Rectangular Regions -->
+    <div data-section-body="Rectangular Regions">
+    <h2 data-section="Rectangular Regions">Rectangular Regions</h2>
+    <ol>
+      <li>Run <code>/claim wand</code> to receive the Claim Staff.</li>
+      <li><strong>Rectangle (default):</strong> left-click a block to set Pos1, right-click a block to set Pos2.</li>
+      <li>A selection box outline renders between the two corners.</li>
+      <li>Run <code>/claim admin</code> to open the admin region list, then
+          <em>Create from Wand Selection</em>.</li>
+    </ol>
+    <p>
+      If a client-side mod conflicts with the Claim Staff click handler, the
+      same selection can be built from commands instead:
+      <code>/claim pos1</code> and <code>/claim pos2</code> set each corner to
+      your current block, <code>/claim select &lt;x1&gt; &lt;y1&gt; &lt;z1&gt; &lt;x2&gt; &lt;y2&gt; &lt;z2&gt;</code>
+      sets both corners at once from explicit coordinates, and
+      <code>/claim deselect</code> clears the selection. They write to the same
+      wand session and trigger the same selection box outline.
+    </p>
+    <p>
+      The creation form asks for name, priority, type (Admin / Rent / Buy), and
+      &mdash; for rent/buy &mdash; price and duration. Checking <strong>Expand Y</strong>
+      extends the region vertically to cover the full world height regardless of
+      the clicked Y coordinates.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Claim Staff</div>
+        <p>
+          The Claim Staff is a Hytale item defined in
+          <code>Server/Item/Items/QuestLinesClaims_Staff.json</code>. It is
+          identified by an item NBT tag, so the underlying model can be swapped
+          without code changes. The wand session is in-memory only and resets if
+          the player disconnects.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Polygon Regions -->
+    <div data-section-body="Polygon Regions">
+    <h2 data-section="Polygon Regions">Polygon Regions</h2>
+    <p>
+      For irregular shapes &mdash; carving around a building, following a coastline,
+      or excluding a small interior &mdash; toggle polygon mode with
+      <code>/region polymode</code> (also registered as <code>/claim polymode</code>).
+      Each wand click then adds or removes a vertex instead of setting Pos1/Pos2:
+    </p>
+    <ul>
+      <li><strong>Left-click</strong> a block to add a vertex at that XZ position.</li>
+      <li><strong>Right-click</strong> a block to remove the most recently added vertex.</li>
+      <li>The selection visualiser highlights every vertex as a cyan cube and connects
+          consecutive vertices with a solid edge.</li>
+      <li>A polygon needs at least <strong>three vertices</strong> before
+          <code>/region create</code> will save it.</li>
+    </ul>
+    <p>
+      Wand-less alternatives mirror the wand while polygon mode is on:
+      <code>/region pos1</code> adds a vertex at your current block, and
+      <code>/region pos2</code> removes the last vertex.
+      <code>/region deselect</code> clears every vertex (and Pos1/Pos2). Running
+      <code>/region polymode</code> again exits polygon mode and clears any
+      in-progress vertex list.
+    </p>
+    <p>
+      Containment uses a point-in-polygon test on the XZ plane. The vertical range
+      is controlled by the <strong>Min Y</strong> / <strong>Max Y</strong> inputs in
+      the region edit form (auto-seeded from the wand clicks' Y values; you almost
+      always want to widen this to a sensible floor and ceiling). Checking
+      <strong>Expand Y</strong> hides the Min Y / Max Y inputs and stretches the
+      region to the full world height regardless. Polygon support carries through to
+      every region type: admin, rent, buy, and guild-hall.
+    </p>
+    <div class="callout warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Schematics are AABB-only</div>
+        <p>
+          Saving and restoring rent/buy schematics still uses the polygon's
+          axis-aligned bounding box because Hytale's Prefab API only takes a
+          rectangular volume. Blocks inside the AABB but outside the polygon will
+          be captured and overwritten on restore. For now, keep schematic-using
+          rent/buy regions rectangular and use polygons primarily for protection
+          and visual claim boundaries.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          Turning a region into a leased or purchasable plot is covered on
+          <a href="claims-rentbuy.html">Rent &amp; Buy Regions</a>; the wand and
+          admin command reference is on <a href="claims-commands.html">Commands</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

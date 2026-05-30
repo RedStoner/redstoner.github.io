@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines &mdash; Wave Arenas</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="wavearenas" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Core feature</div>
+      <h1 class="page-title">Wave Arenas</h1>
+      <p class="page-subtitle">
+        Server-defined wave arenas driven directly by the QuestLines Core engine
+        (<code>net.evilcraft.questlines.arena.WaveArenaEngine</code>). No optional dependency.
+        Trigger from quests, track progress with named trackers, fire rewards via core action
+        lists. Stored as JSON in <code>mods/QuestLines/wavearenas/</code> and authored via
+        <code>/ql waveeditor</code>.
+      </p>
+    </div>
+
+    <!-- ======================== OVERVIEW ======================== -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      The engine drives a per-player phase machine (COUNTDOWN &rarr; SPAWNING &rarr; ACTIVE
+      &rarr; WAVE_CLEAR &rarr; INTERVAL &rarr; COMPLETED, with FAILED reachable from any
+      phase) and spawns NPCs around the arena center on the world thread. Player death,
+      timeout, leash break, manual abort, and disconnect all transition to FAILED with the
+      relevant reason. Sessions are ephemeral &mdash; they do not survive a server restart.
+    </p>
+    <p>
+      Two modes are supported:
+    </p>
+    <ul>
+      <li><strong>Fixed</strong> &mdash; explicit per-wave mob lists. Wave 1 spawns these
+          mobs, wave 2 spawns those, and so on.</li>
+      <li><strong>Generated</strong> &mdash; random rolls from a weighted mob pool. Wave size
+          scales by <code>BaseCount</code> &times; <code>CountScaling</code><sup>(wave-1)</sup>,
+          and every Nth wave can be promoted to a boss wave drawn from boss-tagged pool entries.</li>
+    </ul>
+    <p>
+      The editor never stores the arena center &mdash; that&apos;s passed by the quest that
+      starts the arena (see the <code>startArena</code> action below). The same arena can be
+      reused from many quests, each handing off a different center point.
+    </p>
+    </div>
+
+    <!-- ======================== EDITOR ======================== -->
+    <div data-section-body="Editor">
+    <h2 data-section="Editor">Editor</h2>
+    <p>
+      Open the editor with <code>/ql waveeditor</code> (alias <code>/ql we</code>). Requires
+      <code>questlines.admin</code>. The left column lists every arena and exposes ADD /
+      DUPLICATE / DELETE; the right column edits the currently selected arena.
+    </p>
+    <p>
+      Mob entries are picked through a category dropdown plus a searchable NPC-type dropdown
+      backed by a bundled NPC catalog (340+ ids across 22 categories: Beast, Boss, Critter,
+      Elemental, Flying_Beast, Flying_Critter, Flying_Wildlife, Human, Intelligent, Livestock,
+      Pets, Scifi, Swimming_Beast, Swimming_Critter, Swimming_Wildlife, Undead, Void,
+      Wildlife, and a few showcase / test groups). Any NPC type id is accepted &mdash;
+      including types your server registers beyond the bundled catalog &mdash; but unknown
+      ids produce a validation warning on <code>/ql reload</code>.
+    </p>
+    </div>
+
+    <!-- ======================== FIELDS ======================== -->
+    <div data-section-body="Arena Fields">
+    <h2 data-section="Arena Fields">Arena Fields</h2>
+    <table class="reference-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>Id</code></td><td>string</td><td>Stable id used by <code>startArena:id</code>. Must be filename-safe (letters, digits, <code>_</code>, <code>-</code>).</td></tr>
+        <tr><td><code>DisplayName</code></td><td>string</td><td>Shown in the per-player Arena HUD during the run.</td></tr>
+        <tr><td><code>DisplayColor</code></td><td>string</td><td>Hex color (e.g. <code>#cc44cc</code>). Reserved; not currently surfaced by the Core HUD but stored for downstream integrations.</td></tr>
+        <tr><td><code>WaveCount</code></td><td>int</td><td>Number of waves in the run.</td></tr>
+        <tr><td><code>TimeLimitSeconds</code></td><td>int</td><td>Run-wide time limit. <code>&lt;= 0</code> &rarr; unlimited (HUD shows &quot;unlimited&quot;).</td></tr>
+        <tr><td><code>SpawnRadius</code></td><td>float</td><td>Spawn radius around the arena center (passed by the start action).</td></tr>
+        <tr><td><code>IntervalSeconds</code></td><td>int</td><td>Pause between waves.</td></tr>
+        <tr><td><code>CountdownSeconds</code></td><td>int</td><td>Countdown shown before each wave starts.</td></tr>
+        <tr><td><code>BaseLevel</code></td><td>int</td><td>Mob level for wave 1. Surfaced in the HUD.</td></tr>
+        <tr><td><code>LevelScaling</code></td><td>float</td><td>Level increment per wave. <code>BaseLevel + round(LevelScaling &times; (wave-1))</code>.</td></tr>
+        <tr><td><code>LeashDistance</code></td><td>float</td><td>Max horizontal distance from arena center. Stepping outside fails the run as <code>LEFT_ZONE</code>. <code>&lt;= 0</code> disables the check.</td></tr>
+        <tr><td><code>CompletionActions</code></td><td>string[]</td><td>Core action strings fired when the run completes successfully (any action: <code>giveitem:</code>, <code>elxp:</code>, <code>rpgxp:</code>, <code>title:</code>, <code>chat:</code>, ...).</td></tr>
+        <tr><td><code>FailActions</code></td><td>string[]</td><td>Core action strings fired on any failure (player death, timeout, manual abort, leash break, disconnect).</td></tr>
+        <tr><td><code>InstanceBlacklist</code></td><td>string[]</td><td>Substrings of world ids in which the arena refuses to start.</td></tr>
+        <tr><td><code>BlockedMessage</code></td><td>string</td><td>Shown when the blacklist trips (reserved for UI integrations).</td></tr>
+        <tr><td><code>ZoneParticleId</code></td><td>string</td><td>Particle id sprayed at the arena boundary while ACTIVE.</td></tr>
+        <tr><td><code>ZoneParticleScale</code></td><td>float</td><td>Scale multiplier for the boundary particle.</td></tr>
+        <tr><td><code>Mode</code></td><td>Fixed | Generated</td><td>Selects which set of mode-specific fields the engine consumes.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- ======================== FIXED MODE ======================== -->
+    <div data-section-body="Fixed Mode">
+    <h2 data-section="Fixed Mode">Fixed Mode</h2>
+    <p>
+      Each wave is an explicit list of <code>(NpcTypeId, Count)</code> entries. Use ADD WAVE
+      to grow the wave list, select a wave, then add mobs from the entity picker. <code>WaveCount</code>
+      is independent of the number of authored waves &mdash; if you author fewer waves than
+      <code>WaveCount</code>, the validator warns and the extras don&apos;t play.
+    </p>
+    </div>
+
+    <!-- ======================== GENERATED MODE ======================== -->
+    <div data-section-body="Generated Mode">
+    <h2 data-section="Generated Mode">Generated Mode</h2>
+    <p>
+      Each pool entry is <code>(NpcTypeId, Weight, MinWave, MaxWave, Boss)</code>. Wave
+      size grows with <code>BaseCount &times; CountScaling<sup>wave-1</sup></code>, drawn
+      from non-Boss entries. When <code>BossEveryN &gt; 0</code>, every Nth wave
+      additionally rolls one Boss-tagged entry that spawns alongside the regular mobs. If
+      no Boss entry is eligible (empty Boss pool, or all gated out by MinWave/MaxWave),
+      the wave is just the regular roll. When <code>BossEveryN = 0</code> the Boss flag is
+      ignored and all entries roll together on every wave. <code>MinWave</code> gates an
+      entry from below &mdash; e.g. an Alpha_Rex with <code>MinWave = 9</code> won&apos;t
+      roll until wave 9. <code>MaxWave</code> gates from above &mdash; e.g. a low-level
+      Grunt with <code>MaxWave = 5</code> stops rolling after wave 5.
+      <code>MaxWave = 0</code> means no upper bound.
+    </p>
+    </div>
+
+    <!-- ======================== TRIGGERING ======================== -->
+    <div data-section-body="Triggering from a Quest">
+    <h2 data-section="Triggering from a Quest">Triggering from a Quest</h2>
+    <p>
+      Use the <code>startArena</code> action on any response or page action list:
+    </p>
+    <pre><code>startArena:shadow_trial               // arena centered on the player
+startArena:shadow_trial:120:64:-340   // explicit center (supports ~-relative)
+failArena                             // abort the player&apos;s current arena</code></pre>
+    <p>
+      Track progress via named trackers fed by the engine:
+    </p>
+    <pre><code>track:wavesCleared:arena_wave:shadow_trial      // increment on every wave clear
+track:runsDone:arena_complete:shadow_trial      // increment on full completion
+{track:runsDone} runs cleared                   // text variable for objectives</code></pre>
+    </div>
+
+    <!-- ======================== LIFECYCLE ======================== -->
+    <div data-section-body="Reload Behavior">
+    <h2 data-section="Reload Behavior">Reload Behavior</h2>
+    <p>
+      The engine is a single instance owned by <code>QuestLinesPlugin</code> and reads
+      arena configs from <code>DirectoryWaveArenaConfig</code> on demand at
+      <code>startArena</code> time &mdash; there is no separate registration step. Edits made
+      via the editor go live the moment they&apos;re saved. <code>/ql reload</code> rebuilds
+      the in-memory config; in-flight sessions are unaffected.
+    </p>
+    <p>
+      Validation runs on every reload and on <code>/ql validate</code>. Errors are logged to
+      console; the reload itself never blocks on validation failure.
+    </p>
+    </div>
+
+    <!-- ======================== EXAMPLE ======================== -->
+    <div data-section-body="Example File">
+    <h2 data-section="Example File">Example File</h2>
+<pre><code>// mods/QuestLines/wavearenas/shadow_trial.json
+{
+  "Id": "shadow_trial",
+  "DisplayName": "Shadow Trial",
+  "DisplayColor": "#cc44cc",
+  "WaveCount": 5,
+  "TimeLimitSeconds": 300,
+  "SpawnRadius": 8.0,
+  "IntervalSeconds": 10,
+  "CountdownSeconds": 3,
+  "InstanceBlacklist": ["instance-"],
+  "BlockedMessage": "You cannot start a Shadow Trial inside a dungeon.",
+  "ZoneParticleId": "",
+  "ZoneParticleScale": 0.0,
+  "BaseLevel": 3,
+  "LevelScaling": 0.5,
+  "LeashDistance": 24.0,
+  "CompletionActions": [
+    "giveitem:Coin:200",
+    "elxp:give:1500",
+    "chat:&aShadow Trial cleared! Reward sent."
+  ],
+  "FailActions": [
+    "chat:&cThe shadows reclaim you. Try again."
+  ],
+  "Mode": "Fixed",
+  "Waves": [
+    { "Entries": [ {"NpcTypeId": "Goblin_Scrapper", "Count": 3}, {"NpcTypeId": "Skeleton",        "Count": 2} ] },
+    { "Entries": [ {"NpcTypeId": "Goblin_Lobber",   "Count": 4}, {"NpcTypeId": "Skeleton_Giant",  "Count": 1} ] },
+    { "Entries": [ {"NpcTypeId": "Zombie_Aberrant", "Count": 6} ] }
+  ]
+}</code></pre>
+    </div>
+
+  </div>
+</div>
+
+<script src="nav.js" defer></script>
+<script src="toc.js" defer></script>
+<script src="sections.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Cheat Sheet</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="cheatsheet" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content cheat-sheet">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Reference</div>
+      <h1 class="page-title">Cheat Sheet</h1>
+      <p class="page-subtitle">
+        Every requirement, action, tracking flag, text variable, and formatting tag in one place.
+        <br>
+        <span style="font-size:0.85em">
+          <span class="badge badge-green" style="margin-right:6px">tracking req.</span> needs a tracking tag first &nbsp;
+          <span class="badge badge-orange" style="margin-right:6px">VaultUnlocked</span> optional dependency &nbsp;
+          <span class="badge badge-blue" style="margin-right:6px">OrbisGuard</span> optional dependency &nbsp;
+          <span class="badge badge-purple" style="margin-right:6px">HyFishing</span> optional dependency
+        </span>
+      </p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  TOP ROW: Requirements (left) + Actions (right)             -->
+    <!-- ============================================================ -->
+    <div class="cs-grid">
+
+      <!-- ========== REQUIREMENTS ========== -->
+      <div data-section-body="Requirements">
+        <h2 id="requirements" data-section="Requirements">Requirements</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Format</th><th>Description</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr class="table-group-header"><td colspan="3">Quest State</td></tr>
+              <tr>
+                <td>questCompleted:id</td>
+                <td>Quest is completed</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>questNotCompleted:id</td>
+                <td>Quest is not completed</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>questStarted:id</td>
+                <td>Quest is in progress</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>questNotStarted:id</td>
+                <td>Quest has not been started</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Tags</td></tr>
+              <tr>
+                <td>hasTag:tagName</td>
+                <td>Player has this tag</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>notTag:tagName</td>
+                <td>Player does not have this tag — <em>deprecated</em>, use <code>!hastag:tagName</code></td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Named Trackers</td></tr>
+              <tr>
+                <td>track:id:N</td>
+                <td>Named tracker count &ge; N (kill, killcitizen, block, place, playerkill, travel, mount, dismount, mountdistance, craft, harvest, pickup, use, launch, portal, parry, counter, dodge, fishing; <code>*</code> wildcard ok on target). N is a positive integer.</td>
+                <td class="cs-note"><span class="badge badge-green">tracking req.</span></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Inventory</td></tr>
+              <tr>
+                <td>item:itemId:qty</td>
+                <td>Has &ge; qty of item (not consumed)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>item:itemId:qty:true</td>
+                <td>Has &ge; qty of item (consumed on click)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">NPC Talk &amp; Name</td></tr>
+              <tr>
+                <td>talk:citizenName:qty</td>
+                <td>Talked to this NPC &ge; qty times</td>
+                <td class="cs-note" style="color:var(--text-muted);font-size:0.75rem">auto-tracked</td>
+              </tr>
+              <tr>
+                <td>npcname:displayName</td>
+                <td>NPC that opened dialogue has this name (case-insensitive)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Timer &amp; Cooldown</td></tr>
+              <tr>
+                <td>cooldown:key:seconds</td>
+                <td>&ge; seconds since setTimestamp, or never set</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>timedActive:key</td>
+                <td>Timer running (reads stored duration)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>timedActive:key:seconds</td>
+                <td>Timer running (explicit duration)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>timedExpired:key</td>
+                <td>Timer expired (reads stored duration)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>timedExpired:key:seconds</td>
+                <td>Timer expired (explicit duration)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Position &amp; Depth</td></tr>
+              <tr>
+                <td>nearPosition:x:y:z:radius</td>
+                <td>Within radius blocks of point</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>depth:less|greater|equal:value</td>
+                <td>Player Y-position comparison</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>distanceFrom:less|greater|equal:x:y:z:dist</td>
+                <td>Distance from fixed point</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">World</td></tr>
+              <tr>
+                <td>timeOfDay:morning|afternoon|evening|night</td>
+                <td>Morning 6–11, afternoon 12–16, evening 17–20, night 21–5</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>moonPhase:full|waning|new|waxing|&lt;int&gt;</td>
+                <td>Moon phase (0=full, 4=new, 1–3=waning, 5–7=waxing)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>date:MM-dd | date:yyyy-MM-dd | date:MM-dd:MM-dd</td>
+                <td>Server local date / range. Range year-wraps when start &gt; end.</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>world:worldName</td>
+                <td>Player is in named world</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Named Variables</td></tr>
+              <tr>
+                <td>variable:name:equal:value</td>
+                <td>Variable = value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:greater:value</td>
+                <td>Variable &gt; value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:less:value</td>
+                <td>Variable &lt; value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:greaterOrEqual:value</td>
+                <td>Variable &ge; value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:lessOrEqual:value</td>
+                <td>Variable &le; value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>string:name:equals:value</td>
+                <td>String variable equals value (also: notequals, contains, notcontains, startswith, endswith)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>string:name:empty</td>
+                <td>String variable is empty / unset (companion: <code>notempty</code>)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Position</td></tr>
+              <tr>
+                <td>inArea:x1:y1:z1:x2:y2:z2</td>
+                <td>Inside axis-aligned box (AABB) defined by two corners</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>areaCheck:[entityA,entityB]:x:y:z:radius</td>
+                <td>Any listed entity exists within radius of point; <code>*</code> wildcards ok; <code>Player</code> matches any player</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Logic</td></tr>
+              <tr>
+                <td>any:req1|req2|...</td>
+                <td>OR — true if any sub-requirement passes</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>not:requirement</td>
+                <td>Negate any requirement</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>!requirement</td>
+                <td>Shorthand negation (e.g. !hastag:tag)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>macro:name</td>
+                <td>All requirements in named requirement macro must pass (AND); if AnyMode:true, at least one must pass (OR). Defined in macros/&lt;name&gt;.json.</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Economy &amp; Permissions</td></tr>
+              <tr>
+                <td>economy:canafford:amount</td>
+                <td>Balance &ge; amount</td>
+                <td class="cs-note"><span class="badge badge-orange">VaultUnlocked</span></td>
+              </tr>
+              <tr>
+                <td>permission:has:perm.node</td>
+                <td>Player has permission node</td>
+                <td class="cs-note"><span class="badge badge-orange">VaultUnlocked</span></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">MMO Skill Tree</td></tr>
+              <tr>
+                <td>mmo:skillId:equal:value</td>
+                <td>Skill level = value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">MMOSkillTree</td>
+              </tr>
+              <tr>
+                <td>mmo:skillId:greater:value</td>
+                <td>Skill level &gt; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">MMOSkillTree</td>
+              </tr>
+              <tr>
+                <td>mmo:skillId:less:value</td>
+                <td>Skill level &lt; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">MMOSkillTree</td>
+              </tr>
+              <tr>
+                <td>mmo:skillId:greaterOrEqual:value</td>
+                <td>Skill level &ge; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">MMOSkillTree</td>
+              </tr>
+              <tr>
+                <td>mmo:skillId:lessOrEqual:value</td>
+                <td>Skill level &le; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">MMOSkillTree</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">RPG Leveling</td></tr>
+              <tr>
+                <td>rpglevel:max</td>
+                <td>Player is at max RPG level</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+              <tr>
+                <td>rpglevel:equal:value</td>
+                <td>RPG level = value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+              <tr>
+                <td>rpglevel:greater:value</td>
+                <td>RPG level &gt; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+              <tr>
+                <td>rpglevel:less:value</td>
+                <td>RPG level &lt; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+              <tr>
+                <td>rpglevel:greaterOrEqual:value</td>
+                <td>RPG level &ge; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+              <tr>
+                <td>rpglevel:lessOrEqual:value</td>
+                <td>RPG level &le; value</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+              <tr>
+                <td>rpgxp:greater|less|equal|greaterOrEqual|lessOrEqual:value</td>
+                <td>Total RPG XP comparison</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Endless Leveling</td></tr>
+              <tr>
+                <td>ellevel:max</td>
+                <td>Player is at their EL level cap</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+              <tr>
+                <td>ellevel:equal|greater|less|greaterOrEqual|lessOrEqual:value</td>
+                <td>EL level comparison</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+              <tr>
+                <td>elxp:equal|greater|less|greaterOrEqual|lessOrEqual:value</td>
+                <td>EL XP comparison</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+              <tr>
+                <td>elskill:SKILL:equal|greater|less|greaterOrEqual|lessOrEqual:value</td>
+                <td>Skill attribute level (STRENGTH, HASTE, DEFENSE, LIFE_FORCE, STAMINA, FLOW, SORCERY, DISCIPLINE, PRECISION, FEROCITY)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+              <tr>
+                <td>elrace:raceId</td>
+                <td>Player's race matches (case-insensitive)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+              <tr>
+                <td>elclass:classId</td>
+                <td>Primary OR secondary class matches</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+              <tr>
+                <td>elclass:primary|secondary:classId</td>
+                <td>Specific class slot matches</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Timer (daily reset)</td></tr>
+              <tr>
+                <td>timedExact:key:hour:minute</td>
+                <td>Daily reset gate; true if timestamp unset or before last HH:MM</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Zone &amp; Biome</td></tr>
+              <tr>
+                <td>zone:regionName</td>
+                <td>Player is in named world zone</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>biome:biomeName</td>
+                <td>Player is in named biome</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Fishing</td></tr>
+              <tr>
+                <td>hasfishinbag:fishItemId:qty</td>
+                <td>Live bag check; * for any fish; no tracker needed</td>
+                <td class="cs-note"><span class="badge badge-purple">HyFishing</span></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Mailbox</td></tr>
+              <tr>
+                <td>hasmail</td>
+                <td>Player has at least one queued item in their Books-and-Papers mailbox</td>
+                <td class="cs-note">Books and Papers</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Regions</td></tr>
+              <tr>
+                <td>inregion:regionId</td>
+                <td>Player is inside named region</td>
+                <td class="cs-note">QL Claims / OrbisGuard</td>
+              </tr>
+              <tr>
+                <td>regionowner:regionId</td>
+                <td>Player owns named region (rent tenant or buy owner for QL Claims)</td>
+                <td class="cs-note">QL Claims / OrbisGuard</td>
+              </tr>
+              <tr>
+                <td>regionmember:regionId</td>
+                <td>Player is member or owner of named region</td>
+                <td class="cs-note">QL Claims / OrbisGuard</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Achievements</td></tr>
+              <tr>
+                <td>achievement:id[:minStage]</td>
+                <td>Player has unlocked any stage (or at least <em>minStage</em>) of the named achievement</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>achievementstages:id:n</td>
+                <td>Player has unlocked at least <em>n</em> stages of a specific achievement</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>achievementcount:n</td>
+                <td>Player has unlocked at least <em>n</em> distinct achievements</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>achievementpoints:n</td>
+                <td>Total earned achievement points across all unlocked stages &ge; <em>n</em></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>questcompletedcount:n</td>
+                <td>Player has completed at least <em>n</em> distinct quests (any quest)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Global State</td></tr>
+              <tr>
+                <td>global:hastag:tagName</td>
+                <td>Server-wide tag list contains the tag</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>global:nottag:tagName</td>
+                <td>Server-wide tag list does not contain the tag</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>global:variable:name:op:value</td>
+                <td>Server-wide variable comparison (ops: greater, less, equal, greaterOrEqual, lessOrEqual)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>global:string:name:op[:value]</td>
+                <td>Server-wide string comparison (ops: equals, notequals, contains, notcontains, startswith, endswith, empty, notempty)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Icon State</td></tr>
+              <tr>
+                <td>iconState:npcId:state</td>
+                <td>Player&rsquo;s per-NPC icon-state override is currently set to <em>state</em> (available, inprogress, objectives_complete, completed, locked, waiting, repeatable_ready, story, custom, unknown)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Icons</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Titles</td></tr>
+              <tr>
+                <td>hasTitle:titleId</td>
+                <td>Player owns the named title (unlocked, granted, or held via permission)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
+              </tr>
+              <tr>
+                <td>titleActive:titleId</td>
+                <td>The named title is the player&rsquo;s currently active selection</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div><!-- end requirements col -->
+
+      <!-- ========== ACTIONS ========== -->
+      <div data-section-body="Actions">
+        <h2 id="actions" data-section="Actions">Actions</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Format</th><th>Description</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr class="table-group-header"><td colspan="3">Named Trackers</td></tr>
+              <tr>
+                <td>track:id:type:[targets]</td>
+                <td>Create/reset a named tracker</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>track:id:type:[targets]:exclude:[excl]</td>
+                <td>Tracker with exclusion filter</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>untrack:id</td>
+                <td>Remove tracker and reset count</td>
+                <td></td>
+              </tr>
+              <tr class="table-group-header"><td colspan="3">Quest State</td></tr>
+              <tr>
+                <td>startquest:id</td>
+                <td>Add to started quests + notification</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>completequest:id</td>
+                <td>Move to completed + notification</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>removequest:id</td>
+                <td>Remove from both lists</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Achievements</td></tr>
+              <tr>
+                <td>unlockachievement:id</td>
+                <td>Force-unlock the next stage; fires that stage&rsquo;s UnlockActions</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>unlockachievement:id:tier</td>
+                <td>Force-unlock a specific 1-based stage (cascades through earlier locked stages)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>revokeachievement:id</td>
+                <td>Remove every stage of the named achievement (destructive)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>openachievements</td>
+                <td>Open the player-facing Achievements UI</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Tags</td></tr>
+              <tr>
+                <td>addTag:tagName</td>
+                <td>Add tag (no-op if already present)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>removeTag:tagName</td>
+                <td>Remove tag; resets counter if tracking flag</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Timer &amp; Cooldown</td></tr>
+              <tr>
+                <td>setTimestamp:key</td>
+                <td>Record current time (for cooldown requirement)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>clearTimestamp:key</td>
+                <td>Remove a stored timestamp (resets cooldown / timed gates)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>timedStart:key</td>
+                <td>Record current time (for timed requirements)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>timedStart:key:durationSeconds</td>
+                <td>Record time + store duration (omit seconds in requirements)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Items</td></tr>
+              <tr>
+                <td>item:itemId:qty</td>
+                <td>Give qty of item to player + notification (no negative-qty form to remove)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>givequestitem:itemId:qty</td>
+                <td>Give a PROTECTED quest item — player cannot drop or lose it</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>removequestitem:itemId:qty</td>
+                <td>Remove a protected quest item (the only way to remove one)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Commands</td></tr>
+              <tr>
+                <td>command:commandText:server</td>
+                <td>Run as server console (op-level)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">no colons in cmd</td>
+              </tr>
+              <tr>
+                <td>command:commandText:player</td>
+                <td>Run as interacting player</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">no colons in cmd</td>
+              </tr>
+              <tr>
+                <td>command:commandText:player:elevated</td>
+                <td>Run as player with temp wildcard perm</td>
+                <td class="cs-note"><span class="badge badge-orange">VaultUnlocked</span></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Navigation</td></tr>
+              <tr>
+                <td>page:pageId</td>
+                <td>Navigate to another dialogue page (place last)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">NPC Spawning</td></tr>
+              <tr>
+                <td>spawnCitizen:name:x:y:z</td>
+                <td>Clone HyCitizens NPC at position</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">~ coords ok</td>
+              </tr>
+              <tr>
+                <td>spawnCitizen:name:x:y:z:delay</td>
+                <td>Clone with delay in seconds</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>spawnCitizen:name:x:y:z:delay:qty</td>
+                <td>Clone multiple NPCs with delay</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>spawn:roleId:x:y:z</td>
+                <td>Spawn Hytale NPC by role ID</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">~ coords ok</td>
+              </tr>
+              <tr>
+                <td>spawn:roleId:x:y:z:delay</td>
+                <td>Spawn with delay in seconds</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>spawn:roleId:x:y:z:delay:qty</td>
+                <td>Spawn multiple with delay</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Named Variables</td></tr>
+              <tr>
+                <td>variable:name:set:value</td>
+                <td>Set variable to value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:add:value</td>
+                <td>Add value to variable</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:subtract:value</td>
+                <td>Subtract value from variable</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:multiply:value</td>
+                <td>Multiply variable by value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>variable:name:divide:value</td>
+                <td>Divide variable by value</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>string:name:set:value</td>
+                <td>Set per-player string variable (value preserves colons; TextFormatter vars substituted)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>string:name:concat:value</td>
+                <td>Append onto per-player string variable</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Economy</td></tr>
+              <tr>
+                <td>economy:give:amount</td>
+                <td>Deposit amount into player's account</td>
+                <td class="cs-note"><span class="badge badge-orange">VaultUnlocked</span></td>
+              </tr>
+              <tr>
+                <td>economy:take:amount</td>
+                <td>Withdraw amount from player's account</td>
+                <td class="cs-note"><span class="badge badge-orange">VaultUnlocked</span></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Sound</td></tr>
+              <tr>
+                <td>sound:soundName</td>
+                <td>Play 2D sound to interacting player</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>sound:soundName:true</td>
+                <td>Broadcast 2D sound to all players</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>sound:soundName:x:y:z</td>
+                <td>Play 3D positional sound at coordinates (broadcasts to nearby players; ~ coords ok)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>sound:soundName:x:y:z:player</td>
+                <td>Same but only to triggering player (distance-checked)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Chat / Notify / Title</td></tr>
+              <tr>
+                <td>chat:message</td>
+                <td>Send a plain chat message to the player. Everything after <code>chat:</code> is the message (colons allowed). Supports TextFormatter variables. Alias: <code>message:</code></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>notify:title[:subtitle[:color[:position[:animation[:animMs[:visibleMs[:offsetX[:offsetY]]]]]]]]</td>
+                <td>Animated popup HUD. Position: TopLeft/TopCenter/TopRight/Center/BottomLeft/BottomCenter/BottomRight. Animation: NONE/SLIDE/FADE/POP. Defaults: color #ffffff, TopCenter, SLIDE, 400ms/2500ms, offset 0/80. Colons not allowed in title/subtitle.</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>title:primary[:secondary[:server|player[:isMajor]]]</td>
+                <td>Show event title; server=broadcast world, player=self only; isMajor=true for large format</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Teleport</td></tr>
+              <tr>
+                <td>tp:x:y:z[:world]</td>
+                <td>Teleport the player to coords. <code>~</code> relative syntax supported. Optional world name (case-insensitive); no-op if the world isn't loaded.</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Conditional &amp; Delay</td></tr>
+              <tr>
+                <td>if:req1,req2,...::act1,act2,...[::elseAct1,...]</td>
+                <td>Run the then-branch if ALL requirements pass; otherwise run the optional else-branch. Each section is a comma-separated list of any size (brackets optional). <code>page:</code> cannot be used inside.</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>delay:N</td>
+                <td>Pause N seconds (decimals ok) then continue remaining actions. Not supported inside <code>random:</code>.</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">World Map Markers</td></tr>
+              <tr>
+                <td>setMarker:id:label:x:y:z[:image[:RRGGBB]]</td>
+                <td>Place a marker on the player's world map. Repeating the same id updates it. Built-in images: Home, Spawn, Portal, Warp, Death, Campfire, Coordinate, Temple_Gateway, PortalInvasion, UserA-UserF.</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>removeMarker:id</td>
+                <td>Remove the map marker with the given id (clears on reconnect)</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Per-Player Block Visibility</td></tr>
+              <tr>
+                <td>hideBlock:x:y:z[:world]<br>hideBlock:x1:y1:z1:x2:y2:z2[:world]</td>
+                <td>Hide a block (3 coords) or 3D box (6 coords) from this player only &mdash; they see Air; everyone else sees the real block. Persists across reconnect; resync runs on login and on a periodic tick (default 5s). Volume capped via <code>block_override_max_region_volume</code> (default 32768).</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>showBlock:x:y:z[:world]<br>showBlock:x1:y1:z1:x2:y2:z2[:world]</td>
+                <td>Clear a hideBlock override and re-send the real block(s). Coords must match the hidden region (any order); partial overlaps are not removed.</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Macro</td></tr>
+              <tr>
+                <td>macro:name</td>
+                <td>Execute named macro from macros/&lt;name&gt;.json. Action macros run entries in order; requirement macros AND all entries (or OR if AnyMode:true). Manage macros in the editor Macros tab.</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">MMO Skill Tree</td></tr>
+              <tr>
+                <td>mmo:xp:skillId:give:amount</td>
+                <td>Give XP in named skill</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">MMOSkillTree</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">RPG Leveling</td></tr>
+              <tr>
+                <td>rpgxp:give:amount</td>
+                <td>Give global RPG XP</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Endless Leveling</td></tr>
+              <tr>
+                <td>elxp:give:amount</td>
+                <td>Grant EL XP (respects bonuses, cap, world blacklists)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Wave Arena</td></tr>
+              <tr>
+                <td>startArena:arenaId[:x:y:z]</td>
+                <td>Start wave arena at player pos (or coords; <code>~</code> relative)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">Core</td>
+              </tr>
+              <tr>
+                <td>failArena</td>
+                <td>Abort the player's current arena session (runs FailActions)</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">Core</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Books and Papers</td></tr>
+              <tr>
+                <td>mail:itemId:qty</td>
+                <td>Push an item stack to the player's mailbox in their current world</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">Books and Papers</td>
+              </tr>
+              <tr>
+                <td>givebook:title:author:body</td>
+                <td>Give a signed book; <code>\f</code> = page break, <code>\n</code> = line break</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">Books and Papers</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Titles</td></tr>
+              <tr>
+                <td>giveTitle:titleId</td>
+                <td>Unlock the named title for the player</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
+              </tr>
+              <tr>
+                <td>removeTitle:titleId</td>
+                <td>Remove the title; clears active selection if it was set</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
+              </tr>
+              <tr>
+                <td>setTitle:titleId</td>
+                <td>Equip the title as the player's active worn title; <code>setTitle:</code> with no id clears it</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">GUI</td></tr>
+              <tr>
+                <td>opengui:guiId</td>
+                <td>Open a custom GUI screen defined in <code>mods/QuestLinesGUI/guis/&lt;id&gt;.gui.html</code></td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines GUI</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Regions</td></tr>
+              <tr>
+                <td>regionaddmember:regionId</td>
+                <td>Add player as member of region</td>
+                <td class="cs-note">QL Claims / OrbisGuard</td>
+              </tr>
+              <tr>
+                <td>regionremovemember:regionId</td>
+                <td>Remove player from region member list</td>
+                <td class="cs-note">QL Claims / OrbisGuard</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Global State</td></tr>
+              <tr>
+                <td>global:addtag:tagName</td>
+                <td>Add tag to server-wide global tag list</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>global:removetag:tagName</td>
+                <td>Remove tag from server-wide global tag list</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>global:variable:name:op:value</td>
+                <td>Mutate server-wide variable (ops: add, subtract, multiply, divide, set)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>global:string:name:set:value</td>
+                <td>Set server-wide string variable (value preserves colons)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>global:string:name:concat:value</td>
+                <td>Append onto server-wide string variable</td>
+                <td></td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Icon State</td></tr>
+              <tr>
+                <td>iconState:npcId:state</td>
+                <td>Set per-player icon-state override on the named NPC; states: available, inprogress, objectives_complete, completed, locked, waiting, repeatable_ready, story, custom, unknown</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Icons</td>
+              </tr>
+              <tr>
+                <td>iconState:npcId:state:clear</td>
+                <td>Guarded clear &mdash; removes the override only if it currently equals state</td>
+                <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Icons</td>
+              </tr>
+
+              <tr class="table-group-header"><td colspan="3">Random</td></tr>
+              <tr>
+                <td>random:[action1,action2,...]</td>
+                <td>Pick and execute one action at random (page: not allowed inside)</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div><!-- end actions col -->
+    </div><!-- end cs-grid -->
+
+    <!-- ========== TEXT VARIABLES ========== -->
+    <h2 id="variables" data-section="Text Variables">Text Variables</h2>
+    <p style="font-size:0.85rem;margin-bottom:8px">Used in <code>Dialog</code> and response <code>Text</code> fields. Substituted at display time.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Value</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{track:id}</td>
+            <td>Named tracker count (use with <code>track:</code> action)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{random:[opt1,opt2,...]}</td>
+            <td>One randomly selected entry from the bracket list</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{item:itemId}</td>
+            <td>How many of the given item the player currently has in their inventory</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{icon:itemId}</td>
+            <td>Renders an item icon inline (dialogue only; silently removed elsewhere)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{username}</td>
+            <td>Player's username</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{npcname}</td>
+            <td>Page's Name field (NPC display name)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{npcuuid}</td>
+            <td>Entity UUID of the NPC the player is currently interacting with</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{questname}</td>
+            <td>Title of player's first started quest</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{balance}</td>
+            <td>Economy balance</td>
+            <td class="cs-note"><span class="badge badge-orange">VaultUnlocked</span></td>
+          </tr>
+          <tr>
+            <td>{distancefrom:x:y:z}</td>
+            <td>Distance to (x,y,z), 1 decimal place</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{cooldown:key:totalSeconds}</td>
+            <td>Remaining cooldown (e.g. "3h 22m 15s") or "ready"</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{timeleft:key:totalSeconds}</td>
+            <td>Remaining timer time, or "expired"</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{date} / {date:pattern}</td>
+            <td>Server local date. Default <code>yyyy-MM-dd</code>; custom Java DateTimeFormatter pattern (e.g. <code>{date:EEEE}</code>)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{variable:name}</td>
+            <td>Named variable value (no decimal for whole numbers)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{string:name}</td>
+            <td>Per-player string variable (empty if never set)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{mmo:skillId}</td>
+            <td>Player's current level in named MMO skill (0 if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">MMOSkillTree</td>
+          </tr>
+          <tr>
+            <td>{rpglevel}</td>
+            <td>Player's current RPG level (0 if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+          </tr>
+          <tr>
+            <td>{rpgxp}</td>
+            <td>Player's current total RPG XP (0 if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+          </tr>
+          <tr>
+            <td>{rpgxpneeded}</td>
+            <td>XP needed for next RPG level (0 if inactive or at max)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">RPGLeveling</td>
+          </tr>
+          <tr>
+            <td>{ellevel}</td>
+            <td>Player's current EL level (0 if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{elxp}</td>
+            <td>Player's current EL XP (0 if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{elxpneeded}</td>
+            <td>XP needed for next EL level (0 if inactive or at cap)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{elprestige}</td>
+            <td>Player's EL prestige level (0 if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{elskill:SKILL}</td>
+            <td>Skill attribute level (STRENGTH, HASTE, DEFENSE, LIFE_FORCE, STAMINA, FLOW, SORCERY, DISCIPLINE, PRECISION, FEROCITY)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{elrace}</td>
+            <td>Player's race ID (empty if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{elclass} / {elclass:primary}</td>
+            <td>Primary class ID (empty if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{elclass:secondary}</td>
+            <td>Secondary class ID (empty if inactive)</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">EndlessLeveling</td>
+          </tr>
+          <tr>
+            <td>{fishbagcount:fishItemId}</td>
+            <td>Live fish bag count; * for total</td>
+            <td class="cs-note"><span class="badge badge-purple">HyFishing</span></td>
+          </tr>
+          <tr>
+            <td>{fishmissprogress:fishItemId}</td>
+            <td>Fish lost in the AA minigame, current vs target</td>
+            <td class="cs-note"><span class="badge badge-purple">Anglers&rsquo; Almanac</span></td>
+          </tr>
+          <tr>
+            <td>{catchlegendaryprogress}</td>
+            <td>Legendary catches counter (AA <code>isLegendary</code>)</td>
+            <td class="cs-note"><span class="badge badge-purple">Anglers&rsquo; Almanac</span></td>
+          </tr>
+          <tr>
+            <td>{catchnewprogress}</td>
+            <td>New-discovery catches counter (AA <code>isNewDiscovery</code>)</td>
+            <td class="cs-note"><span class="badge badge-purple">Anglers&rsquo; Almanac</span></td>
+          </tr>
+          <tr>
+            <td>{catchperfprogress:rating}</td>
+            <td>Catches at AA rating (perfect, great, good, fail, nil)</td>
+            <td class="cs-note"><span class="badge badge-purple">Anglers&rsquo; Almanac</span></td>
+          </tr>
+          <tr>
+            <td>{global:variable:name}</td>
+            <td>Server-wide global variable value (defaults to 0)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{global:string:name}</td>
+            <td>Server-wide global string variable (empty if never set)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{regioncount}</td>
+            <td>Number of OrbisGuard regions currently inside (0 if not active)</td>
+            <td class="cs-note"><span class="badge badge-blue">OrbisGuard</span></td>
+          </tr>
+          <tr>
+            <td>{regionnames}</td>
+            <td>Comma-separated OrbisGuard region IDs inside ("" if none)</td>
+            <td class="cs-note"><span class="badge badge-blue">OrbisGuard</span></td>
+          </tr>
+          <tr>
+            <td>{title}</td>
+            <td>Player's currently active title (plain text, no inline formatting). Empty if no title is active or Titles is not installed.</td>
+            <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== INLINE FORMATTING ========== -->
+    <h2 id="formatting" data-section="Inline Formatting">Inline Formatting</h2>
+    <p style="font-size:0.85rem;margin-bottom:8px">Tags are closed with <code>{/}</code>. Can be nested.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Tag</th><th>Effect</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{b}...{/}</td>
+            <td>Bold</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{b}word{/}</td>
+          </tr>
+          <tr>
+            <td>{i}...{/}</td>
+            <td>Italic</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{i}word{/}</td>
+          </tr>
+          <tr>
+            <td>{m}...{/}</td>
+            <td>Monospace</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{m}word{/}</td>
+          </tr>
+          <tr>
+            <td>{#RRGGBB}...{/}</td>
+            <td>Colored text (6-digit hex)</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{#FF4444}text{/}</td>
+          </tr>
+          <tr>
+            <td>{#RGB}...{/}</td>
+            <td>Colored text (3-digit hex)</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{#F00}text{/}</td>
+          </tr>
+          <tr>
+            <td>{rainbow}...{/}</td>
+            <td>Per-character rainbow colors across the span</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{rainbow}Colorful!{/}</td>
+          </tr>
+          <tr>
+            <td>{gradient:#c1:#c2}...{/}</td>
+            <td>Linear color gradient (2 or more stops, colon-separated)</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{gradient:#FF0000:#0000FF}Fade{/}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  NAMED TRACKERS (full width)                                -->
+    <!-- ============================================================ -->
+    <div data-section-body="Named Trackers">
+    <h2 id="tracking" data-section="Named Trackers">Named Trackers</h2>
+    <p style="font-size:0.85rem;margin-bottom:4px">
+      Use <code>track:id:type:[targets]</code> to start counting. Use <code>untrack:id</code> to stop and reset the counter to zero.
+      The same <em>id</em> ties the setup action, the <code>track:id:qty</code> requirement, the <code>{track:id}</code> variable, and the HUD objective together.
+    </p>
+
+    <div class="cs-grid">
+      <!-- Tracker types -->
+      <div>
+        <h3 data-section="Tracker Types" style="margin-top:16px">Tracker Types</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Type</th><th>Tracks</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>kill</td><td>Entity kills by entity type ID (* wildcard ok)</td></tr>
+              <tr><td>killcitizen</td><td>HyCitizens NPC kills by exact display name (* wildcard ok)</td></tr>
+              <tr><td>playerkill</td><td>Player-vs-player kills (use target <code>*</code>)</td></tr>
+              <tr><td>block</td><td>Block breaks by block ID (* wildcard ok)</td></tr>
+              <tr><td>place</td><td>Block placements by block ID (* wildcard ok)</td></tr>
+              <tr><td>travel</td><td>Blocks traveled (use target <code>*</code>; no notification sent)</td></tr>
+              <tr><td>mount</td><td>Times mounted; target matches the mount's NPC type id (e.g. <code>Tamed_Horse</code>, <code>*</code>; non-NPC mounts use controller name <code>Minecart</code>/<code>BlockMount</code>)</td></tr>
+              <tr><td>dismount</td><td>Times dismounted; same target semantics as <code>mount</code></td></tr>
+              <tr><td>mountdistance</td><td>Blocks traveled while mounted; target is the current mount NPC type id (use <code>*</code> for any)</td></tr>
+              <tr><td>craft</td><td>Items crafted by item ID (* wildcard ok)</td></tr>
+              <tr><td>harvest</td><td>Items harvested from blocks/crops by item ID (* wildcard ok)</td></tr>
+              <tr><td>pickup</td><td>Item pickups by item ID (* wildcard ok)</td></tr>
+              <tr><td>launch</td><td>Times stepped onto a launchpad block; target is the block ID (e.g. <code>Launchpad</code> or <code>*</code>)</td></tr>
+              <tr><td>portal</td><td>Times stepped onto a portal block; target is the block ID (<code>Portal_Device</code>, <code>Hub_Portal_*</code>, <code>*Portal*</code>, etc.)</td></tr>
+              <tr><td>catchfish</td><td>Fish caught by item ID (* wildcard ok; requires HyFishing)</td></tr>
+              <tr><td>catchfishbiome</td><td>Fish caught by biome (requires HyFishing)</td></tr>
+              <tr><td>catchfishrarity</td><td>Fish caught by rarity, stored lowercase (requires HyFishing)</td></tr>
+              <tr><td>catchfishzone</td><td>Fish caught by zone (* wildcard ok; requires HyFishing)</td></tr>
+              <tr><td>releasefish</td><td>Fish released by item ID (* wildcard ok; requires HyFishing)</td></tr>
+              <tr><td>fishmiss</td><td>Failed catches in the AA minigame by item ID (* wildcard ok; requires Anglers' Almanac)</td></tr>
+              <tr><td>catchfishlegendary</td><td>Legendary catches (AA isLegendary flag; requires Anglers' Almanac; target unused)</td></tr>
+              <tr><td>catchfishnew</td><td>New-discovery catches (AA isNewDiscovery flag; requires Anglers' Almanac; target unused)</td></tr>
+              <tr><td>catchfishperf</td><td>Catches by AA performance rating: perfect / great / good / fail / nil (requires Anglers' Almanac)</td></tr>
+              <tr><td>arena_complete</td><td>Wave arena completions by arena ID (* wildcard ok)</td></tr>
+              <tr><td>arena_wave</td><td>Wave arena waves cleared by arena ID (* wildcard ok)</td></tr>
+              <tr><td>dodge</td><td>Perfect dodges; targets match the attacker NPC type or <code>Player</code> (requires Perfect Dodges)</td></tr>
+              <tr><td>parry</td><td>Perfect parries; targets match the attacker NPC type or <code>Player</code> (requires Perfect Parries)</td></tr>
+              <tr><td>counter</td><td>Perfect counter-attacks; targets match the target NPC type or <code>Player</code> (requires Perfect Parries)</td></tr>
+              <tr><td>use</td><td>Item activations; target is the item ID. Add <code>:button:left|right</code> to gate on mouse button (e.g. <code>track:id:use:Tome_Fire:button:right</code>)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 data-section="Optional Modifiers">Optional Modifiers</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Modifier</th><th>Effect</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>:loc:x:y:z:radius</td><td>Only counts events within radius of (x,y,z)</td></tr>
+              <tr><td>:world:worldName</td><td>Only counts events in the named world (* wildcard ok)</td></tr>
+              <tr><td>:exclude:[a,b]</td><td>Ignores events matching any exclude pattern</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Examples + system tags -->
+      <div>
+        <h3 data-section="Examples" style="margin-top:16px">Examples</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Action</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>track:goblin_kills:kill:Goblin*</td><td>Counts all Goblin variants</td></tr>
+              <tr><td>track:ore_mined:block:[*Ore*]:exclude:[*Ruby*]</td><td>Any ore except ruby</td></tr>
+              <tr><td>track:distance:travel:*</td><td>Blocks traveled anywhere</td></tr>
+              <tr><td>track:saddle_miles:mountdistance:*</td><td>Blocks traveled while mounted (any mount)</td></tr>
+              <tr><td>track:horse_rides:mount:Tamed_Horse</td><td>Times mounted on a horse</td></tr>
+              <tr><td>track:kills:kill:Zombie:loc:-71:122:186:15</td><td>Location-gated</td></tr>
+              <tr><td>track:kills:kill:Zombie:world:cave</td><td>World-gated</td></tr>
+              <tr><td>untrack:goblin_kills</td><td>Remove tracker + reset count</td></tr>
+              <tr><td>untrack:[id1,id2]</td><td>Remove multiple at once</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div><!-- end tracking cs-grid -->
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  GOTCHAS                                                     -->
+    <!-- ============================================================ -->
+    <div data-section-body="Key Rules">
+    <h2 id="gotchas" data-section="Key Rules">Key Rules</h2>
+    <ul style="font-size:0.9rem;line-height:1.8">
+      <li><strong>Page order matters.</strong> The first page whose requirements all pass is shown. Put more-specific pages (quest complete, objective done) before less-specific ones (quest not started).</li>
+      <li><strong>All requirements and actions are case-insensitive</strong> at parse time — the parser lowercases input before matching. Write them lowercase in JSON for clarity.</li>
+      <li><strong><code>cooldown</code> returns true if the timestamp was never set.</strong> Place the "ready" page before the "waiting" page so new players always see the reward first.</li>
+      <li><strong><code>timedActive</code> and <code>timedExpired</code> return false if never started.</strong> This prevents expiry pages from showing before the quest begins.</li>
+      <li><strong>Always call <code>untrack:id</code> on quest completion.</strong> Failing to do so lets the counter accumulate indefinitely and can break future quests.</li>
+      <li><strong>Items are consumed before actions execute</strong> when <code>item:...:true</code> is used as a requirement.</li>
+      <li><strong><code>page:pageId</code> should be the last action in a list</strong> — it navigates immediately.</li>
+      <li><strong>Commands cannot contain colons</strong> — the parser splits on <code>:</code>. Use an alias or wrapper command instead.</li>
+      <li><strong>Coordinates in <code>spawnCitizen</code> / <code>spawn</code></strong> support <code>~</code> prefix for player-relative positioning (e.g. <code>~5</code> = player coord + 5).</li>
+      <li><strong><code>LoadActions</code></strong> on a page fire automatically every time that page is shown, before any button is clicked.</li>
+      <li><strong>Partial name matching in tracker targets</strong> — use <code>*</code> as a wildcard when setting up a named tracker. Examples: <code>track:goblin_kills:kill:Goblin*</code> (all Goblin variants), <code>track:planks_placed:place:*Planks</code> (any plank type), <code>track:ore_mined:block:*Ore*</code>. The same wildcard used in setup is automatically applied when the tracker increments.</li>
+      <li><strong>Variables in action strings</strong> — <code>{variable:name}</code> substitution works inside action strings (not just dialog text). Example: <code>"spawn:Zombie:~0:~0:~0:{variable:delay}:{variable:amount}"</code>.</li>
+      <li><strong>Auto-trigger pages</strong> — set <code>"AutoTrigger": true</code> on a page's JSON and its <code>LoadActions</code> fire automatically on every HUD tick as soon as requirements pass. Always add <code>!hastag:someflag</code> as a requirement and <code>addTag:someflag</code> as a load action to prevent re-firing every tick.</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

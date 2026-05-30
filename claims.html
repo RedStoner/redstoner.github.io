@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">QuestLines Claims</h1>
+      <p class="page-subtitle">
+        A land protection plugin for Hytale servers. Players claim chunks to protect
+        their builds, admins draw rectangular regions with fine-grained permission
+        flags, and rent/buy plots hook into VaultUnlocked for economy-driven gameplay.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">This documentation is split across pages</div>
+        <p>
+          This page covers the core model &mdash; how protection resolves, the
+          region types, and the permission flags. From here jump to
+          <a href="claims-player.html">Player Claims</a>,
+          <a href="claims-regions.html">Admin Regions</a>,
+          <a href="claims-rentbuy.html">Rent &amp; Buy Regions</a>,
+          <a href="claims-commands.html">Commands</a>,
+          <a href="claims-config.html">Config &amp; Permissions</a>,
+          <a href="claims-integrations.html">Integrations</a>, or the
+          <a href="claims-api.html">Developer API</a>.
+        </p>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      QuestLines Claims protects land by intercepting block, interaction, and combat
+      events and checking whether the acting player is allowed to perform that action
+      at the target position. Permission is resolved by walking a four-step chain and
+      stopping at the first match:
+    </p>
+    <ol>
+      <li><strong>Admin regions</strong> that contain the position, highest priority first.</li>
+      <li><strong>Rent/Buy regions</strong> that contain the position.</li>
+      <li><strong>Player claim</strong> at the position&rsquo;s chunk, if any.</li>
+      <li><strong>Wilderness</strong> defaults (global flag set with optional per-player overrides).</li>
+    </ol>
+    <p>
+      At every layer, members with an explicit entry check their per-member flag
+      allow-list first; otherwise the layer&rsquo;s default flag set applies.
+      Players with <code>questlinesclaims.admin</code> bypass all protection checks.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Standalone plugin</div>
+        <p>
+          QuestLines Claims does not require QuestLines Core. It ships independently
+          as <code>questlines-claims-{version}.jar</code> and stores its data under
+          <code>mods/QuestLinesClaims/</code>.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Region Types -->
+    <div data-section-body="Region Types">
+    <h2 data-section="Region Types">Region Types</h2>
+    <p>
+      Four kinds of protected area can exist on the server. Player claims are
+      chunk-based; admin, rent, and buy regions are arbitrary rectangles in blocks
+      (optionally extended vertically to the full world height).
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Shape</th>
+            <th>Created via</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Player Claim</strong></td>
+            <td>Contiguous chunks</td>
+            <td><code>/claim map</code></td>
+            <td>
+              Owned by a single player; has members with flag permissions. A player
+              can have multiple claims, each independently contiguous.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Admin Region</strong></td>
+            <td>Block-aligned box</td>
+            <td><code>/claim wand</code> + <code>/claim admin</code></td>
+            <td>
+              Protected zone with a numeric priority. The highest-priority region
+              wins when regions overlap. Supports per-flag block/item exclusions.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Rent Region</strong></td>
+            <td>Block-aligned box</td>
+            <td><code>/claim admin</code> (with price + duration)</td>
+            <td>
+              Leased for a fixed duration. Expiry triggers a grace period; unpaid
+              leases are reset via the saved prefab.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Buy Region</strong></td>
+            <td>Block-aligned box</td>
+            <td><code>/claim admin</code> (with price)</td>
+            <td>
+              One-time purchase. The buyer becomes the region owner; no expiry.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Priority Resolution -->
+    <div data-section-body="Priority Resolution">
+    <h2 data-section="Priority Resolution">Priority Resolution</h2>
+    <p>
+      When multiple regions cover the same block, admin regions are sorted by their
+      <code>priority</code> field (descending) and only the top region is consulted.
+      The resolution order for a given <code>(world, x, y, z)</code> is:
+    </p>
+    <ol>
+      <li>Highest-priority admin region at that position (if any).</li>
+      <li>First rent or buy region at that position.</li>
+      <li>Player claim that owns the position&rsquo;s chunk.</li>
+      <li>Wilderness defaults.</li>
+    </ol>
+    <p>
+      Admin regions <em>cover</em> any player claim they overlap &mdash; players cannot
+      claim chunks that intersect an admin, rent, or buy region.
+    </p>
+    </div>
+
+    <!-- Permission Flags -->
+    <div data-section-body="Permission Flags">
+    <h2 data-section="Permission Flags">Permission Flags</h2>
+    <p>
+      Every region and claim has a default flag set (what non-members can do) plus
+      a per-member flag set (what each listed member can do). A flag being in the
+      set means the action is <em>allowed</em>.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Flag</th>
+            <th>Grants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>BUILD</code></td><td>Placing blocks.</td></tr>
+          <tr><td><code>BREAK</code></td><td>Breaking blocks and harvesting crops.</td></tr>
+          <tr><td><code>INTERACT</code></td><td>Using buttons, levers, entity interactions, and non-container world interactions.</td></tr>
+          <tr><td><code>CONTAINER</code></td><td>Opening chests, barrels, furnaces, and other containers.</td></tr>
+          <tr><td><code>DOOR</code></td><td>Opening doors, trapdoors, and gates.</td></tr>
+          <tr><td><code>PVP</code></td><td>Taking or dealing PvP damage while inside the region.</td></tr>
+          <tr><td><code>FRIENDLY_FIRE</code></td><td>Damage between two trusted members of the same region (owner/member/tenant). When disabled, damage between trusted pairs is blocked even if <code>PVP</code> is allowed.</td></tr>
+          <tr><td><code>ENTRY</code></td><td>Walking into the region. Players who lack <code>ENTRY</code> are teleported back to their last allowed position.</td></tr>
+          <tr><td><code>PORTAL</code></td><td>Using portals and teleporters inside the region.</td></tr>
+          <tr><td><code>SIT</code></td><td>Sitting on chairs and other seatable blocks.</td></tr>
+          <tr><td><code>EXPLOSIONS</code></td><td>Allowing explosions (TNT, creepers, etc.) to damage blocks inside the region.</td></tr>
+          <tr><td><code>SPAWN</code></td><td>Allowing vanilla mob spawns inside the region. Admin regions only; plugin-triggered spawns (e.g. HyCitizens) are never blocked.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Flag Exclusions">Flag Exclusions</h3>
+    <p>
+      Admin regions can whitelist specific block or item IDs for a denied flag.
+      Patterns are case-insensitive and support <code>*</code> wildcards (e.g.
+      <code>*stone</code>, <code>Iron_*</code>, <code>*_door*</code>). This is
+      useful for spawn regions that should deny <code>BREAK</code> broadly but
+      still allow chopping trees.
+    </p>
+
+    <h3 data-section="Wilderness Flags">Wilderness Flags</h3>
+    <p>
+      Unclaimed land uses the <code>wilderness_flags</code> config entry (all flags
+      enabled by default). Admins can override the wilderness flag set for specific
+      players by running <code>/claim manage</code> while standing outside any claim
+      or region &mdash; this opens the wilderness member manager where per-player
+      allow-lists can be configured.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

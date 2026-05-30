@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Plugin Suite</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <!-- Hero -->
+    <div class="suite-banner">
+      <img class="suite-banner-logo" src="images/questlineslogolarge.png" alt="QuestLines" />
+      <div class="suite-banner-title">A Quest System Worth Exploring</div>
+      <p class="suite-banner-subtitle">
+        Six Hytale plugins that turn your server into a story. Branching NPC
+        dialogue, floating quest icons, linear story dialogs, player titles,
+        custom GUIs, and land protection &mdash; each stands alone, together they sing.
+      </p>
+      <div class="suite-banner-stats">
+        <span><strong>6</strong> plugins</span>
+        <span><strong>1</strong> suite</span>
+        <span><strong>0</strong> JSON files you have to hand-write</span>
+      </div>
+    </div>
+
+    <!-- Getting Started CTA row -->
+    <div class="quickstart-row">
+      <a class="quickstart-card quickstart-card-primary" href="core.html">
+        <div class="quickstart-card-eyebrow">Start here</div>
+        <div class="quickstart-card-title">New to QuestLines?</div>
+        <p class="quickstart-card-desc">
+          Read the Core overview to understand quests, pages, and how requirements
+          decide which dialogue a player sees.
+        </p>
+        <div class="quickstart-card-cta">Open the Core docs</div>
+      </a>
+      <a class="quickstart-card" href="npc-setup.html">
+        <div class="quickstart-card-eyebrow">Set up an NPC</div>
+        <div class="quickstart-card-title">Link a quest to an NPC</div>
+        <p class="quickstart-card-desc">
+          Point the wand, punch the NPC, and you're done. Works for HyCitizens and
+          standard Hytale entities.
+        </p>
+        <div class="quickstart-card-cta">See NPC Setup</div>
+      </a>
+      <a class="quickstart-card" href="cheatsheet.html">
+        <div class="quickstart-card-eyebrow">Already know the ropes</div>
+        <div class="quickstart-card-title">Cheat sheet</div>
+        <p class="quickstart-card-desc">
+          Every requirement, action, tracking flag, text variable, and formatting tag
+          on one page.
+        </p>
+        <div class="quickstart-card-cta">Open cheat sheet</div>
+      </a>
+    </div>
+
+    <!-- Section label -->
+    <div class="suite-section-label">
+      <span class="suite-section-rule"></span>
+      <span class="suite-section-text">The Suite</span>
+      <span class="suite-section-rule"></span>
+    </div>
+
+    <!-- Plugin Cards -->
+    <div class="plugin-cards-grid">
+      <a class="plugin-card" data-plugin="core" href="core.html">
+        <img class="plugin-card-logo" src="images/QLCoreLogo.png" alt="QuestLines Core" />
+        <div class="plugin-card-tag">Core Plugin</div>
+        <div class="plugin-card-title">QuestLines</div>
+        <p class="plugin-card-desc">
+          The foundation. NPC dialogue with branching responses, quest state tracking,
+          requirements, actions, a player journal, and an in-game editor &mdash; all in one plugin.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
+
+      <a class="plugin-card" data-plugin="icons" href="icons.html">
+        <img class="plugin-card-logo" src="images/QLIconsLogo.png" alt="QuestLines Icons" />
+        <div class="plugin-card-tag">Companion Plugin</div>
+        <div class="plugin-card-title">QuestLines Icons</div>
+        <p class="plugin-card-desc">
+          Per-player floating quest-state icons above NPCs. Shows at a glance whether
+          an NPC has a quest available, one in progress, completed, or on cooldown.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
+
+      <a class="plugin-card" data-plugin="dialog" href="dialog.html">
+        <img class="plugin-card-logo" src="images/QLDialogLogo.png" alt="QuestLines Dialog" />
+        <div class="plugin-card-tag">Companion Plugin</div>
+        <div class="plugin-card-title">QuestLines Dialog</div>
+        <p class="plugin-card-desc">
+          A lightweight in-game dialog builder for linear NPC conversations. Build and
+          export multi-page dialogs directly to QuestLines without writing any JSON.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
+
+      <a class="plugin-card" data-plugin="titles" href="titles.html">
+        <img class="plugin-card-logo" src="images/QLTitlesLogo.png" alt="QuestLines Titles" />
+        <div class="plugin-card-tag">Companion Plugin</div>
+        <div class="plugin-card-title">QuestLines Titles</div>
+        <p class="plugin-card-desc">
+          A player title system. Grant richly formatted titles as quest rewards, let
+          players choose their active title, and display it as a chat prefix or
+          PlaceholderAPI placeholder.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
+
+      <a class="plugin-card" data-plugin="gui" href="gui.html">
+        <img class="plugin-card-logo" src="images/QLGUILogo.png" alt="QuestLines GUI" />
+        <div class="plugin-card-tag">Companion Plugin</div>
+        <div class="plugin-card-title">QuestLines GUI</div>
+        <p class="plugin-card-desc">
+          Define custom in-game screens as <code>.gui.html</code> files. Buttons run any
+          Core action, elements can be requirement-gated, and text fields support Core
+          variables. Open any screen with the <code>opengui:</code> action.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
+
+      <a class="plugin-card" data-plugin="claims" href="claims.html">
+        <img class="plugin-card-logo" src="images/QLClaimsLogo.png" alt="QuestLines Claims" />
+        <div class="plugin-card-tag">Standalone Plugin</div>
+        <div class="plugin-card-title">QuestLines Claims</div>
+        <p class="plugin-card-desc">
+          Chunk-based land protection with per-region permission flags, admin regions,
+          rent &amp; buy regions with schematic restore, and a VaultUnlocked-backed
+          economy for player purchases.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
+    </div>
+
+    <!-- How They Fit Together -->
+    <h2>How the Plugins Fit Together</h2>
+    <p>
+      <strong>Core is required.</strong> Icons, Dialog, GUI, and Titles are optional companions.
+      They load without Core but do little on their own (except Titles and Claims, which work standalone).
+    </p>
+
+    <div class="fit-grid">
+      <div class="fit-card" data-plugin="core">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">Core</div>
+        <p>Handles all quest data, player state, NPC dialogue, and the in-game editor. Required by Icons and Dialog.</p>
+      </div>
+      <div class="fit-card" data-plugin="icons">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">Icons</div>
+        <p>Reads QuestLines&rsquo; NPC assignments from <code>npcs.json</code> and renders per-player floating icons on top of NPCs based on quest state.</p>
+      </div>
+      <div class="fit-card" data-plugin="dialog">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">Dialog</div>
+        <p>A simplified UI for creating linear (non-branching) dialogues. Exports flow into Core&rsquo;s quest directory automatically.</p>
+      </div>
+      <div class="fit-card" data-plugin="titles">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">Titles</div>
+        <p>Standalone player-title system. With Core installed: <code>giveTitle:</code>/<code>removeTitle:</code> actions, <code>hasTitle:</code> requirement, <code>{title}</code> variable.</p>
+      </div>
+      <div class="fit-card" data-plugin="gui">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">GUI</div>
+        <p>Defines custom in-game screens as <code>.gui.html</code> files. Registers an <code>opengui:guiId</code> action usable from any response, load action, or button.</p>
+      </div>
+      <div class="fit-card" data-plugin="claims">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">Claims</div>
+        <p>Standalone land protection. Wand-defined regions, chunk claiming, buy/rent regions with schematic restore, VaultUnlocked payments.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#9733;</span>
+      <div class="callout-body">
+        <div class="callout-title">Getting Started</div>
+        <p>
+          New to QuestLines? Start with <a href="core.html">Core Overview</a> to understand
+          quests, pages, and the page resolution algorithm. Then set up your first NPC via
+          <a href="npc-setup.html">NPC Setup</a>. Add Icons and Dialog once Core is running.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128172;</span>
+      <div class="callout-body">
+        <div class="callout-title">QuestLines on Discord</div>
+        <p>
+          The <a href="bot.html">QuestLines Knowledge bot</a> brings this whole wiki into Discord
+          &mdash; look up actions and requirements, search the docs, get AI-grounded answers, and
+          generate or debug quest JSON without leaving chat. Run your own community? See
+          <a href="bot-admin.html">Admin &amp; Setup</a> to add the bot to your server and configure it.
+        </p>
+      </div>
+    </div>
+
+    <!-- JAR Names / Versions -->
+    <h2>JAR Files</h2>
+    <p>Each plugin ships as a separate JAR placed in the server&rsquo;s <code>mods/</code> directory:</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Plugin</th>
+            <th>JAR file</th>
+            <th>Data directory</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>QuestLines (Core)</td>
+            <td><code>questlines-core-{version}.jar</code></td>
+            <td><code>mods/QuestLines/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines Icons</td>
+            <td><code>questlines-icons-{version}.jar</code></td>
+            <td><code>mods/QuestLinesIcons/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines Dialog</td>
+            <td><code>questlines-dialog-{version}.jar</code></td>
+            <td><code>mods/QuestLinesDialog/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines Titles</td>
+            <td><code>questlines-titles-{version}.jar</code></td>
+            <td><code>mods/QuestLinesTitles/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines GUI</td>
+            <td><code>questlines-gui-{version}.jar</code></td>
+            <td><code>mods/QuestLinesGUI/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines Claims</td>
+            <td><code>questlines-claims-{version}.jar</code></td>
+            <td><code>mods/QuestLinesClaims/</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">i</span>
+      <div class="callout-body">
+        <div class="callout-title">Icons Legacy Migration</div>
+        <p>
+          If you previously used the Icons plugin when its data directory was
+          <code>mods/Icons/</code>, it will automatically migrate <code>icons.json</code>
+          to the new <code>mods/QuestLinesIcons/</code> location on first start.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

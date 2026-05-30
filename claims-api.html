@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Developer API</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">Developer API</h1>
+      <p class="page-subtitle">
+        The public extension surface for other plugins &mdash; the transaction
+        ledger listener, claim-event hooks, access interceptors, and external
+        ownership resolvers.
+      </p>
+    </div>
+
+    <p>
+      Claims exposes a public extension surface for other plugins through
+      <code>QuestLinesClaimsAPI</code>. Obtain it from the loaded plugin
+      instance once setup has completed:
+    </p>
+    <pre class="code-block"><code><span class="hl-type">QuestLinesClaimsPlugin</span> claims <span class="hl-punc">= (</span><span class="hl-type">QuestLinesClaimsPlugin</span><span class="hl-punc">)</span> server.getPlugin<span class="hl-punc">(</span><span class="hl-str">"QuestLinesClaims"</span><span class="hl-punc">);</span>
+<span class="hl-type">QuestLinesClaimsAPI</span> api <span class="hl-punc">=</span> claims.getApi<span class="hl-punc">();</span></code></pre>
+    <p>
+      All API methods must be called from the server main thread. The data
+      objects returned by the facade (<code>AdminRegion</code>, <code>PlayerClaim</code>,
+      <code>RegionMember</code>) expose setters for internal use only &mdash;
+      mutate through the dedicated API methods so saves and map invalidation
+      happen correctly.
+    </p>
+
+    <!-- ClaimsTransactionListener -->
+    <div data-section-body="ClaimsTransactionListener">
+    <h2 id="ClaimsTransactionListener" data-section="ClaimsTransactionListener">ClaimsTransactionListener</h2>
+    <p>
+      Subscriber surface for rent / renew / buy / <strong>refund</strong>
+      economy events. Carries the full Claims-side context VaultUnlocked
+      itself cannot supply (region id, region type, world, the receiving
+      guild for guild halls) plus a Claims-generated <code>transactionId</code>
+      for ledger correlation, and for refunds the <code>parentTransactionId</code>
+      of the original charge being reversed.
+    </p>
+    <p>
+      The intended consumer is an external economy / audit / ledger plugin
+      that wants to journal Claims transactions. Listeners run on the server
+      main thread &mdash; keep them cheap and offload heavy work to async tasks,
+      using <code>ctx.transactionId</code> as the foreign key for the async
+      write.
+    </p>
+
+    <h3 data-section="Lifecycle">Lifecycle</h3>
+    <p>
+      Each charge attempt that passes Claims-side preflight (player can afford,
+      region is in a chargeable state, requester is the tenant where relevant)
+      fires a sequence of callbacks on the same listener. All three callbacks
+      receive the same <code>ClaimsTransactionContext</code> instance &mdash;
+      the <code>transactionId</code> and <code>timestampMillis</code> are stable
+      across the sequence.
+    </p>
+    <ol>
+      <li>
+        <code>onClaimsTransactionPending(ctx)</code> &mdash; fires immediately
+        before <code>economy.withdraw</code> is invoked. No money has moved
+        and no Claims state has been mutated. <code>ctx.balanceAfter</code>
+        is <code>null</code>. Ledger plugins record the attempt here.
+      </li>
+      <li>
+        One of:
+        <ul>
+          <li>
+            <code>onClaimsTransaction(ctx)</code> &mdash; fires after Vault
+            reports <code>EconomyResponse.SUCCESS</code> and Claims has
+            committed the region change (tenant set, lease extended, owner
+            transferred). <code>ctx.balanceAfter</code> carries the post-debit
+            balance Vault reported. Ledger marks the row committed.
+          </li>
+          <li>
+            <code>onClaimsTransactionFailed(ctx, reason)</code> &mdash; fires
+            when Vault rejects the withdraw or throws. No Claims state was
+            mutated and the player was not charged. <code>ctx.balanceAfter</code>
+            is <code>null</code>. Ledger marks the row failed.
+          </li>
+        </ul>
+      </li>
+    </ol>
+    <p>
+      Pre-withdraw rejections (region not available, not the tenant,
+      insufficient funds, Vault plugin missing at the top of the call) produce
+      <strong>no</strong> callbacks &mdash; Claims surfaces them only through
+      the <code>RentResult</code> / <code>RenewResult</code> / <code>BuyResult</code>
+      return value of the action that triggered the charge.
+    </p>
+
+    <h3 data-section="Refunds">Refunds</h3>
+    <p>
+      When the config flag <code>refund_on_reset=true</code> is set, Claims
+      credits a pro-rated refund to the tenant whenever a lease ends early.
+      The refund fires the same pending / committed / failed lifecycle as a
+      charge, but with <code>ctx.type == REFUND</code>; <code>ctx.amount</code>
+      is the refunded value (always non-negative &mdash; direction is implied
+      by the type) and the deposit goes <em>to</em> the tenant rather than
+      <em>from</em> them.
+    </p>
+    <p>
+      Refund math: <code>price &times; max(0, leaseEnd - now) / (durationSeconds &times; 1000)</code>,
+      clamped to the full price. Past-expiry leases (post-grace reset) yield
+      zero and the refund event is skipped entirely &mdash; no zero-amount
+      event fires.
+    </p>
+    <p>
+      <code>ctx.refundReason</code> identifies why the lease ended early
+      (<code>LEASE_EXPIRED</code>, <code>ADMIN_RESET</code>, <code>TENANT_ABANDON</code>).
+      <code>ctx.parentTransactionId</code> points back at the original
+      <code>RENT</code> or <code>RENEW</code> charge being reversed, so a
+      ledger can link the credit row to the original debit row. The
+      parent-id mapping lives in memory only &mdash; refunds fired after a
+      server restart will have <code>parentTransactionId == null</code>; the
+      ledger can fall back to correlating by region + payer in that case.
+    </p>
+    <p>
+      For guild halls, the refund also debits the receiving guild via the
+      <code>ExternalOwnershipResolver.onRegionIncome</code> hook with a
+      negative amount, so guild books stay balanced.
+    </p>
+
+    <h3 data-section="Correlating with Vault">Correlating with Vault</h3>
+    <p>
+      VaultUnlocked emits no events and has no transaction-id concept, so
+      there is no Vault-side handle to correlate against. The Claims-generated
+      <code>ctx.transactionId</code> is the canonical ledger key. The
+      <code>ctx.balanceAfter</code> field on the committed callback is captured
+      directly from Vault&rsquo;s <code>EconomyResponse.balance</code>, so a
+      ledger can detect drift by periodically comparing against
+      <code>Economy.getBalance</code> without making a follow-up Vault call on
+      every transaction.
+    </p>
+
+    <h3 data-section="Example">Example</h3>
+    <pre class="code-block"><code><span class="hl-cmt">// Soft-import pattern &mdash; no compile-time dependency on Claims</span>
+<span class="hl-kw">try</span> <span class="hl-punc">{</span>
+    Class.forName<span class="hl-punc">(</span><span class="hl-str">"net.evilcraft.questlinesclaims.api.QuestLinesClaimsAPI"</span><span class="hl-punc">,</span>
+                  <span class="hl-kw">false</span><span class="hl-punc">,</span> getClass<span class="hl-punc">().</span>getClassLoader<span class="hl-punc">());</span>
+    <span class="hl-type">QuestLinesClaimsPlugin</span> claims <span class="hl-punc">= (</span><span class="hl-type">QuestLinesClaimsPlugin</span><span class="hl-punc">)</span>
+            server.getPlugin<span class="hl-punc">(</span><span class="hl-str">"QuestLinesClaims"</span><span class="hl-punc">);</span>
+    claims.getApi<span class="hl-punc">().</span>registerTransactionListener<span class="hl-punc">(</span><span class="hl-kw">new</span> <span class="hl-type">ClaimsTransactionListener</span><span class="hl-punc">() {</span>
+        <span class="hl-kw">@Override</span>
+        <span class="hl-kw">public void</span> onClaimsTransactionPending<span class="hl-punc">(</span><span class="hl-type">ClaimsTransactionContext</span> ctx<span class="hl-punc">) {</span>
+            ledger.insertPending<span class="hl-punc">(</span>ctx.transactionId<span class="hl-punc">,</span> ctx.timestampMillis<span class="hl-punc">,</span>
+                                 ctx.payerUuid<span class="hl-punc">,</span> ctx.regionId<span class="hl-punc">,</span> ctx.amount<span class="hl-punc">);</span>
+        <span class="hl-punc">}</span>
+
+        <span class="hl-kw">@Override</span>
+        <span class="hl-kw">public void</span> onClaimsTransaction<span class="hl-punc">(</span><span class="hl-type">ClaimsTransactionContext</span> ctx<span class="hl-punc">) {</span>
+            <span class="hl-cmt">// type      = RENT | RENEW | BUY</span>
+            <span class="hl-cmt">// payee*    = null for server plots; GUILD + guildId for guild halls</span>
+            <span class="hl-cmt">// balanceAfter = post-debit balance Vault reported</span>
+            ledger.markCommitted<span class="hl-punc">(</span>ctx.transactionId<span class="hl-punc">,</span> ctx.balanceAfter<span class="hl-punc">);</span>
+        <span class="hl-punc">}</span>
+
+        <span class="hl-kw">@Override</span>
+        <span class="hl-kw">public void</span> onClaimsTransactionFailed<span class="hl-punc">(</span><span class="hl-type">ClaimsTransactionContext</span> ctx<span class="hl-punc">,</span>
+                                              <span class="hl-type">FailureReason</span> reason<span class="hl-punc">) {</span>
+            ledger.markFailed<span class="hl-punc">(</span>ctx.transactionId<span class="hl-punc">,</span> reason.name<span class="hl-punc">());</span>
+        <span class="hl-punc">}</span>
+    <span class="hl-punc">});</span>
+<span class="hl-punc">}</span> <span class="hl-kw">catch</span> <span class="hl-punc">(</span><span class="hl-type">ClassNotFoundException</span> e<span class="hl-punc">) {</span>
+    <span class="hl-cmt">// Claims not installed &mdash; skip</span>
+<span class="hl-punc">}</span></code></pre>
+
+    <h3 data-section="ClaimsTransactionContext fields">ClaimsTransactionContext fields</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>transactionId</code></td><td><code>UUID</code></td><td>Fresh per charge attempt. Stable across pending / committed / failed. Use as ledger primary key.</td></tr>
+          <tr><td><code>timestampMillis</code></td><td><code>long</code></td><td><code>System.currentTimeMillis()</code> captured when the attempt began. Frozen across the lifecycle.</td></tr>
+          <tr><td><code>type</code></td><td><code>TransactionType</code></td><td><code>RENT</code> | <code>RENEW</code> | <code>BUY</code> | <code>REFUND</code></td></tr>
+          <tr><td><code>payerUuid</code></td><td><code>UUID</code></td><td>Player being charged (or credited, for refunds).</td></tr>
+          <tr><td><code>regionId</code> / <code>regionName</code></td><td><code>String</code></td><td>Persistent id and display name of the region.</td></tr>
+          <tr><td><code>regionType</code></td><td><code>String</code></td><td>Plot kind (see table below).</td></tr>
+          <tr><td><code>worldName</code></td><td><code>String</code></td><td>World the region is in.</td></tr>
+          <tr><td><code>regionOwnerType</code> / <code>regionOwnerUuid</code></td><td><code>ClaimOwnerType</code>, <code>UUID</code></td><td><code>null</code> for server-owned plots (gold sunk to server); <code>GUILD</code> + guild id for guild halls (gold credited to guild on charge, debited on refund).</td></tr>
+          <tr><td><code>amount</code></td><td><code>BigDecimal</code></td><td>Amount moved. Always non-negative &mdash; direction is implied by <code>type</code> (debit for <code>RENT</code>/<code>RENEW</code>/<code>BUY</code>, credit for <code>REFUND</code>).</td></tr>
+          <tr><td><code>balanceAfter</code></td><td><code>BigDecimal</code></td><td>Post-transaction balance Vault reported. <strong>Populated only on the committed callback</strong>; <code>null</code> on pending and failed.</td></tr>
+          <tr><td><code>parentTransactionId</code></td><td><code>UUID</code></td><td><strong><code>REFUND</code> only</strong>. The <code>transactionId</code> of the original <code>RENT</code> or <code>RENEW</code> being reversed, if Claims still has it in memory. <code>null</code> for non-refunds and for refunds after a server restart.</td></tr>
+          <tr><td><code>refundReason</code></td><td><code>RefundReason</code></td><td><strong><code>REFUND</code> only</strong>. <code>LEASE_EXPIRED</code> | <code>ADMIN_RESET</code> | <code>TENANT_ABANDON</code>. <code>null</code> for non-refunds.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The <code>regionType</code> string identifies the kind of plot the charge
+      was for &mdash; useful for categorising income by plot kind. Stable
+      values:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th><code>regionType</code></th>
+            <th>Plot</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>rent</code></td><td>Standard server-owned rent plot.</td></tr>
+          <tr><td><code>buy</code></td><td>Standard server-owned buy plot.</td></tr>
+          <tr><td><code>guild_rent</code></td><td>Guild hall rent &mdash; <code>regionOwnerType</code> is <code>GUILD</code>, <code>regionOwnerUuid</code> is the guild id.</td></tr>
+          <tr><td><code>guild_buy</code></td><td>Guild hall buy &mdash; same payee semantics as <code>guild_rent</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="FailureReason values">FailureReason values</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th><code>FailureReason</code></th><th>Cause</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>VAULT_REJECTED</code></td><td>Vault returned <code>EconomyResponse.FAILURE</code>. Typically a race between the <code>canAfford</code> check and the <code>withdraw</code> call.</td></tr>
+          <tr><td><code>VAULT_NOT_IMPLEMENTED</code></td><td>Vault returned <code>EconomyResponse.NOT_IMPLEMENTED</code> for this currency.</td></tr>
+          <tr><td><code>VAULT_THREW</code></td><td>Vault threw an exception inside <code>withdraw</code>.</td></tr>
+          <tr><td><code>ECONOMY_UNAVAILABLE</code></td><td>Vault became unavailable between preflight and withdraw (rare).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      All Vault-side failures fold into the existing <code>ECONOMY_UNAVAILABLE</code>
+      value of the public <code>RentResult</code> / <code>RenewResult</code> /
+      <code>BuyResult</code> return enums &mdash; UI consumers continue to show the
+      same &ldquo;Economy is unavailable&rdquo; message and do not need a new
+      switch arm. The precise reason is delivered only through the listener.
+    </p>
+    </div>
+
+    <!-- ClaimEventListener -->
+    <div data-section-body="ClaimEventListener">
+    <h2 data-section="ClaimEventListener">ClaimEventListener</h2>
+    <p>
+      Subscriber surface for claim chunk-removal events. Fires after a chunk
+      has been removed from any <code>PlayerClaim</code> &mdash; whether by
+      <code>/unclaim</code>, admin unclaim, external-owner unclaim, or cascade
+      from a deleted claim row. Intended for plugins that maintain side-tables
+      keyed by chunk (e.g. share-grant rows in a federation plugin) so they
+      can drop their rows when the chunk goes away.
+    </p>
+    <pre class="code-block"><code>claims.getApi<span class="hl-punc">().</span>registerClaimEventListener<span class="hl-punc">(</span><span class="hl-kw">new</span> <span class="hl-type">ClaimEventListener</span><span class="hl-punc">() {</span>
+    <span class="hl-kw">@Override</span>
+    <span class="hl-kw">public void</span> onClaimChunkRemoved<span class="hl-punc">(</span><span class="hl-type">ClaimOwnerType</span> ownerType<span class="hl-punc">,</span>
+                                    <span class="hl-type">UUID</span> ownerUuid<span class="hl-punc">,</span>
+                                    <span class="hl-type">String</span> worldName<span class="hl-punc">,</span>
+                                    <span class="hl-kw">int</span> chunkX<span class="hl-punc">,</span> <span class="hl-kw">int</span> chunkZ<span class="hl-punc">) {</span>
+        <span class="hl-cmt">// drop side-table rows keyed by (worldName, chunkX, chunkZ)</span>
+    <span class="hl-punc">}</span>
+<span class="hl-punc">});</span></code></pre>
+    </div>
+
+    <!-- PlayerClaimAccessInterceptor -->
+    <div data-section-body="PlayerClaimAccessInterceptor">
+    <h2 data-section="PlayerClaimAccessInterceptor">PlayerClaimAccessInterceptor</h2>
+    <p>
+      Hook called during access resolution on <code>PLAYER</code>-typed claims
+      for actors who are neither the owner nor a listed member, <em>before</em>
+      the claim&rsquo;s <code>memberDefaultFlags</code> are consulted. Multiple
+      interceptors may be registered &mdash; they are consulted in registration
+      order and the first non-null result wins. Returning <code>null</code>
+      defers to the next interceptor (and ultimately to the default flags).
+    </p>
+    <p>
+      Used by federation plugins to grant the surrounding city or nation
+      access to a player&rsquo;s claim without modifying the claim&rsquo;s member
+      list. Returning a populated <code>Set&lt;RegionFlags&gt;</code> overrides
+      the default access for that actor.
+    </p>
+    <pre class="code-block"><code>claims.getApi<span class="hl-punc">().</span>registerPlayerClaimAccessInterceptor<span class="hl-punc">((</span>claim<span class="hl-punc">,</span> actorUuid<span class="hl-punc">)</span> <span class="hl-punc">-&gt; {</span>
+    <span class="hl-kw">if</span> <span class="hl-punc">(</span>sharedWithCity<span class="hl-punc">(</span>claim<span class="hl-punc">,</span> actorUuid<span class="hl-punc">))</span> <span class="hl-kw">return</span> <span class="hl-type">EnumSet</span>.of<span class="hl-punc">(</span><span class="hl-type">RegionFlags</span>.INTERACT<span class="hl-punc">);</span>
+    <span class="hl-kw">return</span> <span class="hl-kw">null</span><span class="hl-punc">;</span> <span class="hl-cmt">// defer</span>
+<span class="hl-punc">});</span></code></pre>
+    </div>
+
+    <!-- ExternalOwnershipResolver -->
+    <div data-section-body="ExternalOwnershipResolver">
+    <h2 data-section="ExternalOwnershipResolver">ExternalOwnershipResolver</h2>
+    <p>
+      Adapter for non-<code>PLAYER</code> claim owner types &mdash; guilds,
+      nations, cities, parties, or any other grouping defined by another
+      plugin. Registered per <code>ClaimOwnerType</code>:
+    </p>
+    <pre class="code-block"><code>claims.getApi<span class="hl-punc">().</span>registerOwnershipResolver<span class="hl-punc">(</span><span class="hl-type">ClaimOwnerType</span>.GUILD<span class="hl-punc">,</span> <span class="hl-kw">new</span> <span class="hl-type">ExternalOwnershipResolver</span><span class="hl-punc">() {</span> <span class="hl-cmt">/* &hellip; */</span> <span class="hl-punc">});</span></code></pre>
+    <p>
+      The resolver is consulted whenever Claims needs to decide whether an
+      actor is an owner-like principal of the claim, look up the actor&rsquo;s
+      effective member flags, gate claim creation on the owner&rsquo;s behalf,
+      enforce the owner&rsquo;s chunk limit, or report income on guild-hall
+      rent/buy transactions. Multiple plugins can coexist by registering
+      resolvers for distinct owner types (e.g. one for <code>GUILD</code>,
+      another for <code>NATION</code> + <code>CITY</code>).
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

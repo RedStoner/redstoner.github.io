@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Core — Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="core" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Core Plugin</div>
+      <h1 class="page-title">QuestLines Overview</h1>
+      <p class="page-subtitle">
+        QuestLines is a Hytale server plugin that ties NPC dialogue to a quest system.
+        Players interact with NPCs to trigger branching dialogue — each response can have
+        requirements that control visibility and actions that drive quest state forward.
+      </p>
+    </div>
+
+    <!-- How it works -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      When a player interacts with an NPC, QuestLines looks up all quests linked to that NPC
+      and walks through their pages in order. The <strong>first page whose requirements all
+      pass</strong> is displayed as a dialogue screen. The player sees the NPC's text and
+      response buttons. Choosing a response executes its actions — updating quest state,
+      giving items, running commands, or navigating to another page.
+    </p>
+
+    <div class="cards-grid">
+      <a class="card" href="requirements.html">
+        <span class="card-icon">&#10003;</span>
+        <div class="card-title">Requirements</div>
+        <p class="card-desc">Control when a page or response is visible. Quest state, tags, kill counts, items, cooldowns, and more.</p>
+      </a>
+      <a class="card" href="actions.html">
+        <span class="card-icon">&#9654;</span>
+        <div class="card-title">Actions</div>
+        <p class="card-desc">Effects triggered by a response: start quests, give items, run commands, spawn NPCs, navigate pages.</p>
+      </a>
+      <a class="card" href="npc-setup.html">
+        <span class="card-icon">&#9651;</span>
+        <div class="card-title">NPC Setup</div>
+        <p class="card-desc">Link quests to NPCs, use wand mode, and configure talk tracking.</p>
+      </a>
+      <a class="card" href="progression.html">
+        <span class="card-icon">&#9670;</span>
+        <div class="card-title">Quest Patterns</div>
+        <p class="card-desc">Full worked examples: kill quests, item turn-ins, branching dialogue, cooldown rewards, timed quests.</p>
+      </a>
+    </div>
+    </div>
+
+    <!-- Core Concepts -->
+    <div data-section-body="Core Concepts">
+    <h2 data-section="Core Concepts">Core Concepts</h2>
+
+    <h3 data-section="Quest">Quest</h3>
+    <p>
+      A Quest is the top-level container. It has a title, description, and an ordered list of
+      <strong>page IDs</strong>. When a player interacts with an NPC, the quest's pages are
+      evaluated in the order they appear in this list.
+    </p>
+
+    <h3 data-section="Page">Page</h3>
+    <p>
+      A Page represents one screen of dialogue. It has its own requirements (which must pass
+      for the page to be selected), NPC display name, dialogue text, optional load actions,
+      and any number of responses. <strong>Load actions</strong> run automatically whenever the
+      page is shown — on initial NPC interaction and on any <code>page:</code> navigation —
+      regardless of which response the player clicks.
+    </p>
+    <p>
+      Pages also support an optional <strong>JournalText</strong> field that overrides the
+      dialogue text shown in the Quest Journal — useful when the in-world dialogue is spoken
+      by an NPC but you want the journal entry written from the player's perspective. When
+      blank, the <code>Dialog</code> field is used in the journal.
+    </p>
+
+    <h3 data-section="Response">Response</h3>
+    <p>
+      A Response is one button on a dialogue screen. It has display text, its own requirements
+      (controlling whether the button appears), and a list of actions executed when clicked.
+    </p>
+
+    <h3 data-section="PlayerData">PlayerData</h3>
+    <p>
+      Each player has a persistent data record storing: started quests, completed quests,
+      custom tags, named tracker progress counters, and timestamps for cooldown checks.
+      This data is stored in <code>players.json</code> and managed automatically.
+    </p>
+    </div>
+
+    <div data-section-body="Data Model">
+    <h2 data-section="Data Model">Data Model</h2>
+    <p>
+      All configuration is stored as JSON files on the server. Below is the structure of
+      each config type.
+    </p>
+
+    <h3 data-section="Quest File — quests/&lt;id&gt;.json">Quest File &mdash; <code>quests/&lt;id&gt;.json</code></h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span>        <span class="hl-str">"The Lost Sword"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Description"</span><span class="hl-punc">:</span> <span class="hl-str">"Help the blacksmith retrieve his stolen blade."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span>
+  <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[],</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"lost_sword_intro"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"lost_sword_progress"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"lost_sword_turnin"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"lost_sword_complete"</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <h3 data-section="Page (in quest JSON under PageData)">Page (in quest JSON under PageData)</h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"lost_sword_intro"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span>       <span class="hl-str">"A Favour to Ask"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Name"</span><span class="hl-punc">:</span>        <span class="hl-str">"Aldric the Smith"</span><span class="hl-punc">,</span>  <span class="hl-cmt">// NPC display name on this page</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:lost_sword"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span>  <span class="hl-punc">[],</span>  <span class="hl-cmt">// actions run automatically when this page is shown</span>
+  <span class="hl-key">"Objectives"</span><span class="hl-punc">:</span>  <span class="hl-punc">[],</span>  <span class="hl-cmt">// requirement strings shown as pass/fail objectives in HUD + journal</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>      <span class="hl-str">"Ah, {username}! My sword was stolen by goblins. Will you help?"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"JournalText"</span><span class="hl-punc">:</span> <span class="hl-str">""</span><span class="hl-punc">,</span>  <span class="hl-cmt">// optional: overrides Dialog in the Quest Journal (e.g. a player-perspective entry)</span>
+  <span class="hl-key">"Portrait"</span><span class="hl-punc">:</span>    <span class="hl-str">""</span><span class="hl-punc">,</span>  <span class="hl-cmt">// optional: per-page portrait (filename or resource-pack path)</span>
+  <span class="hl-key">"SecondaryPortrait"</span><span class="hl-punc">:</span> <span class="hl-str">""</span><span class="hl-punc">,</span>  <span class="hl-cmt">// optional: second portrait on opposite side</span>
+  <span class="hl-key">"Responses"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-punc">{</span> <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"I'll find it for you."</span><span class="hl-punc">,</span> <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span> <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"startquest:lost_sword"</span><span class="hl-punc">,</span> <span class="hl-str">"track:goblin_kills:kill:Goblin*"</span><span class="hl-punc">]</span> <span class="hl-punc">},</span>
+    <span class="hl-punc">{</span> <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"Not right now."</span><span class="hl-punc">,</span> <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[],</span> <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span> <span class="hl-punc">}</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <h3 data-section="NPC Config — npcs.json">NPC Config &mdash; <code>npcs.json</code></h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Npcs"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-str">"lost_sword,daily_reward"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_07"</span><span class="hl-punc">:</span> <span class="hl-str">"goblin_king"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_15"</span><span class="hl-punc">:</span> <span class="hl-str">"bounty_a,bounty_b,bounty_c"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"NpcIsBoard"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>          <span class="hl-cmt">// 1.11+ — interactions open the QuestBoardUI instead of DialogueUI</span>
+    <span class="hl-key">"citizen_15"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    <p>
+      Additional optional keys (omitted above for brevity) include <code>NpcRandomGroups</code>,
+      <code>NpcPortraits</code>, <code>NpcPortraitEnabled</code>, <code>NpcHitToTalk</code>, and
+      <code>NpcFToTalk</code> &mdash; see <a href="npc-setup.html">NPC Setup</a>.
+    </p>
+
+    <h3 data-section="players.json — auto-managed">players.json &mdash; auto-managed</h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Players"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"player-uuid-here"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"CompletedQuests"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"tutorial"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"StartedQuests"</span><span class="hl-punc">:</span>   <span class="hl-punc">[</span><span class="hl-str">"lost_sword"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"Tags"</span><span class="hl-punc">:</span>           <span class="hl-punc">[</span><span class="hl-str">"vip"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"Progress"</span><span class="hl-punc">:</span>       <span class="hl-punc">{</span> <span class="hl-key">"goblin_kills"</span><span class="hl-punc">:</span> <span class="hl-num">3</span> <span class="hl-punc">},</span>
+      <span class="hl-key">"Timestamps"</span><span class="hl-punc">:</span>     <span class="hl-punc">{</span> <span class="hl-key">"daily_key"</span><span class="hl-punc">:</span> <span class="hl-num">1735000000000</span> <span class="hl-punc">},</span>
+      <span class="hl-key">"Variables"</span><span class="hl-punc">:</span>      <span class="hl-punc">{</span> <span class="hl-key">"score"</span><span class="hl-punc">:</span> <span class="hl-num">7</span> <span class="hl-punc">},</span>
+      <span class="hl-key">"TrackedQuests"</span><span class="hl-punc">:</span>  <span class="hl-punc">[</span><span class="hl-str">"lost_sword"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"PreferredLanguage"</span><span class="hl-punc">:</span> <span class="hl-str">"en-US"</span><span class="hl-punc">,</span>
+      <span class="hl-key">"AutoTrackQuests"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Quest Boards -->
+    <div data-section-body="Quest Boards">
+    <h2 data-section="Quest Boards">Quest Boards</h2>
+    <p>
+      Quest Boards (added in 1.11.0) let players browse multiple quests from one location instead of
+      walking up to individual NPCs. Two flavours ship in Core &mdash; physical blocks and an
+      NPC-as-board toggle &mdash; both open the same <code>QuestBoardUI</code>.
+    </p>
+
+    <h3 data-section="Block-based boards">Block-based boards</h3>
+    <p>
+      Two item models are bundled with the plugin:
+    </p>
+    <ul>
+      <li><code>QuestLines_QuestBoard</code> &mdash; wall-mounted, single block.</li>
+      <li><code>QuestLines_QuestSign</code> &mdash; free-standing, 2x2 footprint.</li>
+    </ul>
+    <p>
+      Give yourself one with the standard creative-mode item flow, place it in the world, then
+      hold the <strong>Quest Staff</strong> (the same staff used for NPC wand assignments) and
+      right-click the board to open its editor. Each board has its own quest list keyed by the
+      placed location (the boardKey). Add new block variants by appending to
+      <code>BoardInteractListener.BOARD_BLOCK_IDS</code>.
+    </p>
+
+    <h3 data-section="NPC as quest board">NPC as quest board</h3>
+    <p>
+      Set <code>NpcIsBoard</code> to <code>true</code> for any NPC in <code>npcs.json</code> &mdash; or use the
+      <strong>Is Quest Board</strong> checkbox on the NPC editor's INFO tab. Interaction with that
+      NPC will route through <code>QuestBoardUI.forNpc()</code> instead of the dialogue UI. The
+      NPC's normal quest list (<code>NpcConfig.getQuestIds</code>) is what the board lists.
+    </p>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// npcs.json &mdash; turn citizen_15 into a quest board</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Npcs"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_15"</span><span class="hl-punc">:</span> <span class="hl-str">"bounty_a,bounty_b,bounty_c"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"NpcIsBoard"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_15"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Board filtering</div>
+        <p>
+          Both variants display every assigned quest whose page resolution would otherwise return a
+          dialogue page. Non-repeatable quests the player has already completed are hidden;
+          repeatables on cooldown are visible but greyed.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Events -->
+    <div data-section-body="Events">
+    <h2 data-section="Events">Events</h2>
+    <p>
+      The Events system (added in 1.10.0) lets admins attach a list of actions to a handful of
+      lifecycle events. Events are stored in <code>mods/QuestLines/events.json</code> and edited via
+      the <strong>EVENTS</strong> tab in <code>/ql quest</code>. The actions are the same core action
+      strings used by quest responses &mdash; <code>chat:</code>, <code>command:</code>,
+      <code>tp:</code>, <code>notify:</code>, <code>title:</code>, <code>mail:</code>,
+      <code>addTag:</code>, etc.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Event</th><th>When</th><th>Action context</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>playerDeath</code></td>
+            <td>A player dies.</td>
+            <td>Runs against the dead player.</td>
+          </tr>
+          <tr>
+            <td><code>playerConnect</code></td>
+            <td>After <code>PlayerReadyEvent</code> on login.</td>
+            <td>Runs against the connecting player.</td>
+          </tr>
+          <tr>
+            <td><code>playerDisconnect</code></td>
+            <td>A player disconnects.</td>
+            <td>Runs against the leaving player.</td>
+          </tr>
+          <tr>
+            <td><code>serverStopping</code></td>
+            <td>Server begins shutdown.</td>
+            <td>Runs against every online player.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// mods/QuestLines/events.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"playerConnect"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"notify:Welcome back, {username}!:Check the journal for updates:#88ff88:TopCenter:SLIDE"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"if:!hasTag:has_logged_in_today::[addTag:has_logged_in_today,economy:give:25,chat:You received your daily login bonus.]"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"playerDeath"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"chat:You died! Some progress was lost."</span><span class="hl-punc">],</span>
+  <span class="hl-key">"playerDisconnect"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"setTimestamp:last_online"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"serverStopping"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"title:Server Restarting:Save your work:server:true"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">No serverStart event</div>
+        <p>
+          There is no <code>serverStart</code> event. The action engine requires a
+          <code>PlayerRef</code> to execute against, which doesn't exist at boot &mdash; so a
+          <code>serverStart</code> hook would always be a no-op.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Page Resolution Algorithm -->
+    <div data-section-body="Page Resolution Algorithm">
+    <h2 data-section="Page Resolution Algorithm">Page Resolution Algorithm</h2>
+    <p>
+      Understanding how QuestLines selects a page is essential for authoring correct quest flows.
+      The algorithm runs every time a player interacts with an NPC:
+    </p>
+
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Look up quests for this NPC.</strong>
+          <p>
+            The NPC's citizen ID is looked up in <code>npcs.json</code>. The comma-separated
+            list of quest IDs is the evaluation order for that NPC.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>For each quest, iterate its Pages list.</strong>
+          <p>
+            Pages are evaluated in the order they appear in the Quest's <code>Pages</code> array.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Check this page's Requirements.</strong>
+          <p>
+            All requirements must pass. If any fails, skip to the next page.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Show the first matching page.</strong>
+          <p>
+            As soon as a page passes all requirements, that dialogue is opened. No further
+            pages are evaluated.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>If no page matches, no dialogue opens.</strong>
+          <p>
+            The player's interaction with the NPC silently does nothing.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout warning">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Order Matters</div>
+        <p>
+          Put your most <strong>specific</strong> pages first. A completed-state page must
+          come before an in-progress page, which must come before the intro page.
+          If the intro page (with <code>questNotStarted</code>) were listed last, it would
+          never match once the quest was started because the in-progress page would match first.
+          See <a href="progression.html">Quest Patterns</a> for full worked examples.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Admin Commands -->
+    <div data-section-body="Admin Commands">
+    <h2 data-section="Admin Commands">Admin Commands</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/ql create</td>
+            <td>Open the quest creation wizard to scaffold a new quest and its pages. Item-ID fields include a searchable dropdown of every registered item.</td>
+          </tr>
+          <tr>
+            <td>/ql quest &nbsp;<span style="opacity:0.6;font-size:0.85em">(aliases: /ql ui, /ql q)</span></td>
+            <td>Open the full QuestLines editor UI to browse and edit quests, pages, responses, NPCs, players, macros, achievements, and events. Includes a <strong>Translate Quest</strong> button that fills missing locale strings via the configured <a href="#translation-backend">translation backend</a>. The Users tab lists every known player sorted by online-then-last-seen, with an <code>[O]</code> tag marking currently-online players.</td>
+          </tr>
+          <tr>
+            <td>/ql list</td>
+            <td>List every loaded quest ID and title, sorted alphabetically.</td>
+          </tr>
+          <tr>
+            <td>/ql remove &lt;questId&gt;</td>
+            <td>Delete a quest. Two-step confirm with a 30s window — run twice in 30s to confirm.</td>
+          </tr>
+          <tr>
+            <td>/ql npc</td>
+            <td>Open the NPC management panel.</td>
+          </tr>
+          <tr>
+            <td>/ql wand &lt;questId&gt;</td>
+            <td>Enter wand mode. The next NPC you punch will be linked to the specified quest.</td>
+          </tr>
+          <tr>
+            <td>/ql wandcancel</td>
+            <td>Cancel an active wand mode assignment.</td>
+          </tr>
+          <tr>
+            <td>/ql waveeditor &nbsp;<span style="opacity:0.6;font-size:0.85em">(alias: /ql we)</span></td>
+            <td>Open the in-game wave arena editor. Arenas are stored under <code>mods/QuestLines/wavearenas/&lt;id&gt;.json</code> and triggered from quests with <code>startArena:</code>. See <a href="wavearenas.html">Wave Arenas</a>. (1.10.1+)</td>
+          </tr>
+          <tr>
+            <td>/qleditor</td>
+            <td>Stand-alone command (not under <code>/ql</code>). Asks the editor relay for a short-lived pair code and DMs the admin a link of the form <code>https://evilcraft.net/editor/?code=K3F92Q4</code> for the <a href="editor.html">Web Editor</a>. Requires <code>questlines.admin</code>. (1.10.2+)</td>
+          </tr>
+          <tr>
+            <td>/ql validate</td>
+            <td>Run the quest validator on demand without reloading. Mirrors the checks performed at startup and on <code>/ql reload</code>; output is logged to console.</td>
+          </tr>
+          <tr>
+            <td>/ql reload</td>
+            <td>Reload all config files from disk without restarting the server. Quests are validated as part of the reload; problems are reported to console but never block the reload.</td>
+          </tr>
+          <tr>
+            <td>/ql action &lt;value&gt; [--player=name]</td>
+            <td>Execute any action string for a player (defaults to self). <code>page:pageId</code> opens DialogueUI for the target instead of executing as a normal action. Useful for debugging.</td>
+          </tr>
+          <tr>
+            <td>/ql requirement &lt;value&gt; [--player=name] &nbsp;<span style="opacity:0.6;font-size:0.85em">(alias: /ql req)</span></td>
+            <td>Test a requirement string for a player and print PASS or FAIL. Offline players evaluate against the sender's position for world-based requirements.</td>
+          </tr>
+          <tr>
+            <td>/ql player reset &lt;player&gt; &lt;field&gt;</td>
+            <td>Reset a player data field. Fields: <code>tags</code>, <code>completed</code>, <code>started</code>, <code>progress</code>, <code>timestamps</code>, <code>variables</code>, <code>stringvars</code>, <code>tracked</code>, <code>trackers</code>, <code>questitems</code>, <code>markers</code>, <code>blockoverrides</code>, <code>achievements</code>, <code>iconoverrides</code>, <code>escorts</code>, <code>journal</code>, <code>all</code>. <code>escorts</code> despawns any live escort NPC clones before clearing persisted records. <code>blockoverrides</code> repaints real blocks for online players before clearing the override map.</td>
+          </tr>
+          <tr>
+            <td>/ql player variable &lt;player&gt; &lt;name&gt; &lt;op&gt; &lt;amount&gt; &nbsp;<span style="opacity:0.6;font-size:0.85em">(alias: var)</span></td>
+            <td>Mutate a player's named variable. Ops: <code>set</code>, <code>add</code>, <code>sub</code>, <code>multiply</code>, <code>divide</code>. Mirrors the <code>variable:</code> action.</td>
+          </tr>
+          <tr>
+            <td>/ql achievement &lt;list|grant|revoke|reset|reload&gt;</td>
+            <td>Manage player achievement state. <code>list [player]</code> shows every achievement and its unlock state; <code>grant &lt;player&gt; &lt;id&gt; [stage]</code> force-unlocks a stage and runs its UnlockActions; <code>revoke</code>/<code>reset &lt;player&gt; &lt;id&gt;</code> removes every stage of the achievement; <code>reload</code> re-reads <code>achievements/</code> from disk. See <a href="#achievements">Achievements</a> below.</td>
+          </tr>
+          <tr>
+            <td>/ql info</td>
+            <td>Show plugin version and dependency information.</td>
+          </tr>
+          <tr>
+            <td>/ql help</td>
+            <td>List all available <code>/ql</code> commands.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Tip</div>
+        <p>
+          Use <code>/ql wand &lt;questId&gt;</code> as the fastest way to link quests to NPCs
+          in-world. See <a href="npc-setup.html">NPC Setup</a> for full details on wand mode
+          and alternative linking methods.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Player Commands -->
+    <div data-section-body="Player Commands">
+    <h2 data-section="Player Commands">Player Commands</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/journal &nbsp;<span style="opacity:0.6;font-size:0.85em">(aliases: /j, /log)</span></td>
+            <td>Open the Quest Journal. Shows active and completed quests with the last dialogue seen for each, plus objectives for the current page. Players can toggle quest tracking to show objectives on the HUD. The journal remembers the last tab and quest the player was viewing and reopens to it next time; if the remembered entry no longer exists (quest removed, completed), it opens to the first available quest instead.</td>
+          </tr>
+          <tr>
+            <td>/qlconfig</td>
+            <td>Open the personal quest settings UI to configure preferred language, auto-track HUD behaviour, HUD anchor corner, and exact HUD pixel offsets. Language changes take effect immediately. Requires the <code>questlines.config.use</code> permission.</td>
+          </tr>
+          <tr>
+            <td>/achievements &nbsp;<span style="opacity:0.6;font-size:0.85em">(alias: /ach)</span></td>
+            <td>Open the Achievements UI to browse server-defined milestones, view unlock progress per stage, and see total points earned. Requires the <code>questlines.achievements.use</code> permission.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+    <p>
+      QuestLines uses the following permission nodes. Admin commands require
+      <code>questlines.admin</code>; it defaults to <code>false</code> (op-only).
+      Player commands have their own nodes that default to <code>true</code>.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>questlines.admin</td>
+            <td>false</td>
+            <td>Required for all <code>/ql</code> admin commands (quest editor, NPC setup, wand mode, reload, etc.).</td>
+          </tr>
+          <tr>
+            <td>questlines.journal.use</td>
+            <td>true</td>
+            <td>Required to open the Quest Journal via <code>/journal</code>.</td>
+          </tr>
+          <tr>
+            <td>questlines.config.use</td>
+            <td>true</td>
+            <td>Required to open the player settings UI via <code>/qlconfig</code>.</td>
+          </tr>
+          <tr>
+            <td>questlines.achievements.use</td>
+            <td>true</td>
+            <td>Required to open the Achievements UI via <code>/achievements</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Multi-Language Support</div>
+        <p>
+          QuestLines ships with built-in translations for English (en-US), Spanish (es-ES),
+          German (de-DE), French (fr-FR), Portuguese (pt-BR), and Russian (ru-RU). Players
+          can choose their preferred language via <code>/qlconfig</code>. Admins can add or
+          override translations by placing <code>.lang</code> files in
+          <code>{pluginDataDir}/lang/{locale}.lang</code>. The server default locale is set
+          in the plugin config; individual players override it per-player.
+        </p>
+        <p>
+          Quest text itself (name, description, page dialogue, responses, objectives)
+          is stored as a locale-&gt;string map. Authors can translate a quest in one click
+          with the <strong>Translate Quest</strong> button in the editor, which fills
+          missing locales via a pluggable HTTP backend — see
+          <a href="#translation-backend">Translation Backend</a>. Bare-string legacy configs
+          remain valid and are preserved byte-identical on disk until a translation is added.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Configuration -->
+    <div data-section-body="Configuration">
+    <h2 data-section="Configuration">Configuration</h2>
+    <p>
+      Global plugin settings live in <code>mods/QuestLines/QuestLines.conf</code> — a simple
+      <code>key=value</code> file that is created with sensible defaults on first startup and
+      re-saved with any new keys after a plugin upgrade. Reload with <code>/ql reload</code>.
+    </p>
+
+    <h3 data-section="HUD &amp; Dialogue Defaults">HUD &amp; Dialogue Defaults</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>default_language</code></td><td><code>en-US</code></td><td>Language assigned to newly-created player records. Existing players keep their <code>/qlconfig</code> selection. Supported: <code>en-US</code>, <code>de-DE</code>, <code>es-ES</code>, <code>fr-FR</code>, <code>pt-BR</code>, <code>ru-RU</code>.</td></tr>
+          <tr><td><code>default_hud_position</code></td><td><code>TopRight</code></td><td>Starting HUD corner for new players. Options: <code>TopRight</code>, <code>TopLeft</code>, <code>BottomRight</code>, <code>BottomLeft</code>.</td></tr>
+          <tr><td><code>default_hud_offset_x</code></td><td><code>10</code></td><td>Default horizontal offset (pixels) from the HUD anchor corner for new players. Players can fine-tune their own values via <code>/qlconfig</code>.</td></tr>
+          <tr><td><code>default_hud_offset_y</code></td><td><code>10</code></td><td>Default vertical offset (pixels) from the HUD anchor corner for new players. Players can fine-tune their own values via <code>/qlconfig</code>.</td></tr>
+          <tr><td><code>hud_refresh_rate</code></td><td><code>500</code> ms</td><td>How often the Quest Goal HUD re-evaluates and redraws per player.</td></tr>
+          <tr><td><code>damage_tracking_time</code></td><td><code>5000</code> ms</td><td>Window during which damage contributors receive kill credit.</td></tr>
+          <tr><td><code>dialog_width_full</code> / <code>_mid</code> / <code>_compact</code></td><td><code>20</code> / <code>350</code> / <code>570</code></td><td>Horizontal anchor offsets for each dialogue width option.</td></tr>
+          <tr><td><code>hit_to_talk_default</code> / <code>f_to_talk_default</code></td><td><code>true</code></td><td>Global fallbacks for whether hitting or pressing F on an NPC opens dialogue. Overridable per-NPC in <code>npcs.json</code>.</td></tr>
+          <tr><td><code>debug_toasts</code></td><td><code>false</code></td><td>Show toast notifications on the right of the screen when tracking events fire (useful when authoring quests).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Storage Backend">Storage Backend</h3>
+    <p>
+      QuestLines stores per-player state in a file by default, but can be switched to a database
+      for production deployments. The choice is transparent to quests and actions — the same
+      <code>PlayerData</code> model is used either way.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>storage_backend</code></td><td><code>file</code></td><td>One of <code>file</code> (JSON at <code>players.json</code>), <code>sqlite</code>, <code>mysql</code>, or <code>mariadb</code>.</td></tr>
+          <tr><td><code>db_url</code></td><td><em>(empty)</em></td><td>Full JDBC URL override. When set, <code>db_host</code>/<code>_port</code>/<code>_name</code> are ignored. For SQLite, a relative path here becomes the database filename.</td></tr>
+          <tr><td><code>db_host</code> / <code>db_port</code></td><td><code>localhost</code> / <code>3306</code></td><td>MySQL/MariaDB host and port.</td></tr>
+          <tr><td><code>db_name</code> / <code>db_user</code> / <code>db_password</code></td><td><code>questlines</code> / <em>(empty)</em> / <em>(empty)</em></td><td>MySQL/MariaDB schema and credentials.</td></tr>
+          <tr><td><code>db_pool_size</code></td><td><code>5</code></td><td>HikariCP maximum pool size. SQLite is capped at 1 regardless.</td></tr>
+          <tr><td><code>db_table_prefix</code></td><td><code>ql_</code></td><td>Prefix applied to every table name (e.g. <code>ql_player_data</code>).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warning">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Switching Backends</div>
+        <p>
+          There is no automatic migration between <code>file</code> and database backends.
+          Stop the server, copy <code>players.json</code> aside if you need to seed, switch
+          <code>storage_backend</code>, and restart. Existing player data in the previous
+          backend is not read by the new one.
+        </p>
+      </div>
+    </div>
+
+    <h3 data-section="Translation Backend">Translation Backend</h3>
+    <p>
+      The in-editor <strong>Translate Quest</strong> button uses a pluggable HTTP backend to
+      auto-fill missing locale strings on a quest. Source language defaults to
+      <code>default_language</code>; the button fills the remaining supported locales in one
+      pass. Existing translations are never overwritten.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>translation_provider</code></td><td><code>mymemory</code></td><td>One of <code>mymemory</code> (free, zero-setup), <code>libretranslate</code> (self-host or hosted), or <code>none</code> (disables the Translate button).</td></tr>
+          <tr><td><code>translation_endpoint</code></td><td><em>(empty)</em></td><td>Optional URL override for the provider. Blank uses the provider's default public endpoint.</td></tr>
+          <tr><td><code>translation_email</code></td><td><em>(empty)</em></td><td>Optional contact email for MyMemory — raises the daily character quota.</td></tr>
+          <tr><td><code>translation_api_key</code></td><td><em>(empty)</em></td><td>Optional API key for LibreTranslate instances that require authentication.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Achievements -->
+    <div data-section-body="Achievements">
+    <h2 id="achievements" data-section="Achievements">Achievements</h2>
+    <p>
+      Achievements are server-defined milestones unlocked when a player&rsquo;s state
+      satisfies a list of requirement criteria. Each achievement is stored in
+      <code>QuestLines/achievements/&lt;id&gt;.json</code> and is made up of one or
+      more ordered <strong>stages</strong>. A single-stage achievement is just an
+      achievement with one stage; the editor and runtime treat all achievements
+      uniformly. Players open the Achievements UI with <code>/achievements</code>
+      (alias <code>/ach</code>); admins manage state with
+      <code>/ql achievement</code>.
+    </p>
+
+    <h3 data-section="When achievements are evaluated">When achievements are evaluated</h3>
+    <p>
+      The <code>AchievementManager</code> walks every loaded achievement and unlocks
+      any stage whose <code>Criteria</code> currently pass. Cascading stages can
+      unlock together on a single pass. Re-evaluation happens after:
+    </p>
+    <ul>
+      <li>Tracking events (kill, break, place, craft, harvest, pickup, fishing) processed by <code>QuestManager</code>.</li>
+      <li>Quest completion (the <code>completequest:</code> action and the implicit completion that fires when a quest&rsquo;s last page is reached).</li>
+      <li>Player join (after <code>PlayerReadyEvent</code>) so quests-completed-while-offline show up at next login.</li>
+    </ul>
+    <p>
+      When a stage unlocks the manager fires that stage&rsquo;s <code>UnlockActions</code>
+      through the normal <code>ActionManager</code>, so any action available to a
+      response (give items, grant titles, run commands, send chat, etc.) can be used
+      as an achievement reward.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Achievement counters are isolated from quest progress</div>
+        <p>
+          Tracking-style criteria (<code>kill:</code>, <code>break:</code>, <code>craft:</code>,
+          fishing, etc.) used in achievement <code>Criteria</code> are stored in
+          private named trackers under the reserved <code>__ach__</code> prefix.
+          They are completely independent of the named-tracker counters quests use, so a
+          quest&rsquo;s <code>untrack:zombie_kills</code> never rolls back the
+          achievement&rsquo;s lifetime kill count.
+        </p>
+      </div>
+    </div>
+
+    <h3 data-section="Achievement file — achievements/&lt;id&gt;.json">Achievement File &mdash; <code>achievements/&lt;id&gt;.json</code></h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>          <span class="hl-str">"goblin_slayer"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span>       <span class="hl-str">"Goblin Slayer"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Description"</span><span class="hl-punc">:</span> <span class="hl-str">"Slay goblins across the realm."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Category"</span><span class="hl-punc">:</span>    <span class="hl-str">"combat"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Icon"</span><span class="hl-punc">:</span>        <span class="hl-str">"Sword_Iron"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Hidden"</span><span class="hl-punc">:</span>      <span class="hl-kw">false</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Stages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-punc">{</span>
+      <span class="hl-key">"Title"</span><span class="hl-punc">:</span>         <span class="hl-str">""</span><span class="hl-punc">,</span> <span class="hl-cmt">// blank → falls back to "Goblin Slayer I"</span>
+      <span class="hl-key">"Points"</span><span class="hl-punc">:</span>        <span class="hl-num">5</span><span class="hl-punc">,</span>
+      <span class="hl-key">"Rewards"</span><span class="hl-punc">:</span>       <span class="hl-str">"100 gold"</span><span class="hl-punc">,</span>
+      <span class="hl-key">"Criteria"</span><span class="hl-punc">:</span>     <span class="hl-punc">[</span><span class="hl-str">"kill:Goblin*:10"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"UnlockActions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"economy:give:100"</span><span class="hl-punc">,</span> <span class="hl-str">"chat:You earned a stage of Goblin Slayer!"</span><span class="hl-punc">]</span>
+    <span class="hl-punc">},</span>
+    <span class="hl-punc">{</span>
+      <span class="hl-key">"Points"</span><span class="hl-punc">:</span>        <span class="hl-num">10</span><span class="hl-punc">,</span>
+      <span class="hl-key">"Rewards"</span><span class="hl-punc">:</span>       <span class="hl-str">"250 gold + Goblin Slayer title"</span><span class="hl-punc">,</span>
+      <span class="hl-key">"Criteria"</span><span class="hl-punc">:</span>     <span class="hl-punc">[</span><span class="hl-str">"kill:Goblin*:50"</span><span class="hl-punc">],</span>
+      <span class="hl-key">"UnlockActions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"economy:give:250"</span><span class="hl-punc">,</span> <span class="hl-str">"giveTitle:combat:goblinslayer"</span><span class="hl-punc">]</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Id</code></td><td>Unique achievement ID. Must NOT contain <code>:</code> &mdash; the unlock-time map keys use <code>id:tier</code> internally.</td></tr>
+          <tr><td><code>Title</code> / <code>Description</code></td><td>Achievement-level localized text. Falls back to the per-stage equivalents when those are blank.</td></tr>
+          <tr><td><code>Category</code></td><td>Free-form grouping string used by the Achievements UI to organize entries.</td></tr>
+          <tr><td><code>Icon</code></td><td>Item ID shown next to the achievement in the UI.</td></tr>
+          <tr><td><code>Hidden</code></td><td>When <code>true</code> the achievement is concealed in the UI until the first stage unlocks.</td></tr>
+          <tr><td><code>Stages</code></td><td>Ordered array of one or more stages. Each stage carries its own <code>Title</code>, <code>Description</code>, <code>Points</code>, <code>Rewards</code> text, <code>Criteria</code>, and <code>UnlockActions</code>. <code>Criteria</code> accept any <a href="requirements.html">requirement</a>; <code>UnlockActions</code> accept any <a href="actions.html">action</a>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Editing">Editing</h3>
+    <p>
+      Achievements have a dedicated <strong>ACHIEVEMENTS</strong> tab in
+      <code>/ql quest</code>. The tab supports full CRUD on both single-stage and
+      staged achievements; the editor distinguishes the achievement-level
+      Title/Description/Icon/Category/Hidden fields from the per-stage
+      Points/Rewards/Criteria/UnlockActions fields by switching between a
+      <em>Base</em> context and a <em>Stage N</em> context, shown in the
+      <code>#AchievementContextLabel</code> at the top of the editor.
+    </p>
+
+    <h3 data-section="Achievement requirements">Achievement Requirements</h3>
+    <p>
+      Quests can react to achievement progress via three requirement types
+      (full details on the <a href="requirements.html">Requirements</a> page):
+    </p>
+    <ul>
+      <li><code>achievement:&lt;id&gt;[:&lt;minStage&gt;]</code> &mdash; player has unlocked the achievement (any stage) or at least the given tier.</li>
+      <li><code>achievementcount:&lt;n&gt;</code> &mdash; player has unlocked at least <em>n</em> distinct achievements.</li>
+      <li><code>achievementpoints:&lt;n&gt;</code> &mdash; player&rsquo;s total achievement points are at least <em>n</em>.</li>
+      <li><code>achievementstages:&lt;id&gt;:&lt;n&gt;</code> &mdash; player has unlocked at least <em>n</em> stages of a specific achievement.</li>
+    </ul>
+    </div>
+
+    <!-- Integrations -->
+    <div data-section-body="Integrations">
+    <h2 data-section="Integrations">Integrations</h2>
+    <p>
+      QuestLines ships with opt-in integrations that activate automatically when a compatible
+      plugin is detected. These are in addition to the optional requirement/action dependencies
+      (VaultUnlocked, MMOSkillTree, RPGLeveling, OrbisGuard, HyFishing) documented on the
+      <a href="requirements.html">Requirements</a> and <a href="actions.html">Actions</a> pages.
+    </p>
+
+    <h3 data-section="Insight HUD">Insight HUD</h3>
+    <p>
+      When the <strong>Insight HUD</strong> plugin is installed alongside QuestLines Core, the
+      plugin registers contributors that surface live quest data in the Insight HUD target
+      panel while the player is looking at an NPC:
+    </p>
+    <ul>
+      <li>
+        <strong>Quest availability</strong> — whether the NPC has a quest available, in
+        progress, completed, or on cooldown for the viewing player.
+      </li>
+      <li>
+        <strong>Active tracking</strong> — for any quest on the NPC that is currently tracked,
+        the player's goal text / objective progress is displayed.
+      </li>
+    </ul>
+    <p>
+      There is no configuration required. If Insight HUD is not installed, the integration is
+      silently skipped at startup.
+    </p>
+
+    <h3 data-section="QL Claims">QL Claims</h3>
+    <p>
+      When <a href="claims.html">QuestLines Claims</a> is loaded, Core registers actions,
+      requirements, and variables that bridge quest state to claim flags and region membership.
+      See the Claims wiki page for the full list; all of them are only active when the Claims
+      plugin is present.
+    </p>
+
+    <h3 data-section="Anglers' Almanac">Anglers&rsquo; Almanac</h3>
+    <p>
+      When <strong>Anglers&rsquo; Almanac</strong> (AA) is detected on startup, QuestLines
+      registers a bridge listener for AA&rsquo;s catch and minigame events. Successful
+      catches from the AA minigame feed the existing
+      <code>catchfish:</code> and <code>catchfishrarity:</code> counters using the
+      caught item&rsquo;s ID and rarity, so existing fishing quests work transparently
+      whether the player is using base HyFishing or AA. AA also exposes
+      legendary/new-discovery flags and a per-cast performance rating, which drive
+      a new family of requirements, trackers, and text variables &mdash; and a
+      separate counter for fish lost in the minigame:
+    </p>
+    <ul>
+      <li>Requirements: <code>fishmiss:</code>, <code>catchfishlegendary:</code>, <code>catchfishnew:</code>, <code>catchfishperf:&lt;rating&gt;:</code>.</li>
+      <li>Tracker types (for the named-tracker system): <code>track:id:fishmiss:&lt;fishItemId&gt;</code>, <code>track:id:catchfishlegendary:*</code>, <code>track:id:catchfishnew:*</code>, <code>track:id:catchfishperf:&lt;rating&gt;</code>.</li>
+      <li>Text variables: <code>{fishmissprogress:&lt;fishItemId&gt;}</code>, <code>{catchlegendaryprogress}</code>, <code>{catchnewprogress}</code>, <code>{catchperfprogress:&lt;rating&gt;}</code>.</li>
+    </ul>
+    <p>
+      Performance ratings are <code>perfect</code>, <code>great</code>, <code>good</code>,
+      <code>fail</code>, and <code>nil</code>. Biome and zone are not provided by AA, so
+      <code>catchfishbiome:</code> / <code>catchfishzone:</code> remain HyFishing-only.
+      The bridge is fully optional &mdash; if AA is not installed, Core never references
+      its classes.
+    </p>
+    <h3 data-section="Books and Papers">Books and Papers</h3>
+    <p>
+      When the <a href="https://github.com/Luke100000/BooksAndPapers" target="_blank" rel="noopener">Books and Papers</a> plugin is detected on startup, Core registers two action types and one requirement that route through Books-and-Papers state without forcing the dependency.
+    </p>
+    <ul>
+      <li>Actions: <code>mail:itemId:qty</code> pushes an item stack to the player&rsquo;s mailbox in their current world; <code>givebook:title:author:body</code> (with the optional <code>givebook:itemId:title:author:body</code> form for letter items) gives the player a signed book whose pages come from <em>body</em>. Use <code>\f</code> to break pages and <code>\n</code> for line breaks within a page.</li>
+      <li>Requirement: <code>hasmail</code> &mdash; true while the player has at least one queued item in their mailbox.</li>
+    </ul>
+    <p>
+      All three are no-ops when Books and Papers is absent, and all direct references to the plugin&rsquo;s types are isolated in
+      <code>BooksAndPapersBridge</code> so the QuestLines JAR loads cleanly without the dependency.
+    </p>
+    </div>
+
+    <!-- What's Next -->
+    <div data-section-body="What to Read Next">
+    <h2 data-section="What to Read Next">What to Read Next</h2>
+    <div class="cards-grid">
+      <a class="card" href="npc-setup.html">
+        <span class="card-icon">&#9651;</span>
+        <div class="card-title">NPC Setup</div>
+        <p class="card-desc">Link quests to NPCs and understand talk tracking.</p>
+      </a>
+      <a class="card" href="requirements.html">
+        <span class="card-icon">&#10003;</span>
+        <div class="card-title">Requirements Reference</div>
+        <p class="card-desc">Every requirement type with format and JSON examples.</p>
+      </a>
+      <a class="card" href="actions.html">
+        <span class="card-icon">&#9654;</span>
+        <div class="card-title">Actions Reference</div>
+        <p class="card-desc">Every action type with format, behavior notes, and JSON examples.</p>
+      </a>
+      <a class="card" href="progression.html">
+        <span class="card-icon">&#9670;</span>
+        <div class="card-title">Quest Patterns</div>
+        <p class="card-desc">Complete JSON examples for the most common quest structures.</p>
+      </a>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

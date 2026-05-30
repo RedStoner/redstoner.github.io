@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Actions Reference</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="actions" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Reference</div>
+      <h1 class="page-title">Actions</h1>
+      <p class="page-subtitle">
+        Actions are colon-delimited strings in a response's <code>Actions</code> list.
+        They execute in order when the player clicks that response button.
+        Actions modify quest state, player data, inventory, the world, or navigate dialogue.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Execution Order</div>
+        <p>
+          If a response has an <code>item:...:true</code> requirement (consume on use),
+          items are removed <em>before</em> actions execute. Actions themselves run in
+          the order they appear in the list. A <code>page:pageId</code> action navigates
+          immediately — place it last in the list.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== AUTO-TRIGGER ======================== -->
+    <div class="section-group" data-section-body="Achievements">
+      <h2 data-section="Achievements">Achievements</h2>
+      <p>
+        Drive achievement state directly from quests or response actions. See the
+        <a href="core.html#achievements">Achievements</a> section in the Core overview
+        for how achievements unlock automatically when their <code>Criteria</code> pass
+        &mdash; these actions are for explicit grant/revoke and for opening the UI.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>unlockachievement:id</td>
+              <td>Force-unlock the next still-locked stage of the named achievement, firing that stage&rsquo;s <code>UnlockActions</code>. No-op when every stage is already unlocked. Unknown IDs log a warning.</td>
+            </tr>
+            <tr>
+              <td>unlockachievement:id:tier</td>
+              <td>Force-unlock the specific 1-based stage tier (and any earlier locked stages it cascades through). Each granted stage&rsquo;s <code>UnlockActions</code> fire in order.</td>
+            </tr>
+            <tr>
+              <td>revokeachievement:id</td>
+              <td>Remove every stage of the named achievement from the player and clear its unlock timestamps. Destructive; intended for admin / scripted use only.</td>
+            </tr>
+            <tr>
+              <td>openachievements</td>
+              <td>Open the player-facing Achievements UI. Equivalent to the player running <code>/achievements</code>; useful as a response action that pairs with a NPC who awards milestones.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Award a milestone tier on quest completion and pop the UI to show it</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:dragon_slayer"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"unlockachievement:legendary_hunter:2"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"openachievements"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Arena">
+      <h2 data-section="Arena">Wave Arena</h2>
+      <p>
+        Triggers Core-driven wave arenas from quest actions. Arenas are authored via
+        <code>/ql waveeditor</code> and stored under <code>QuestLines/wavearenas/&lt;id&gt;.json</code>.
+        No optional dependency. Pair with <code>track:id:arena_complete:[arenaId]</code> or
+        <code>track:id:arena_wave:[arenaId]</code> to count arena progress for quests.
+        Rewards are configured per-arena via <code>CompletionActions</code> / <code>FailActions</code>
+        (core action strings; see the <a href="wavearenas.html">Wave Arenas page</a>).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>startArena:arenaId</td>
+              <td>Starts the named wave arena centered on the player's current position.</td>
+            </tr>
+            <tr>
+              <td>startArena:arenaId:x:y:z</td>
+              <td>Starts the named wave arena at the given coordinates. Coordinates support <code>~</code> for player-relative values.</td>
+            </tr>
+            <tr>
+              <td>failArena</td>
+              <td>Aborts the player's current arena session (fail reason <code>MANUAL</code>). Runs the arena's <code>FailActions</code>. No-op if the player is not in an arena.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Start the Shadow Trial arena on quest accept; track 3 clears to complete</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"track:shadow_clears:3:arena_complete:[shadow_trial]"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"startArena:shadow_trial"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Auto-Triggered Pages">
+      <h2 data-section="Auto-Triggered Pages">Auto-Triggered Pages</h2>
+      <p>
+        Every page has an optional <code>AutoTrigger</code> boolean field (default
+        <code>false</code>). When set to <code>true</code>, QuestLines checks the page's
+        requirements on every HUD tick for all online players. As soon as requirements pass,
+        the page's <code>LoadActions</code> are executed automatically &mdash; <strong>no NPC
+        interaction required</strong> and <strong>no dialogue UI is shown</strong>.
+      </p>
+      <p>
+        Typical use cases:
+      </p>
+      <ul>
+        <li><strong>Auto-start intro quests</strong> &mdash; trigger a quest start the first time a new player connects.</li>
+        <li><strong>Passive milestones</strong> &mdash; detect when a player reaches a kill count or level and award a bonus quest.</li>
+        <li><strong>World-event gates</strong> &mdash; fire effects when a <code>global:hastag</code> world flag is set.</li>
+        <li><strong>Location-based triggers</strong> &mdash; combine with <code>nearPosition</code> or <code>zone</code> requirements to fire when a player enters an area.</li>
+      </ul>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">Prevent Re-Firing Every Tick</div>
+          <p>
+            An auto-triggered page fires <strong>every tick</strong> while its requirements pass.
+            You must prevent this from looping. The standard pattern is to add a
+            <code>!hastag:someflag</code> (or <code>notTag:someflag</code>) requirement and an
+            <code>addTag:someflag</code> load action so it fires exactly once per player.
+            You can also use <code>setTimestamp:</code> + <code>cooldown:</code> for time-gated
+            repeatable triggers.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example &mdash; auto-start an intro quest on first login</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"auto_welcome"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"AutoTrigger"</span><span class="hl-punc">:</span> <span class="hl-val">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:intro_quest"</span><span class="hl-punc">,</span> <span class="hl-str">"!hastag:intro_fired"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span>  <span class="hl-punc">[</span><span class="hl-str">"addTag:intro_fired"</span><span class="hl-punc">,</span> <span class="hl-str">"startquest:intro_quest"</span><span class="hl-punc">,</span> <span class="hl-str">"chat:Welcome to the server, {username}!"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+      </div>
+
+      <h4>Example &mdash; location-based trigger (fires once when player enters area)</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"dungeon_entrance_trigger"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"AutoTrigger"</span><span class="hl-punc">:</span> <span class="hl-val">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:dungeon_quest"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"nearPosition:450:64:-210:20"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"!hastag:dungeon_entered"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"addTag:dungeon_entered"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"setMarker:dungeon_exit:Exit:460:64:-250:Portal"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"sound:world.dungeon_ambience"</span>
+  <span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Tick Rate &amp; Scope</div>
+          <p>
+            Auto-trigger checks run at the same interval as the Quest Goal HUD refresh
+            (configurable via <code>hud_refresh_rate</code> in <code>QuestLines.conf</code>,
+            default 500 ms). The check runs independently for every online player &mdash; it starts
+            when a player connects and stops when they disconnect. Auto-trigger pages do
+            <strong>not</strong> open a dialogue UI and are never reachable via NPC interaction.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Books and Papers">
+      <h2 data-section="Books and Papers">Books and Papers <span style="font-weight:400;opacity:0.55;font-size:0.75em">(Books and Papers optional dependency)</span></h2>
+      <p>
+        Integrates with the <a href="https://github.com/Luke100000/BooksAndPapers" target="_blank" rel="noopener">Books and Papers</a> plugin for delivering items to player mailboxes and giving custom signed books or letters. Both actions are no-ops when Books and Papers is not installed. Pair with the <code>hasmail</code> requirement to gate dialogue on whether the player has unread mail.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>mail:itemId:qty</td>
+              <td>Pushes the given item stack into the player's mailbox in the world they are currently in. The player collects the item by interacting with their mailbox block.</td>
+            </tr>
+            <tr>
+              <td>givebook:title:author:body</td>
+              <td>Gives the player a signed <code>Books_And_Papers_Book</code> with the supplied title, author, and pages. Use <code>\f</code> in <em>body</em> to break pages and <code>\n</code> for line breaks within a page. <em>title</em> and <em>author</em> cannot contain a literal colon; <em>body</em> captures everything after the third colon, so colons inside page text are preserved.</td>
+            </tr>
+            <tr>
+              <td>givebook:itemId:title:author:body</td>
+              <td>Same as above with an explicit item id (must start with <code>Books_And_Papers_</code>). Use <code>Books_And_Papers_Letter</code> for a single-page letter.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Mail a stack of gold coins to the player on quest completion</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:lost_letter"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"mail:Items_Coin_Gold:100"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Hand the player a signed two-page book</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"givebook:The Sealed Tome:Master Aldwin:Chapter One...\fChapter Two..."</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Chat">
+      <h2 data-section="Chat">Chat</h2>
+      <p>
+        Sends a plain chat message directly to the interacting player. Supports all
+        TextFormatter variables (e.g. <code>{username}</code>, <code>{variable:name}</code>).
+        Everything after <code>chat:</code> is the message — colons in the message text
+        are allowed. <code>message:</code> is an alias and behaves identically.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>chat:message text here</td>
+              <td>Sends the message to the triggering player's chat. Colons in the message are preserved.</td>
+            </tr>
+            <tr>
+              <td>message:message text here</td>
+              <td>Alias of <code>chat:</code> — identical behavior, same parsing and variable substitution.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Simple confirmation message</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"chat:Your quest has been recorded, {username}."</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Alias form — identical effect</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"message:Welcome back, {username}!"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Used in an if: branch to inform the player of a condition</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"if:hasTag:quest_started::chat:You already have this quest!::startquest:my_quest"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Commands">
+      <h2 data-section="Commands">Commands</h2>
+      <p>
+        Runs a server command either from the console or as the interacting player.
+        This allows bridging QuestLines with any other plugin that supports commands.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>command:commandText:server</td>
+              <td>Runs <em>commandText</em> as the server console (op-level permissions).</td>
+            </tr>
+            <tr>
+              <td>command:commandText:player</td>
+              <td>Runs <em>commandText</em> as the interacting player (player's permission level).</td>
+            </tr>
+            <tr>
+              <td>command:commandText:player:elevated</td>
+              <td>Runs <em>commandText</em> as the player with a transient wildcard permission grant. Requires VaultUnlocked; falls back to normal player execution if unavailable.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">No Colons in Command Text</div>
+          <p>
+            The command text is parsed by splitting on <code>:</code>. If your command
+            contains a colon (e.g. a plugin command like <code>myplugin:subcmd</code>),
+            the parser will break. Use an alias or a wrapper command instead.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Teleport the player via console command</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"command:tp Steve 100 64 -200:server"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Player runs a command (e.g. to join a minigame)</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"command:joinqueue arena:player"</span><span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Cooldown &amp; Timer">
+      <h2 data-section="Cooldown &amp; Timer">Cooldown &amp; Timer</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>setTimestamp:key</td>
+              <td>Records the current server time under <em>key</em> in the player's timestamps. Used with the <code>cooldown:key:seconds</code> requirement.</td>
+            </tr>
+            <tr>
+              <td>clearTimestamp:key</td>
+              <td>Removes the stored timestamp under <em>key</em>. Resets any <code>cooldown:</code>, <code>timedActive:</code>, <code>timedExpired:</code>, or <code>timedExact:</code> gate that reads it.</td>
+            </tr>
+            <tr>
+              <td>timedStart:key</td>
+              <td>Records the current server time under <em>key</em>. Use with <code>timedActive:key:seconds</code> / <code>timedExpired:key:seconds</code>.</td>
+            </tr>
+            <tr>
+              <td>timedStart:key:durationSeconds</td>
+              <td>Same as above, but also stores the duration so the requirements can be written as just <code>timedActive:key</code> / <code>timedExpired:key</code> (without repeating the seconds). The stored duration is used when no seconds argument is given to those requirements.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">setTimestamp vs timedStart</div>
+          <p>
+            Both actions write to the same <code>timestamps</code> map. The names differ
+            only for readability: use <code>setTimestamp</code> for cooldown gates (reward
+            timers, NPC chat limits) and <code>timedStart</code> for countdown timers
+            (timed quests, races). Do not reuse the same key for both purposes.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Grant daily reward and reset the cooldown clock</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"item:daily_chest:1"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"setTimestamp:daily_reward"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Start a 5-minute countdown timer</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:courier_run"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"timedStart:courier_timer"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Delay">
+      <h2 data-section="Delay">Delay</h2>
+      <p>
+        Pauses execution of the remaining actions for a given number of seconds, then resumes. Player data is re-fetched after the delay so variable checks stay current. Decimal values are supported for sub-second precision.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>delay:N</td>
+              <td>Wait N seconds before continuing. N may be a decimal (e.g. <code>0.5</code>, <code>2.5</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">Not supported inside random:</div>
+          <p><code>delay:</code> cannot be used inside a <code>random:[...]</code> bracket list.</p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Give a reward then show a title 1.5 seconds later</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"item:Health_Potion:3"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"delay:1.5"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"title:Potions received!"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Dialogue Navigation">
+      <h2 data-section="Dialogue Navigation">Dialogue Navigation</h2>
+      <p>
+        Immediately navigates the player to a different dialogue page without closing the
+        UI. This enables branching conversations, sub-menus, and multi-step dialogue trees
+        that don't require NPC re-interaction.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>page:pageId</td>
+              <td>Navigates the player's open dialogue to the specified page. Place this last in the actions list.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Use for Branching Dialogue</div>
+          <p>
+            Hub pages with no quest logic can use <code>page:pageId</code> exclusively
+            to route players to topic-specific sub-pages. The sub-pages can themselves
+            have actions or further navigation. See
+            <a href="progression.html#branching">Quest Patterns &rarr; Branching Dialogue</a>.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Hub page response routes to a lore sub-page</span>
+<span class="hl-key">"Responses"</span><span class="hl-punc">:</span> <span class="hl-punc">[{</span> <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"Tell me about the ancient war."</span><span class="hl-punc">,</span> <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:elder_lore_war"</span><span class="hl-punc">]</span> <span class="hl-punc">}]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Economy">
+      <h2 data-section="Economy">Economy <span style="font-weight:400;opacity:0.55;font-size:0.75em">(VaultUnlocked optional dependency)</span></h2>
+      <p>
+        Give or take currency from the player's economy account. Requires VaultUnlocked with
+        a compatible economy provider. Actions are silently ignored if VaultUnlocked is not
+        installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>economy:give:amount</td>
+              <td>Deposits <em>amount</em> into the player's economy account.</td>
+            </tr>
+            <tr>
+              <td>economy:take:amount</td>
+              <td>Withdraws <em>amount</em> from the player's economy account. Use <code>economy:canafford:amount</code> as a requirement to guard this.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Always Guard economy:take with a Requirement</div>
+          <p>
+            Pair <code>economy:take</code> with an <code>economy:canafford:amount</code>
+            requirement on the same response. This prevents the action from firing if the
+            player's balance is insufficient.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Quest reward — deposit gold into the player's account</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:merchant_errand"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"economy:give:250"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Purchase response — require funds, then deduct them</span>
+<span class="hl-key">"Responses"</span><span class="hl-punc">:</span> <span class="hl-punc">[{</span>
+  <span class="hl-key">"Text"</span><span class="hl-punc">:</span>         <span class="hl-str">"I'll buy the map for 100 gold."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"economy:canafford:100"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Actions"</span><span class="hl-punc">:</span>      <span class="hl-punc">[</span><span class="hl-str">"economy:take:100"</span><span class="hl-punc">,</span> <span class="hl-str">"item:treasure_map:1"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Endless Leveling XP">
+      <h2 data-section="Endless Leveling XP">Endless Leveling XP <span style="font-weight:400;opacity:0.55;font-size:0.75em">(EndlessLeveling optional dependency)</span></h2>
+      <p>
+        Grants XP to a player's Endless Leveling level. Requires the EndlessLeveling plugin to be active;
+        silently ignored if not installed. Respects the plugin's own bonuses (Discipline multiplier etc.),
+        world XP blacklists, and the player's level cap.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>elxp:give:amount</td>
+              <td>Grants <em>amount</em> EL XP to the player.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Give 1500 EL XP on dungeon completion</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:dungeon_raid"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"elxp:give:1500"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Global State">
+      <h2 data-section="Global State">Global State <span style="font-weight:400;opacity:0.55;font-size:0.75em">(server-wide)</span></h2>
+      <p>
+        Manage server-wide tags and variables stored in <code>GlobalData</code>. Unlike
+        per-player tags and variables, these affect and are visible to all players. Changes
+        are persisted to <code>QuestLines/global.json</code> immediately.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>global:addtag:tagName</td>
+              <td>Adds <em>tagName</em> to the server-wide global tag list. No effect if already present.</td>
+            </tr>
+            <tr>
+              <td>global:removetag:tagName</td>
+              <td>Removes <em>tagName</em> from the server-wide global tag list.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:set:value</td>
+              <td>Sets the global variable to <em>value</em> exactly.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:add:value</td>
+              <td>Adds <em>value</em> to the global variable.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:subtract:value</td>
+              <td>Subtracts <em>value</em> from the global variable.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:multiply:value</td>
+              <td>Multiplies the global variable by <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:divide:value</td>
+              <td>Divides the global variable by <em>value</em>. Division by zero is ignored.</td>
+            </tr>
+            <tr>
+              <td>global:string:name:set:value</td>
+              <td>Sets the global string variable to <em>value</em>. Value captures everything after <code>set:</code>, so colons are preserved.</td>
+            </tr>
+            <tr>
+              <td>global:string:name:concat:value</td>
+              <td>Appends <em>value</em> onto the existing global string variable.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Start a world event by setting a global tag</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"global:addtag:world_event_active"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Increment a server-wide boss kill counter</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"global:variable:boss_kills:add:1"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Record this player's name as the current event leader</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"global:string:event_leader:set:{username}"</span><span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Icon State">
+      <h2 data-section="Icon State">Icon State <span style="font-weight:400;opacity:0.55;font-size:0.75em">(QuestLines Icons optional dependency)</span></h2>
+      <p>
+        Sets a per-player icon-state override on a specific NPC, bypassing the
+        auto-computed quest state for that player only. Useful for narrative beats
+        &mdash; e.g. force the <code>unknown</code> icon on a fallen NPC the player
+        just discovered, or hold an NPC at <code>objectives_complete</code> after a
+        scripted scene. Pairs with the matching <code>iconState:</code> requirement
+        (see <a href="requirements.html#icon-state">Requirements &raquo; Icon State</a>).
+      </p>
+      <p>
+        Only registered when the <strong>QuestLines Icons</strong> companion plugin
+        is active &mdash; the action silently no-ops on installs without Icons. See
+        the <a href="icons.html#per-player-overrides">Icons wiki &raquo; Per-Player Overrides</a>
+        for the full state list and resolution priority.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>iconState:npcId:state</td>
+              <td>Set the player&rsquo;s icon-state override for <em>npcId</em>. <em>state</em> must be one of <code>available</code>, <code>inprogress</code>, <code>objectives_complete</code>, <code>completed</code>, <code>locked</code>, <code>waiting</code>, <code>repeatable_ready</code>, <code>story</code>, <code>custom</code>, <code>unknown</code>. Invalid state names silently no-op. <code>story</code> and <code>custom</code> are override-only states (not auto-resolved) intended for main-quest beats and admin-defined visuals.</td>
+            </tr>
+            <tr>
+              <td>iconState:npcId:state:clear</td>
+              <td>Guarded clear &mdash; removes the override only if it currently equals <em>state</em>. Prevents one quest&rsquo;s cleanup from stomping another quest&rsquo;s override.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Force the smith's icon to the "turn in" cue while a follow-up</span>
+<span class="hl-cmt">// scene plays out on a different NPC.</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"iconState:smith_id:objectives_complete"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// On turn-in, only clear if our quest set it -- another quest may have</span>
+<span class="hl-cmt">// switched the icon to its own override since.</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:trial"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"iconState:smith_id:objectives_complete:clear"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="If Action">
+      <h2 data-section="If Action">If Action</h2>
+      <p>
+        Executes actions conditionally based on whether a set of requirements passes.
+        Uses <code>::</code> as a delimiter between the requirements, the then-branch
+        actions, and an optional else-branch. Each section is a comma-separated list.
+        Brackets <code>[]</code> around lists are accepted but optional.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>if:req::thenAction</td>
+              <td>Runs <em>thenAction</em> when the requirement passes. No else branch.</td>
+            </tr>
+            <tr>
+              <td>if:req::thenAction::elseAction</td>
+              <td>Runs <em>thenAction</em> when the requirement passes; <em>elseAction</em> when it fails.</td>
+            </tr>
+            <tr>
+              <td>if:req1,req2::[thenA,thenB]::[elseA,elseB]</td>
+              <td>All requirements must pass (AND logic). Brackets optional around comma-separated action lists.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">page: not supported inside if:</div>
+          <p>
+            The <code>page:pageId</code> navigation action cannot be used in the then or
+            else branches of an <code>if:</code> action.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Flag the player only if they haven't been flagged before</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"if:notTag:visited::addTag:visited"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Grant a bonus quest if a prerequisite is complete, otherwise inform the player</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"if:questCompleted:main_quest::startquest:bonus_quest::chat:Complete the main quest first!"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Multiple requirements and multiple actions in each branch</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"if:hasTag:vip,questCompleted:tutorial::[startquest:vip_quest,chat:Welcome VIP!]::[chat:You are not eligible yet.]"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Items">
+      <h2 data-section="Items">Items</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>item:itemId:qty</td>
+              <td>Gives <em>qty</em> of the specified item to the player and shows an item-received notification.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Reward the player for completing a quest</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:bounty_hunter"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"item:gold_coin:50"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"item:health_potion:3"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Journal Page Resolution">
+      <h2 data-section="Journal Page Resolution">Journal Page Resolution</h2>
+      <p>
+        The Quest Journal (<code>/journal</code>) resolves the <strong>current page</strong>
+        for each quest the player has started or completed using live
+        <a href="core.html#page-resolution-algorithm">page resolution</a> — the same algorithm
+        the HUD uses. The quest's pages are walked in order and the first page whose
+        requirements pass is the one shown in the journal.
+      </p>
+      <p>
+        No tags or actions are needed to drive the journal. Older versions of QuestLines
+        maintained a hidden <code>log:questId:pageId</code> tag for this; that mechanic was
+        removed in 1.9.4. Any leftover <code>log:</code> tags in player data are harmless and
+        ignored at runtime.
+      </p>
+      <p>
+        <code>JournalText</code> on a page overrides the <code>Dialog</code> field for the
+        journal entry only — useful when the in-world dialogue is spoken by an NPC but you want
+        the journal written from the player's perspective.
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="Load Actions">
+      <h2 data-section="Load Actions">Load Actions</h2>
+      <p>
+        In addition to response <code>Actions</code>, every Page has a
+        <code>LoadActions</code> field — a list of action strings that run
+        <strong>automatically</strong> whenever that page is displayed. This happens both
+        on the initial NPC interaction and whenever a <code>page:pageId</code> response
+        navigates to the page. Load actions fire before the player sees any response
+        buttons and regardless of which button they eventually click.
+      </p>
+      <p>
+        Use <code>LoadActions</code> for side-effects that should happen once per page
+        view, not once per response click — for example, setting a tag, recording a
+        timestamp, or running a server command that logs the visit.
+      </p>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Old Configs</div>
+          <p>
+            <code>LoadActions</code> defaults to an empty list if omitted. Existing page
+            configs that predate this field work without any changes.
+          </p>
+        </div>
+      </div>
+
+      <h4>JSON field</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"my_quest_hub"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span>  <span class="hl-punc">[</span><span class="hl-str">"setTimestamp:last_visit_hub"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>      <span class="hl-str">"Welcome back, {username}."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Responses"</span><span class="hl-punc">:</span> <span class="hl-punc">[{</span> <span class="hl-str">"..."</span> <span class="hl-punc">}]</span>
+<span class="hl-punc">}</span></code></pre>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Supported Actions</div>
+          <p>
+            Any action string that works in a response <code>Actions</code> list also works
+            in <code>LoadActions</code>. The same execution rules apply: actions run in
+            order, and <code>page:pageId</code> navigation is supported but should be placed
+            last.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Macro">
+      <h2 data-section="Macro">Macro</h2>
+      <p>
+        Executes a named macro defined in <code>QuestLines/macros/</code>. Each macro is stored
+        as its own <code>&lt;name&gt;.json</code> file. Action macros reuse common action
+        sequences; requirement macros group reusable conditions. Circular references are
+        detected and logged as a warning.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>macro:name</td>
+              <td>Runs every action in the named action macro in order. If used in a requirement list, evaluates the named requirement macro. Unknown macro names are silently ignored (actions) or pass by default (requirements).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <span class="callout-icon">&#9432;</span>
+        <div class="callout-body">
+          <div class="callout-title">Macro file format (QuestLines/macros/&lt;name&gt;.json)</div>
+          <p>
+            Each macro is a separate JSON file. <code>"Type"</code> is <code>"action"</code>
+            or <code>"requirement"</code>. Requirement macros AND all entries by default; add
+            <code>"AnyMode": true</code> to use OR logic (at least one must pass).
+          </p>
+          <pre class="code-block"><code><span class="hl-cmt">// macros/give_rewards.json — action macro</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Type"</span><span class="hl-punc">:</span> <span class="hl-str">"action"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Entries"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"economy:give:500"</span><span class="hl-punc">,</span> <span class="hl-str">"item:Gold_Coin:5"</span><span class="hl-punc">,</span> <span class="hl-str">"addTag:rewarded"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}</span>
+
+<span class="hl-cmt">// macros/is_vip.json — requirement macro with AnyMode (OR)</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Type"</span><span class="hl-punc">:</span> <span class="hl-str">"requirement"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"AnyMode"</span><span class="hl-punc">:</span> <span class="hl-val">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Entries"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"hasTag:vip"</span><span class="hl-punc">,</span> <span class="hl-str">"permission:has:server.vip"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}</span></code></pre>
+          <p>
+            Macros can be created and edited from the in-game editor under the <strong>Macros</strong>
+            tab in <code>/ql quest</code>. Legacy <code>macros.json</code> files are
+            automatically migrated to per-file format on load.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Complete the quest and give rewards using a macro</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:main_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"macro:give_rewards"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Gate a response on a VIP requirement macro (OR logic)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"macro:is_vip"</span><span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="MMO Skill XP">
+      <h2 data-section="MMO Skill XP">MMO Skill XP <span style="font-weight:400;opacity:0.55;font-size:0.75em">(MMOSkillTree optional dependency)</span></h2>
+      <p>
+        Gives XP to a player's MMO skill. Requires the MMOSkillTree plugin to be active;
+        silently ignored if not installed. Skill IDs are case-insensitive.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>mmo:xp:skillId:give:amount</td>
+              <td>Awards <em>amount</em> XP to the player in the specified skill (e.g. <code>MINING</code>, <code>CRAFTING</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Give 500 Mining XP as a quest reward</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:miners_task"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"mmo:xp:MINING:give:500"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Named Trackers">
+      <h2 data-section="Named Trackers">Named Trackers</h2>
+      <p>
+        Named trackers are the preferred way to set up progress counting. Instead of
+        adding a tag, writing a separate requirement, and using a separate variable,
+        a single ID ties everything together. Old tracking flags continue to work.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:type:[target1,target2]</td>
+              <td>Creates (or resets) a named tracker. <em>id</em> is a unique name you choose. <em>type</em> is one of: <code>kill</code>, <code>killcitizen</code>, <code>block</code>, <code>place</code>, <code>playerkill</code>, <code>travel</code>, <code>craft</code>, <code>harvest</code>, <code>pickup</code>, <code>use</code>, <code>launch</code>, <code>portal</code>, <code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>, <code>catchfishzone</code>, <code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>releasefish</code>, <code>fishmiss</code>, <code>parry</code>, <code>counter</code>, <code>dodge</code>, <code>arena_complete</code>, <code>arena_wave</code> (arena types require EndgameQoL; AA types require Anglers' Almanac; <code>parry</code>/<code>counter</code> require Perfect Parries; <code>dodge</code> requires Perfect Dodges). Targets use a comma-separated bracket list or a bare single value; <code>*</code> matches any. For <code>use</code>, the targets are item IDs the player must be holding when clicking. For <code>launch</code>/<code>portal</code>, the targets are block IDs (<code>Launchpad</code>, <code>Portal_Device</code>, <code>Hub_Portal_*</code>, etc.). For <code>parry</code>/<code>counter</code>, the targets match the attacker's (parry) or countered entity's (counter) NPC type ID, or <code>Player</code>. For <code>dodge</code>, the targets match the attacker's NPC type ID, or <code>Player</code>.</td>
+            </tr>
+            <tr>
+              <td>track:id:type:[targets]:exclude:[excl1,excl2]</td>
+              <td>Same as above with an exclusion filter. Events whose value matches an exclude pattern are ignored even if they matched a target.</td>
+            </tr>
+            <tr>
+              <td>track:id:type:[targets]:loc:x:y:z:radius</td>
+              <td>Location-gated. Only counts events while the player is within <em>radius</em> blocks of (x, y, z). Coords are absolute world coordinates (raw doubles &mdash; <code>~</code>-relative is <strong>not</strong> supported here). The check uses the player's position at the moment the event fires.</td>
+            </tr>
+            <tr>
+              <td>track:id:type:[targets]:world:worldName</td>
+              <td>World-gated. Only counts events while the player is in the named world. Supports <code>*</code> wildcard (e.g. <code>over*</code>) and bracket lists (<code>[overworld,nether]</code>).</td>
+            </tr>
+            <tr>
+              <td>track:id:use:[items]:button:left|right</td>
+              <td><code>use</code>-only modifier. Counts only the named mouse button (left for melee swings, right for wand/tome casts and similar activations). Omitted = either button counts.</td>
+            </tr>
+            <tr>
+              <td>track:[id1,id2]:type:[targets]</td>
+              <td>Bracket list on the ID creates multiple trackers with the same config in one action.</td>
+            </tr>
+            <tr>
+              <td>untrack:id / untrack:[id1,id2]</td>
+              <td>Removes the named tracker(s) and resets the count to zero.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Modifiers (<code>exclude:</code>, <code>loc:</code>, <code>world:</code>, <code>button:</code>)
+        can appear in any order after the targets and combine with AND semantics &mdash; e.g. a tracker
+        with both <code>loc:</code> and <code>world:</code> only counts events that satisfy both gates.
+      </p>
+
+      <p><strong>Example &mdash; location-gated kills (clear a bandit camp):</strong></p>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Setup &mdash; only kills within 30 blocks of (1024, 64, -512) count</span>
+<span class="hl-str">"track:bandit_camp:kill:[Bandit,Marauder]:loc:1024:64:-512:30"</span>
+
+<span class="hl-cmt">// Combine gates: bandits in that radius AND only in the overworld</span>
+<span class="hl-str">"track:bandit_camp:kill:[Bandit,Marauder]:loc:1024:64:-512:30:world:overworld"</span>
+
+<span class="hl-cmt">// Requirement</span>
+<span class="hl-str">"track:bandit_camp:10"</span></code></pre>
+      </div>
+
+      <p><strong>Example &mdash; kill 10 undead:</strong></p>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Setup (on quest-start response)</span>
+<span class="hl-str">"track:undead:kill:[zombie,skeleton,phantom]"</span>
+
+<span class="hl-cmt">// Requirement (on completion page)</span>
+<span class="hl-str">"track:undead:10"</span>
+
+<span class="hl-cmt">// Variable in dialogue</span>
+<span class="hl-str">"You have slain {track:undead} undead so far."</span>
+
+<span class="hl-cmt">// Objective entry</span>
+<span class="hl-str">"track:undead:10::Kill Undead"</span>
+
+<span class="hl-cmt">// Reset (on quest-complete response)</span>
+<span class="hl-str">"untrack:undead"</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Named Variables">
+      <h2 data-section="Named Variables">Named Variables</h2>
+      <p>
+        Named variables are numeric values stored per-player. They can be used to track
+        arbitrary numeric state — scores, choices, counters, or anything that doesn't fit
+        a kill/break counter. Variables default to <strong>0</strong> if never set.
+        Fractional values are supported.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>variable:name:set:value</td>
+              <td>Sets the variable to <em>value</em> exactly. Use this to initialise a variable at quest start.</td>
+            </tr>
+            <tr>
+              <td>variable:name:add:value</td>
+              <td>Adds <em>value</em> to the variable.</td>
+            </tr>
+            <tr>
+              <td>variable:name:subtract:value</td>
+              <td>Subtracts <em>value</em> from the variable.</td>
+            </tr>
+            <tr>
+              <td>variable:name:multiply:value</td>
+              <td>Multiplies the variable by <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:divide:value</td>
+              <td>Divides the variable by <em>value</em>. Division by zero is ignored.</td>
+            </tr>
+            <tr>
+              <td>string:name:set:value</td>
+              <td>Sets the per-player string variable to <em>value</em>. Value captures everything after <code>set:</code>, so colons in the value are preserved. <code>{username}</code> and other TextFormatter variables are substituted.</td>
+            </tr>
+            <tr>
+              <td>string:name:concat:value</td>
+              <td>Appends <em>value</em> onto the existing player string variable (initialises to empty if never set).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Initialise Before Use</div>
+          <p>
+            Always use <code>variable:name:set:0</code> (or another initial value) in your
+            quest-start actions before any <code>add</code>, <code>subtract</code>, or
+            <code>multiply</code> operations. While variables default to 0, being explicit
+            avoids surprises if a player repeats a quest.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Variables in Action Strings</div>
+          <p>
+            <code>{variable:name}</code> substitution works inside action strings, not just
+            dialog text. This lets named variables drive action parameters at runtime.
+          </p>
+          <pre style="margin:6px 0 0;font-size:0.82rem"><code><span class="hl-cmt">// Spawn count and delay are taken from named variables</span>
+<span class="hl-str">"spawn:Zombie:~0:~0:~0:{variable:delay}:{variable:amount}"</span></code></pre>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Quest start — initialise a score variable</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:my_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"variable:score:set:0"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Response that increments the counter</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"variable:score:add:1"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Response that doubles it</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"variable:score:multiply:2"</span><span class="hl-punc">]</span></code></pre>
+      </div>
+
+      <p>
+        Use <code>{variable:name}</code> in dialog text to show the current value to the
+        player. Use <code>variable:name:comparison:value</code> requirements to gate pages
+        or responses on the variable's value. See
+        <a href="requirements.html">Requirements &rarr; Named Variables</a> and
+        <a href="npc-setup.html#variables">Text Variables</a>.
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="Response Input Fields">
+      <h2 data-section="Response Input Fields">Response Input Fields</h2>
+      <p>
+        A dialogue response can ask the player to <strong>type a value</strong>. Give the
+        response an <code>InputKey</code> and it renders a text or number field above the
+        button; whatever the player types is saved to that player under the key
+        <strong>before</strong> the response's actions run. You then read and act on it with
+        the ordinary <a href="#named-variables">Named Variables</a> system &mdash; there is no
+        dedicated input action or requirement type.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Response field</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>InputKey</td>
+              <td>The storage key. When set, the response shows an input field and the typed value is written to <code>{string:key}</code> (and <code>{variable:key}</code> for numbers). Leave blank for a normal response.</td>
+            </tr>
+            <tr>
+              <td>InputType</td>
+              <td><code>text</code> (default) for a single-line text field, or <code>number</code> for a numeric field. <code>number</code> also parses the value into the numeric variable store so <code>variable:</code> comparisons work.</td>
+            </tr>
+            <tr>
+              <td>InputPlaceholder</td>
+              <td>Optional greyed prompt shown inside the empty field. Localizable.</td>
+            </tr>
+            <tr>
+              <td>InputRequired</td>
+              <td>When <code>true</code>, the player cannot pick the response while the field is blank.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">No New Action Type</div>
+          <p>
+            The value lands in the same per-player stores that <code>string:</code> and
+            <code>variable:</code> use, so read it with <code>{string:key}</code> /
+            <code>{variable:key}</code>, gate later responses or pages with
+            <code>string:key:equals:value</code> or <code>variable:key:&gt;:value</code>
+            requirements, and transform it with the <code>string:</code> / <code>variable:</code>
+            actions. For a <code>number</code> field the raw text is always kept in
+            <code>{string:key}</code>; <code>{variable:key}</code> is only populated when it
+            parses as a number. Typed values are sanitized (<code>{</code>/<code>}</code>
+            stripped, capped at 256 characters).
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Page A response — ask the player to name their pet</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"That's the one!"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"InputKey"</span><span class="hl-punc">:</span> <span class="hl-str">"petName"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"InputType"</span><span class="hl-punc">:</span> <span class="hl-str">"text"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"InputPlaceholder"</span><span class="hl-punc">:</span> <span class="hl-str">"Type a name..."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"InputRequired"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:pageB"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}</span>
+
+<span class="hl-cmt">// Page B dialog can now greet them by name</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"A fine name. {string:petName} will serve you well."</span>
+
+<span class="hl-cmt">// Number field — branch on the typed amount with a requirement</span>
+<span class="hl-punc">{</span> <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"Wager"</span><span class="hl-punc">,</span> <span class="hl-key">"InputKey"</span><span class="hl-punc">:</span> <span class="hl-str">"bet"</span><span class="hl-punc">,</span> <span class="hl-key">"InputType"</span><span class="hl-punc">:</span> <span class="hl-str">"number"</span> <span class="hl-punc">}</span>
+<span class="hl-cmt">// later: "Requirements": ["variable:bet:&gt;:100"]</span></code></pre>
+      </div>
+
+      <p>
+        Authorable in the in-game <code>/ql quest</code> response editor and the web editor.
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="NPC Spawning">
+      <h2 data-section="NPC Spawning">NPC Spawning</h2>
+      <p>
+        Spawn NPCs in the world as a result of player actions — useful for scripted events,
+        quest escorts, ambushes, and environmental storytelling. Spawned NPCs are
+        <strong>not persisted</strong> to disk; they exist only until the server restarts
+        or they are killed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>spawnCitizen:citizenName:x:y:z</td>
+              <td>Spawns a visual clone of the HyCitizens NPC with that display name at the given world coordinates. Copies model, skin, scale, and appearance. Spawns in the player's current world.</td>
+            </tr>
+            <tr>
+              <td>spawnCitizen:citizenName:x:y:z:delaySeconds</td>
+              <td>Same as above, but waits <em>delaySeconds</em> (integer) before spawning. Useful for dramatic timing.</td>
+            </tr>
+            <tr>
+              <td>spawnCitizen:citizenName:x:y:z:delaySeconds:quantity</td>
+              <td>Spawns <em>quantity</em> clones simultaneously (minimum 1). Combine with a delay as needed.</td>
+            </tr>
+            <tr>
+              <td>spawn:npcRoleId:x:y:z</td>
+              <td>Spawns a standard Hytale NPC by role ID at the given coordinates. Default rotation (0, 0, 0).</td>
+            </tr>
+            <tr>
+              <td>spawn:npcRoleId:x:y:z:delaySeconds</td>
+              <td>Same as above with an optional spawn delay in seconds.</td>
+            </tr>
+            <tr>
+              <td>spawn:npcRoleId:x:y:z:delaySeconds:quantity</td>
+              <td>Spawns <em>quantity</em> NPCs simultaneously. Combine with a delay as needed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">spawnCitizen Lookup</div>
+          <p>
+            <code>spawnCitizen</code> matches by the <em>display name</em> of an existing
+            HyCitizens NPC. If multiple NPCs share the same display name, the first match
+            is used. The spawned copy has no quest linkage — it is purely visual.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Relative Coordinates</div>
+          <p>
+            Coordinates for both <code>spawnCitizen</code> and <code>spawn</code> support
+            a <code>~</code> prefix to specify a position <em>relative to the player</em>.
+            For example, <code>~5</code> means 5 units ahead on that axis, and <code>~</code>
+            or <code>~0</code> means exactly at the player's position on that axis.
+          </p>
+          <pre style="margin:6px 0 0;font-size:0.82rem"><code><span class="hl-cmt">// Spawn 3 units in front of and 1 unit above the player</span>
+<span class="hl-str">"spawnCitizen:Bandit Guard:~3:~1:~0"</span></code></pre>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Spawn a bandit immediately at a fixed position</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:ambush"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"spawnCitizen:Bandit Guard:120:64:-340"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Spawn after a 3-second dramatic pause</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:ambush"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:bandit_kills:killcitizen:Bandit Guard"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"spawnCitizen:Bandit Guard:120:64:-340:3"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Spawn a standard Hytale NPC by role</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"spawn:goblin_warrior:200:70:100"</span><span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="HyCitizens NPC State">
+      <h2 data-section="HyCitizens NPC State">HyCitizens NPC State <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyCitizens optional dependency)</span></h2>
+      <p>
+        Mutate a HyCitizens NPC by citizen ID. Changes are <strong>saved</strong> and persist
+        across server restarts &mdash; pair with <code>questCompleted:</code> or
+        <code>questRemoved:</code> actions to revert when the quest ends. All of these are
+        no-ops if HyCitizens is not installed or the citizen ID is unknown.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>setAttitude:citizenId:passive|neutral|aggressive|hostile</td>
+              <td>Change the citizen's combat attitude. Behaviour-only update, no respawn.</td>
+            </tr>
+            <tr>
+              <td>setInvulnerable:citizenId:true|false</td>
+              <td>Toggle damage immunity (HyCitizens <code>takesDamage</code> flipped).</td>
+            </tr>
+            <tr>
+              <td>setHealth:citizenId:max|default</td>
+              <td>Override max health and refill to it. Use <code>default</code> to revert to the citizen's authored value.</td>
+            </tr>
+            <tr>
+              <td>setDamage:citizenId:amount|default</td>
+              <td>Override attack damage. Use <code>default</code> to revert.</td>
+            </tr>
+            <tr>
+              <td>setEquip:citizenId:slot:itemId</td>
+              <td>Set an equipment slot &mdash; <code>slot</code> is one of <code>hand</code>, <code>offhand</code>, <code>helmet</code>, <code>chest</code>, <code>gloves</code>, <code>leggings</code>. Empty <code>itemId</code> or <code>none</code> clears the slot. No respawn.</td>
+            </tr>
+            <tr>
+              <td>hideCitizen:citizenId:true|false</td>
+              <td>Hide or show the NPC body. <em>Triggers a full respawn.</em></td>
+            </tr>
+            <tr>
+              <td>hideNametag:citizenId:true|false</td>
+              <td>Hide or show the nametag. No respawn.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Merchant turns hostile when the player breaks the deal</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"setAttitude:merchant_dorin:aggressive"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"setEquip:merchant_dorin:hand:Iron_Sword"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Restore the merchant when the quest is resolved peacefully</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"setAttitude:merchant_dorin:passive"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"setEquip:merchant_dorin:hand:none"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="HyCitizens Movement">
+      <h2 data-section="HyCitizens Movement">HyCitizens Movement <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyCitizens optional dependency)</span></h2>
+      <p>
+        Drive HyCitizens NPCs around the world from quest actions. Patrol paths must be
+        pre-authored in HyCitizens (use <code>/citizens</code> in-game). Direct movement
+        (<code>moveCitizen</code>) is a one-shot &mdash; it does <em>not</em> repeat. The
+        <code>Group</code> variants apply the action to every citizen in a HyCitizens
+        <em>group</em> (set on the citizen in HyCitizens' UI).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>patrol:citizenId:pathName</td>
+              <td>Start the named patrol path on the citizen.</td>
+            </tr>
+            <tr>
+              <td>stopPatrol:citizenId</td>
+              <td>Stop the active patrol.</td>
+            </tr>
+            <tr>
+              <td>moveCitizen:citizenId:x:y:z</td>
+              <td>One-shot move to coords. <code>~</code> prefix is relative to the activating player.</td>
+            </tr>
+            <tr>
+              <td>stopCitizen:citizenId</td>
+              <td>Cancel an active direct movement. Does <em>not</em> stop a patrol &mdash; use <code>stopPatrol</code>.</td>
+            </tr>
+            <tr>
+              <td>patrolGroup:groupName:pathName</td>
+              <td>Start the named patrol on every citizen in the group.</td>
+            </tr>
+            <tr>
+              <td>stopPatrolGroup:groupName</td>
+              <td>Stop patrols on every citizen in the group.</td>
+            </tr>
+            <tr>
+              <td>moveGroup:groupName:x:y:z</td>
+              <td>Move every citizen in the group to coords. <code>~</code> prefix supported.</td>
+            </tr>
+            <tr>
+              <td>stopGroup:groupName</td>
+              <td>Cancel direct movement on every citizen in the group.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Send the city guards on their dusk patrol</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"patrolGroup:city_guards:nightwatch"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Have an escort NPC walk to the player's position</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"moveCitizen:guide_marta:~0:~0:~3"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Per-Player NPC Visibility">
+      <h2 data-section="Per-Player NPC Visibility">Per-Player NPC Visibility <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyCitizens optional dependency)</span></h2>
+      <p>
+        Unlike <code>hideCitizen</code> (global on/off for everyone), these actions are
+        <em>per-player</em>. The citizen vanishes only for the player who triggered the action;
+        every other player still sees it normally. Useful for phased dialogue NPCs, escort
+        questgivers, and instanced encounters.
+      </p>
+      <p>
+        The first argument is matched as a citizen id first, then falls back to display-name
+        lookup if no id matches. State is <em>transient</em> &mdash; it does not survive a server
+        restart. Re-issue on relevant pages via <code>LoadActions</code> if you need it to persist.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>hideNpc:citizenIdOrName</td>
+              <td>Hide the citizen for the calling player only.</td>
+            </tr>
+            <tr>
+              <td>showNpc:citizenIdOrName</td>
+              <td>Reverse a prior <code>hideNpc</code> for the calling player. No-op if no hide policy is in place.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Phased questgiver disappears for this player while they're on the quest</span>
+<span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"hideNpc:Sir Bob"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Restore on completion</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"showNpc:Sir Bob"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Escort Quests">
+      <h2 data-section="Escort Quests">Escort Quests <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyCitizens optional dependency)</span></h2>
+      <p>
+        Build escort missions where each player has their own private copy of the escort NPC.
+        Two players can run the same escort quest simultaneously without seeing each other's
+        clones &mdash; visibility is whitelisted per-player.
+      </p>
+      <p>
+        The <code>escortId</code> is a per-player label. Two players can each have an
+        <code>escort1</code> running at the same time without collision. The clone inherits
+        display name, model, equipment, and combat config from the named HyCitizens template.
+        Movement uses HC pathfinding &mdash; one-shot via <code>escortMove</code>, or named
+        multi-waypoint via <code>escortPatrol</code>.
+      </p>
+      <p>
+        Sessions are <em>transient</em> &mdash; they vanish on disconnect or server restart.
+        <code>startEscort</code> does <em>not</em> auto-hide the source questgiver; chain a
+        <code>hideNpc:</code> call beforehand if you want the original to disappear for the
+        escorting player.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>startEscort:escortId:templateName:x:y:z</td>
+              <td>Clone the named template at the coords (<code>~</code> relative supported), whitelist visibility to the calling player, and clear any baked patrol on the clone.</td>
+            </tr>
+            <tr>
+              <td>escortMove:escortId:x:y:z</td>
+              <td>Walk the clone toward the coords via HC pathfinding. Re-issuing overrides any in-flight target. <code>~</code> relative supported.</td>
+            </tr>
+            <tr>
+              <td>escortPatrol:escortId:pathName</td>
+              <td>Send the clone along a named HyCitizens patrol path (LOOP / PING_PONG with per-waypoint pauses).</td>
+            </tr>
+            <tr>
+              <td>escortStopPatrol:escortId</td>
+              <td>Halt the patrol without despawning the clone. Use this if you want to redirect the clone with <code>escortMove</code> instead.</td>
+            </tr>
+            <tr>
+              <td>escortStop:escortId</td>
+              <td>End the escort: despawn the clone, drop its visibility policy, forget the session.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        <strong>Companion requirements / variables:</strong> see
+        <a href="requirements.html#escort"><code>escortAt</code></a> and
+        <code>escortPlayerInRange</code> on the Requirements page, and the
+        <code>{escort:id:dist}</code> / <code>{escort:id:name}</code> /
+        <code>{escort:id:active}</code> text variables.
+      </p>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Start the escort: hide the questgiver, spawn a private clone, send it on a patrol route</span>
+<span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"hideNpc:guard_sir_bob"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"startEscort:bob:Sir Bob:~2:~:~"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"escortPatrol:bob:tour_route"</span>
+<span class="hl-punc">]</span><span class="hl-punc">,</span>
+<span class="hl-key">"GoalText"</span><span class="hl-punc">:</span> <span class="hl-str">"{escort:bob:name} is {escort:bob:dist}m away"</span>
+
+<span class="hl-cmt">// Finish the escort on the next page</span>
+<span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"escortStop:bob"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"showNpc:guard_sir_bob"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Objectives">
+      <h2 data-section="Objectives">Objectives</h2>
+      <p>
+        Page <code>Objectives</code> drive the live HUD and Journal goal display. They
+        are built from requirement strings (same format as the <code>Requirements</code>
+        list) plus a special <code>text:</code> prefix for plain-text lines, and they
+        support a <code>::label</code> override for friendly labels.
+      </p>
+      <p>
+        Full reference, including the <code>text:</code> special case, the
+        <code>::label</code> override, contextual-requirement handling, and a complete
+        JSON example, is on the <a href="objectives.html">Objectives</a> page.
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="Open GUI">
+      <h2 data-section="Open GUI">Open GUI <span style="font-weight:400;opacity:0.55;font-size:0.75em">(QuestLines GUI companion plugin)</span></h2>
+      <p>
+        Opens a custom GUI screen for the player. Requires the
+        <a href="gui.html">QuestLines GUI</a> companion plugin. The screen is defined by a
+        <code>.gui.json</code> file in <code>mods/QuestLinesGUI/</code>. When QuestLines GUI
+        is present, it registers this action with Core automatically at startup.
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>opengui:guiId</td>
+              <td>Open the screen with the given ID for the triggering player.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="example-block">
+        <pre class="code-block"><code><span class="hl-cmt">// In a response — open a shop when the player clicks</span>
+<span class="hl-str">"opengui:blacksmith_shop"</span>
+
+<span class="hl-cmt">// In LoadActions — auto-open a welcome screen once per player</span>
+<span class="hl-cmt">// (requires: notTag:seen_welcome)</span>
+<span class="hl-str">"addTag:seen_welcome"</span>
+<span class="hl-str">"opengui:welcome_screen"</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Player Tags">
+      <h2 data-section="Player Tags">Player Tags</h2>
+      <p>
+        Tags are free-form string labels stored on a player's data. They can represent
+        any custom boolean state — visited locations, made choices, unlocked content, etc.
+        Adding a tag that already exists is a no-op (idempotent).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>addTag:tagName</td>
+              <td>Adds the tag to the player's tag list. No effect if already present.</td>
+            </tr>
+            <tr>
+              <td>removeTag:tagName</td>
+              <td>Removes the tag. If the tag is a tracking flag, also resets the associated counter (see Tracking Flags below).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Record that the player chose a path in branching dialogue</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"addTag:chose_merchant_path"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Remove a tag when a condition is no longer relevant</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"removeTag:pending_escort"</span><span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Quest Items">
+      <h2 data-section="Quest Items">Quest Items</h2>
+      <p>
+        Quest items live in the player's <strong>virtual quest inventory</strong> — a
+        separate storage tracked by QuestLines, not the player's real item pack.
+        They cannot be dropped, lost, or consumed by normal <code>item:</code>
+        requirements. Use <code>questitem:itemId:qty</code> in Requirements to check
+        them, and <code>removequestitem:</code> to take them back. Quest items are
+        visible to the player in the Quest Items tab of the journal.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>givequestitem:itemId:qty</td>
+              <td>Adds <em>qty</em> of the item to the player's virtual quest inventory. The item is not placed in the real pack.</td>
+            </tr>
+            <tr>
+              <td>removequestitem:itemId:qty</td>
+              <td>Removes up to <em>qty</em> of the item from the player's virtual quest inventory. Has no effect on the real pack.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Give the player a quest item on quest start</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:artifact_hunt"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"givequestitem:Ancient_Medallion:1"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Turn in — require the item in Requirements, then remove it in Actions</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questitem:Ancient_Medallion:1"</span><span class="hl-punc">]</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"removequestitem:Ancient_Medallion:1"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"completequest:artifact_hunt"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Quest State">
+      <h2 data-section="Quest State">Quest State</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>startquest:questId</td>
+              <td>Adds the quest to the player's <em>started quests</em> list and displays a "Quest Started" notification on screen.</td>
+            </tr>
+            <tr>
+              <td>completequest:questId</td>
+              <td>Adds the quest to <em>completed quests</em>, removes it from <em>started quests</em>, and shows a "Quest Completed" notification.</td>
+            </tr>
+            <tr>
+              <td>removequest:questId</td>
+              <td>Removes the quest from <em>both</em> started and completed lists. Useful for resettable or repeatable quests.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Accept the quest and begin tracking kills (Goblin* matches Goblin_Duke, Goblin_Miner, etc.)</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:goblin_kills:kill:Goblin*"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Complete the quest and tear down tracking</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"untrack:goblin_kills"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Random">
+      <h2 data-section="Random">Random</h2>
+      <p>
+        Picks one action at random from a bracket-delimited comma-separated list and executes it.
+        Each option in the list is an action string. Only one option is chosen and run per
+        execution. The selection is uniformly random.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>random:[action1,action2,action3]</td>
+              <td>Picks one of the listed actions at random and executes it. Enclose the list in <code>[</code> and <code>]</code>, comma-separated.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">page: not supported inside random</div>
+          <p>
+            The <code>page:pageId</code> navigation action cannot be used inside a
+            <code>random:</code> bracket list. Use separate responses with different
+            page actions if you need random navigation.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Give one of three random item rewards</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:loot_chest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"random:[item:gold_coin:10,item:health_potion:3,item:rare_gem:1]"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Regions">
+      <h2 data-section="Regions">Regions <span style="font-weight:400;opacity:0.55;font-size:0.75em">(QuestLines Claims or OrbisGuard)</span></h2>
+      <p>
+        Add or remove the interacting player as a member of a named region. QuestLines Claims
+        is checked first when installed; OrbisGuard is used as a fallback for any region ID
+        Claims does not recognise. When adding via QL Claims, the member is granted a standard
+        trusted flag set (build, break, interact, container, door, entry, sit, portal). Silently
+        ignored if neither plugin recognises the region.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>regionaddmember:regionId</td>
+              <td>Adds the player as a member of the named region.</td>
+            </tr>
+            <tr>
+              <td>regionremovemember:regionId</td>
+              <td>Removes the player from the named region's member list.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Grant access to the guild hall region on quest complete</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:guild_initiation"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"regionaddmember:guild_hall"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="RPG Leveling XP">
+      <h2 data-section="RPG Leveling XP">RPG Leveling XP <span style="font-weight:400;opacity:0.55;font-size:0.75em">(RPGLeveling optional dependency)</span></h2>
+      <p>
+        Gives XP to a player's global RPG level. Requires the RPGLeveling plugin to be active;
+        silently ignored if not installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>rpgxp:give:amount</td>
+              <td>Awards <em>amount</em> XP to the player's global RPG level.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Give 200 RPG XP as a quest reward</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:training_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"rpgxp:give:200"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Sound">
+      <h2 data-section="Sound">Sound</h2>
+      <p>
+        Plays a sound event. Use <code>/sound</code> in-game to browse all available sound event names.
+        Supports 2D (player-relative) and 3D (world-positioned) playback. Coordinates support <code>~</code> prefix for player-relative values.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sound:soundName</td>
+              <td>Plays the named sound event to the interacting player only (2D).</td>
+            </tr>
+            <tr>
+              <td>sound:soundName:true</td>
+              <td>Plays the named sound event to <strong>all</strong> online players (2D broadcast).</td>
+            </tr>
+            <tr>
+              <td>sound:soundName:x:y:z</td>
+              <td>Plays a 3D positional sound at the given world coordinates. Broadcasts to all nearby players within the sound's natural max distance. Coordinates support <code>~</code> prefix (e.g. <code>~0:~5:~0</code>).</td>
+            </tr>
+            <tr>
+              <td>sound:soundName:x:y:z:player</td>
+              <td>Same as above but only plays to the triggering player (still distance-checked from the specified position).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Play a quest-complete fanfare for the player</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"sound:ui.quest_complete"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Announce a world event to all players</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"sound:world.boss_roar:true"</span><span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Teleport">
+      <h2 data-section="Teleport">Teleport</h2>
+      <p>
+        Move the interacting player to a fixed or player-relative location, optionally in a
+        different loaded world. Body and head rotation are preserved. The action is a no-op if
+        the named world is not loaded; coordinates outside the loaded chunks are still accepted
+        (the engine streams the destination on arrival).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>tp:x:y:z</td>
+              <td>Teleport the player to the given coordinates in their current world. Coordinates support <code>~</code> prefix for player-relative values (e.g. <code>~5</code> = 5 units ahead on that axis).</td>
+            </tr>
+            <tr>
+              <td>tp:x:y:z:world</td>
+              <td>Teleport to a named world (case-insensitive, must be loaded). Omit the segment to stay in the current world.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Drop the player into a hidden chamber on quest start</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:hidden_temple"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"tp:120:64:-340"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Cross-world teleport using a player-relative Y offset</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"tp:0:~10:0:nether_realm"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="Title">
+      <h2 data-section="Title">Title</h2>
+      <p>
+        Shows a large event title on screen. Supports all TextFormatter variables in both the primary and secondary text.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>title:primary</td>
+              <td>Shows the primary message to the triggering player.</td>
+            </tr>
+            <tr>
+              <td>title:primary:secondary</td>
+              <td>Primary message with a subtitle below it.</td>
+            </tr>
+            <tr>
+              <td>title:primary:secondary:server</td>
+              <td>Broadcasts to <strong>all</strong> players in the world instead of just the triggering player.</td>
+            </tr>
+            <tr>
+              <td>title:primary:secondary:player</td>
+              <td>Explicit player-only (default). Same as omitting the third segment.</td>
+            </tr>
+            <tr>
+              <td>title:primary:secondary:server:true</td>
+              <td>Server broadcast with <em>major</em> (large) title style.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Show a dramatic boss-intro title to all players</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"title:The Lich Awakens:Prepare for battle:server:true"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Personal quest-complete message</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:main_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"title:Quest Complete!:Well done, {username}"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <div class="section-group" data-section-body="World Map Markers">
+      <h2 data-section="World Map Markers">World Map Markers</h2>
+      <p>
+        Place and remove markers on a player's world map. Markers persist across sessions until
+        explicitly removed. Sending the same <code>id</code> again replaces the existing marker.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>setMarker:id:label:x:y:z</td>
+              <td>Place a map marker. <em>id</em> uniquely identifies this marker (used for updates/removal). <em>label</em> is the display text. <em>x:y:z</em> are world coordinates (support <code>~</code> relative prefix).</td>
+            </tr>
+            <tr>
+              <td>setMarker:id:label:x:y:z:image</td>
+              <td>Same with a custom icon. <em>image</em> is the marker image name — <code>.png</code> is appended automatically. Marker images live in <code>Common/UI/WorldMap/MapMarkers/</code>.</td>
+            </tr>
+            <tr>
+              <td>setMarker:id:label:x:y:z:image:RRGGBB</td>
+              <td>Same with a hex tint color applied to the icon (e.g. <code>FF0000</code> for red).</td>
+            </tr>
+            <tr>
+              <td>removeMarker:id</td>
+              <td>Remove the marker with the given <em>id</em>. The marker clears from the client on reconnect.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Per-player block visibility</h3>
+      <div class="action-format">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>hideBlock:x:y:z[:world]</td>
+              <td>Hide a single block <strong>from this player only</strong> &mdash; they see Air where the rest of the server still sees the real block. World defaults to the player's current world. Coordinates support <code>~</code>-relative syntax.</td>
+            </tr>
+            <tr>
+              <td>hideBlock:x1:y1:z1:x2:y2:z2[:world]</td>
+              <td>Hide an inclusive 3D box. Coordinates may be supplied in any order &mdash; they are normalised to min/max on insert. Volume is capped via <code>block_override_max_region_volume</code> in <code>QuestLines.conf</code> (default <code>32768</code>).</td>
+            </tr>
+            <tr>
+              <td>showBlock:x:y:z[:world]<br>showBlock:x1:y1:z1:x2:y2:z2[:world]</td>
+              <td>Clear a previously stored override and re-send the real block(s). The coordinate set must match the originally hidden region (any ordering); partial overlaps are not removed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Why a periodic resync is needed</div>
+          <p>
+            The Hytale plugin API does not expose a per-player chunk-load event, so every time the
+            client reloads a chunk (typical as the player moves around) the server re-sends the real
+            block data and our override is briefly visible. QuestLines re-applies overrides on login
+            <em>and</em> on a configurable periodic tick (default every 5 seconds, controlled by
+            <code>block_override_tick_seconds</code>) to compensate. Lower the interval for tighter
+            sync at the cost of more packets; set to <code>0</code> to disable the tick entirely.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Hide a wall of blocks until the player completes the quest</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:secret_passage"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"hideBlock:120:64:-30:120:67:-30"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Reveal the wall again on completion</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:secret_passage"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"showBlock:120:64:-30:120:67:-30"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Built-in marker icons</div>
+          <p>
+            Default icons available out of the box:
+            <code>Home</code>, <code>Spawn</code>, <code>Portal</code>, <code>Warp</code>,
+            <code>Death</code>, <code>Campfire</code>, <code>Coordinate</code>,
+            <code>Temple_Gateway</code>, <code>PortalInvasion</code>,
+            <code>UserA</code>&ndash;<code>UserF</code>.
+            Add custom icons to <code>Common/UI/WorldMap/MapMarkers/</code> in your resource pack.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Mark an objective location when a quest starts</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"startquest:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"setMarker:goblin_cave:Goblin Cave:450:64:-210:Coordinate:FF6600"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Remove the marker on quest completion</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"completequest:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"removeMarker:goblin_cave"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
+    <!-- ======================== QUICK REFERENCE ======================== -->
+    <div data-section-body="Quick Reference">
+    <h2 data-section="Quick Reference">Quick Reference</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Category</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>startquest:id</td><td>Quest State</td><td>Add to started quests + notification</td></tr>
+          <tr><td>completequest:id</td><td>Quest State</td><td>Move to completed + notification</td></tr>
+          <tr><td>removequest:id</td><td>Quest State</td><td>Remove from both lists</td></tr>
+          <tr><td>addTag:tagName</td><td>Tags</td><td>Add a tag (idempotent)</td></tr>
+          <tr><td>removeTag:tagName</td><td>Tags</td><td>Remove a tag</td></tr>
+          <tr><td>track:id:type:[targets]</td><td>Tracking</td><td>Start a named tracker (see Named Trackers section)</td></tr>
+          <tr><td>track:id:type:target:loc:x:y:z:radius</td><td>Tracking</td><td>Start a location-gated named tracker</td></tr>
+          <tr><td>track:id:type:target:world:worldName</td><td>Tracking</td><td>Start a world-gated named tracker</td></tr>
+          <tr><td>untrack:id</td><td>Tracking</td><td>Remove named tracker and reset its count to zero</td></tr>
+          <tr><td>untrack:[id1,id2]</td><td>Tracking</td><td>Remove multiple named trackers at once</td></tr>
+          <tr><td>setTimestamp:key</td><td>Cooldown</td><td>Record time for cooldown gate</td></tr>
+          <tr><td>clearTimestamp:key</td><td>Cooldown</td><td>Remove a stored timestamp; resets the gate</td></tr>
+          <tr><td>timedStart:key</td><td>Timer</td><td>Record time for countdown timer</td></tr>
+          <tr><td>timedStart:key:durationSeconds</td><td>Timer</td><td>Record time + store duration (allows timedActive/timedExpired without repeating seconds)</td></tr>
+          <tr><td>item:itemId:qty</td><td>Items</td><td>Give item + notification</td></tr>
+          <tr><td>command:text:server</td><td>Commands</td><td>Run as server console</td></tr>
+          <tr><td>command:text:player[:elevated]</td><td>Commands</td><td>Run as player (add :elevated to grant temp wildcard perm)</td></tr>
+          <tr><td>page:pageId</td><td>Navigation</td><td>Navigate to another page</td></tr>
+          <tr><td>spawnCitizen:name:x:y:z[:delay[:qty]]</td><td>Spawning</td><td>Clone HyCitizens NPC at position (coords may use <code>~</code>)</td></tr>
+          <tr><td>spawn:npcRoleId:x:y:z[:delay[:qty]]</td><td>Spawning</td><td>Spawn Hytale NPC by role ID (coords may use <code>~</code>)</td></tr>
+          <tr><td>tp:x:y:z[:world]</td><td>Teleport</td><td>Teleport player to coords (supports <code>~</code> relative); optional loaded world name (defaults to current)</td></tr>
+          <tr><td>variable:name:set:value</td><td>Variable</td><td>Set named variable to value</td></tr>
+          <tr><td>variable:name:add:value</td><td>Variable</td><td>Add to named variable</td></tr>
+          <tr><td>variable:name:subtract:value</td><td>Variable</td><td>Subtract from named variable</td></tr>
+          <tr><td>variable:name:multiply:value</td><td>Variable</td><td>Multiply named variable</td></tr>
+          <tr><td>variable:name:divide:value</td><td>Variable</td><td>Divide named variable</td></tr>
+          <tr><td>string:name:set:value</td><td>Variable</td><td>Set per-player string variable (value preserves colons)</td></tr>
+          <tr><td>string:name:concat:value</td><td>Variable</td><td>Append onto per-player string variable</td></tr>
+          <tr><td>global:string:name:set:value</td><td>Global State</td><td>Set server-wide string variable</td></tr>
+          <tr><td>global:string:name:concat:value</td><td>Global State</td><td>Append onto server-wide string variable</td></tr>
+          <tr><td>economy:give:amount</td><td>Economy</td><td>Deposit amount into player account (requires VaultUnlocked)</td></tr>
+          <tr><td>economy:take:amount</td><td>Economy</td><td>Withdraw amount from player account (requires VaultUnlocked)</td></tr>
+          <tr><td>sound:soundName</td><td>Sound</td><td>Play 2D sound to player</td></tr>
+          <tr><td>sound:soundName:true</td><td>Sound</td><td>Broadcast 2D sound to all players</td></tr>
+          <tr><td>sound:soundName:x:y:z</td><td>Sound</td><td>Play 3D positional sound at coordinates (~ relative ok); broadcasts to nearby players</td></tr>
+          <tr><td>sound:soundName:x:y:z:player</td><td>Sound</td><td>Same as above but only to the triggering player</td></tr>
+          <tr><td>title:primary[:secondary[:server|player[:isMajor]]]</td><td>Title</td><td>Show an event title screen; server=broadcast to world, player=self only (default); isMajor=true for large format</td></tr>
+          <tr><td>setMarker:id:label:x:y:z[:image[:RRGGBB]]</td><td>Map Marker</td><td>Place a marker on the player's world map. Repeating the same id updates it.</td></tr>
+          <tr><td>removeMarker:id</td><td>Map Marker</td><td>Remove the map marker with the given id (clears on reconnect)</td></tr>
+          <tr><td>hideBlock:x:y:z[:world]</td><td>Block Visibility</td><td>Hide a single block from this player only (sends Air); persists across reconnect</td></tr>
+          <tr><td>hideBlock:x1:y1:z1:x2:y2:z2[:world]</td><td>Block Visibility</td><td>Hide an inclusive 3D box from this player only; volume capped via <code>block_override_max_region_volume</code></td></tr>
+          <tr><td>showBlock:x:y:z[:world]<br>showBlock:x1:y1:z1:x2:y2:z2[:world]</td><td>Block Visibility</td><td>Clear a hideBlock override and re-send the real block(s) to the player</td></tr>
+          <tr><td>macro:name</td><td>Macro</td><td>Execute a named action macro from macros/&lt;name&gt;.json in order</td></tr>
+          <tr><td>delay:N</td><td>Flow</td><td>Pause for N seconds (decimals ok, e.g. 0.5) then continue remaining actions</td></tr>
+          <tr><td>mmo:xp:skillId:give:amount</td><td>MMO Skill</td><td>Give skill XP to player (requires MMOSkillTree)</td></tr>
+          <tr><td>rpgxp:give:amount</td><td>RPG Leveling</td><td>Give RPG XP to player (requires RPGLeveling)</td></tr>
+          <tr><td>elxp:give:amount</td><td>Endless Leveling</td><td>Grant EL XP to player (requires EndlessLeveling)</td></tr>
+          <tr><td>startArena:arenaId[:x:y:z]</td><td>Arena</td><td>Start a Core wave arena at player pos or given coords (supports <code>~</code> relative)</td></tr>
+          <tr><td>failArena</td><td>Arena</td><td>Abort the player's current arena session (runs the arena's FailActions)</td></tr>
+          <tr><td>mail:itemId:qty</td><td>Books and Papers</td><td>Push an item stack to the player's mailbox (requires Books and Papers)</td></tr>
+          <tr><td>givebook:title:author:body</td><td>Books and Papers</td><td>Give the player a signed book; <code>\f</code> = page break, <code>\n</code> = line break (requires Books and Papers)</td></tr>
+          <tr><td>regionaddmember:regionId</td><td>Regions</td><td>Add player as member of named region (QL Claims first, then OrbisGuard)</td></tr>
+          <tr><td>regionremovemember:regionId</td><td>Regions</td><td>Remove player from named region's member list (QL Claims first, then OrbisGuard)</td></tr>
+          <tr><td>opengui:guiId</td><td>GUI</td><td>Open a custom GUI screen for the player (requires QuestLines GUI plugin)</td></tr>
+          <tr><td>iconState:npcId:state</td><td>Icon State</td><td>Set per-player icon-state override on the named NPC. <em>state</em>: <code>available</code>, <code>inprogress</code>, <code>objectives_complete</code>, <code>completed</code>, <code>locked</code>, <code>waiting</code>, <code>repeatable_ready</code>, <code>story</code>, <code>custom</code>, <code>unknown</code> (requires QuestLines Icons)</td></tr>
+          <tr><td>iconState:npcId:state:clear</td><td>Icon State</td><td>Guarded clear &mdash; removes the override only if it currently equals <em>state</em> (requires QuestLines Icons)</td></tr>
+          <tr><td>global:addtag:tagName</td><td>Global State</td><td>Add tag to server-wide global tag list</td></tr>
+          <tr><td>global:removetag:tagName</td><td>Global State</td><td>Remove tag from server-wide global tag list</td></tr>
+          <tr><td>global:variable:name:op:value</td><td>Global State</td><td>Mutate server-wide variable (ops: add, subtract, multiply, divide, set)</td></tr>
+          <tr><td>random:[action1,action2,...]</td><td>Random</td><td>Pick one action at random from bracket list (page: not supported inside)</td></tr>
+          <tr><td colspan="3" style="font-style:italic;color:var(--text-muted);font-size:0.85rem;">The actions above work in both <code>Response.Actions</code> and <code>Page.LoadActions</code>. Load actions fire automatically when the page is shown, before the player clicks any button.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

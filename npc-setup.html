@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — NPC Setup</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="npc-setup" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Getting Started</div>
+      <h1 class="page-title">NPC Setup</h1>
+      <p class="page-subtitle">
+        QuestLines supports any in-world NPC as a quest giver — both <strong>HyCitizens</strong>
+        NPCs and <strong>standard Hytale NPCs</strong>. This page covers how to link quests to
+        NPCs, use wand mode, and understand the talk tracking system.
+      </p>
+    </div>
+
+    <!-- ======================== NPC TYPES ======================== -->
+    <div data-section-body="Supported NPC Types">
+    <h2 data-section="Supported NPC Types">Supported NPC Types</h2>
+    <p>
+      Any entity in the world can be a quest giver in QuestLines. Two NPC types are supported:
+    </p>
+    <ul>
+      <li>
+        <strong>HyCitizens NPCs</strong> — managed by the HyCitizens plugin. QuestLines listens
+        to the <code>CitizenInteractEvent</code> to intercept interactions. Each HyCitizens NPC
+        has a unique <strong>citizen ID</strong> (e.g.
+        <code>f48f7eaa-512e-415d-bfdb-f53d2ea0b991</code>) which is used as the key in
+        <code>npcs.json</code>.
+      </li>
+      <li>
+        <strong>Standard Hytale NPCs</strong> — any non-HyCitizens entity. QuestLines intercepts
+        interactions via the <code>SyncInteractionChains</code> packet watcher. The entity's
+        <strong>UUID</strong> is used as the key in <code>npcs.json</code>.
+      </li>
+    </ul>
+    <p>
+      Both NPC types use the same <code>npcs.json</code> mapping format and identical quest logic.
+      You don't need to configure anything in HyCitizens or elsewhere — all the linkage lives
+      in QuestLines.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Finding an NPC Key</div>
+        <p>
+          Use <code>/ql wand &lt;questId&gt;</code> and punch the NPC. Wand mode
+          reads the citizen ID (for HyCitizens NPCs) or entity UUID (for standard NPCs)
+          automatically and stores it in <code>npcs.json</code>. For HyCitizens NPCs you
+          can also look up citizen IDs via <code>/citizens</code>.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- ======================== HYCITIZENS ======================== -->
+    <div data-section-body="HyCitizens Overview">
+    <h2 data-section="HyCitizens Overview">HyCitizens Overview</h2>
+    <p>
+      HyCitizens is the NPC framework for Hytale servers. It manages NPC spawning,
+      appearance, and interaction events. QuestLines listens to the
+      <code>CitizenInteractEvent</code> emitted by HyCitizens to intercept player
+      interactions and open the appropriate dialogue.
+    </p>
+    <p>
+      Each NPC in HyCitizens has a unique <strong>citizen ID</strong> (e.g.
+      <code>f48f7eaa-512e-415d-bfdb-f53d2ea0b991</code>). This ID is used as the key in QuestLines'
+      <code>npcs.json</code> to map that NPC to one or more quests. You don't need
+      to configure anything in HyCitizens itself — all the linkage lives in QuestLines.
+    </p>
+    </div>
+
+    <!-- ======================== LINKING QUESTS ======================== -->
+    <div data-section-body="Linking Quests to an NPC">
+    <h2 data-section="Linking Quests to an NPC">Linking Quests to an NPC</h2>
+    <p>
+      There are two methods to link a quest to an NPC:
+    </p>
+
+    <h3 data-section="Method 1 — Wand Mode (Recommended)">Method 1 — Wand Mode (Recommended)</h3>
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Enter wand mode.</strong>
+          <p>Run <code>/ql wand &lt;questId&gt;</code> in chat. You'll receive a
+          confirmation that wand mode is active.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Punch the target NPC.</strong>
+          <p>Left-click (punch) the HyCitizens NPC in the world. QuestLines reads the
+          citizen's ID and adds it to <code>npcs.json</code> automatically.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Wand mode ends.</strong>
+          <p>The assignment is saved immediately. Run <code>/ql wandcancel</code> at
+          any time to abort without making changes.</p>
+        </div>
+      </li>
+    </ol>
+
+    <h3 data-section="Method 2 — Editor UI">Method 2 — Editor UI</h3>
+    <p>
+      Open the editor with <code>/ql ui</code> and navigate to the <strong>NPC</strong>
+      tab. From there you can manually type the citizen id in.
+    </p>
+    </div>
+
+    <!-- ======================== NPCS.JSON FORMAT ======================== -->
+    <div data-section-body="npcs.json Format">
+    <h2 data-section="npcs.json Format">npcs.json Format</h2>
+    <p>
+      The <code>npcs.json</code> file is the source of truth for NPC-to-quest mappings.
+      It has one top-level map: <code>Npcs</code> for NPC-to-quest assignments.
+    </p>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// npcs.json</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"Npcs"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-str">"lost_sword,daily_reward"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_07"</span><span class="hl-punc">:</span> <span class="hl-str">"goblin_king"</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <h3 data-section="Multiple Quests on One NPC">Multiple Quests on One NPC</h3>
+    <p>
+      The value in <code>Npcs</code> is a <strong>comma-separated</strong> list of
+      quest IDs. When a player interacts with that NPC, QuestLines evaluates the quests
+      in this order — first quest first. The page resolution algorithm stops as soon as a
+      matching page is found, across all quests and their pages.
+    </p>
+
+    <div class="callout warning">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Quest Order Matters for Multi-Quest NPCs</div>
+        <p>
+          When an NPC has multiple quests, the evaluation order is:
+          Quest 1 pages (in order), then Quest 2 pages (in order), and so on.
+          If Quest 1 has a catch-all page with no requirements, it will always match
+          and Quest 2 will never be reached. Put more specific quests earlier in
+          the comma-separated list, or ensure every quest's final fallback page
+          has requirements that exclude other quest states.
+        </p>
+      </div>
+    </div>
+
+    <h3 data-section="NPC as Quest Board">NPC as Quest Board (1.11+)</h3>
+    <p>
+      Set <code>NpcIsBoard</code> to <code>true</code> for an NPC in <code>npcs.json</code> &mdash;
+      or use the <strong>Is Quest Board</strong> checkbox on the NPC editor's INFO tab. The NPC will
+      open the <code>QuestBoardUI</code> on interaction (showing every assigned quest in one panel)
+      instead of running the page resolution algorithm. The board's quest list is the same comma-separated
+      entry in <code>Npcs</code>. Useful for kiosk NPCs that hand out bounties or rotating jobs &mdash;
+      see <a href="core.html#quest-boards">Quest Boards</a> in the Core overview for the full feature.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Npcs"</span><span class="hl-punc">:</span>       <span class="hl-punc">{</span> <span class="hl-key">"citizen_15"</span><span class="hl-punc">:</span> <span class="hl-str">"bounty_a,bounty_b,bounty_c"</span> <span class="hl-punc">},</span>
+  <span class="hl-key">"NpcIsBoard"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"citizen_15"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span> <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <!-- ======================== WAND MODE ======================== -->
+    <div data-section-body="Wand Mode">
+    <h2 data-section="Wand Mode">Wand Mode</h2>
+    <p>
+      Wand mode is the fastest way to link quests to NPCs in-world without editing JSON
+      directly.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/ql wand &lt;questId&gt;</td>
+            <td>Enter wand mode for the specified quest. Persists until you punch an NPC or cancel.</td>
+          </tr>
+          <tr>
+            <td>/ql wandcancel</td>
+            <td>Cancel the active wand mode without making any changes.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      While wand mode is active, a pending assignment is stored in memory keyed to your
+      player UUID. Punching any NPC (HyCitizens or standard) will:
+    </p>
+    <ol>
+      <li>Read the NPC's citizen ID.</li>
+      <li>Append the quest ID to that NPC's entry in <code>Npcs</code>.</li>
+      <li>Save <code>npcs.json</code> to disk.</li>
+      <li>Exit wand mode and confirm the link in chat.</li>
+    </ol>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Wand Mode is Per-Player</div>
+        <p>
+          Multiple admins can be in wand mode simultaneously without interfering with
+          each other. Each pending assignment is stored against the admin's own UUID.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- ======================== TALK TRACKING ======================== -->
+    <div data-section-body="Talk Tracking">
+    <h2 data-section="Talk Tracking">Talk Tracking</h2>
+    <p>
+      QuestLines automatically tracks how many times each player has interacted with
+      each NPC. No setup or tracking tag is required — the counter increments on
+      every interaction, before the page resolution algorithm runs.
+    </p>
+
+    <p>
+      Use the <code>talk:citizenName:qty</code> requirement to gate content on visit count.
+      Use the NPC's display name — the same name shown above their head (e.g. <code>Elder Maren</code>):
+    </p>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// This page only shows after the player's third visit</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:Elder Maren:3"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// A "returning visitor" page for visits 2+</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:Elder Maren:2"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+    </div>
+
+    <!-- ======================== INTERACTION TYPES ======================== -->
+    <div data-section-body="Interaction Types">
+    <h2 data-section="Interaction Types">Interaction Types</h2>
+    <p>
+      By default, players can trigger NPC dialogue either by pressing <strong>F</strong>
+      (the interaction key) or by <strong>hitting</strong> the NPC. Both are enabled
+      globally by default and can be toggled per NPC to match your world design.
+    </p>
+
+    <h3 data-section="Global Defaults">Global Defaults</h3>
+    <p>
+      Set the server-wide defaults in <code>QuestLines.conf</code>:
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-key">f_to_talk_default</span><span class="hl-punc">=</span><span class="hl-kw">true</span>   <span class="hl-cmt">// F-key opens dialogue for all NPCs by default</span>
+<span class="hl-key">hit_to_talk_default</span><span class="hl-punc">=</span><span class="hl-kw">true</span>  <span class="hl-cmt">// Hitting opens dialogue for all NPCs by default</span></code></pre>
+    </div>
+
+    <h3 data-section="Per-NPC Override">Per-NPC Override</h3>
+    <p>
+      Individual NPCs can override the global defaults. Use the NPC tab in the editor UI
+      to configure these, or set them directly in <code>npcs.json</code>:
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"NpcFToTalk"</span><span class="hl-punc">:</span>    <span class="hl-punc">{</span> <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-kw">false</span> <span class="hl-punc">},</span>  <span class="hl-cmt">// disable F-to-talk for this NPC only</span>
+  <span class="hl-key">"NpcHitToTalk"</span><span class="hl-punc">:</span>  <span class="hl-punc">{</span> <span class="hl-key">"citizen_07"</span><span class="hl-punc">:</span> <span class="hl-kw">false</span> <span class="hl-punc">}</span>   <span class="hl-cmt">// disable hit-to-talk for this NPC only</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Only false values are stored</div>
+        <p>
+          An absent entry means "use the global default". Only explicit <code>false</code>
+          overrides are stored in <code>npcs.json</code>.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- ======================== TEXT VARIABLES ======================== -->
+    <div data-section-body="Text Variables">
+    <h2 id="variables" data-section="Text Variables">Text Variables</h2>
+    <p>
+      Variables can be embedded in any <code>Dialog</code> or response <code>Text</code>
+      field. They are substituted at render time with live player data.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Variable</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{username}</td>
+            <td>The player's username.</td>
+          </tr>
+          <tr>
+            <td>{npcname}</td>
+            <td>The <code>Name</code> field of the current page (the NPC's display name).</td>
+          </tr>
+          <tr>
+            <td>{questname}</td>
+            <td>The title of the first quest currently in the player's started quests list.</td>
+          </tr>
+          <tr>
+            <td>{track:id}</td>
+            <td>The player's current count for the named tracker with that ID.</td>
+          </tr>
+          <tr>
+            <td>{cooldown:key:totalSeconds}</td>
+            <td>Remaining cooldown time as a human-readable string (e.g. "4 hours 23 minutes"). Renders as "ready" when the cooldown has elapsed.</td>
+          </tr>
+          <tr>
+            <td>{timeleft:key:totalSeconds}</td>
+            <td>Remaining time on a countdown timer as a human-readable string. Renders as "expired" when time is up.</td>
+          </tr>
+          <tr>
+            <td>{variable:name}</td>
+            <td>The current value of a named numeric variable. Whole numbers are shown without a decimal point (e.g. <code>3</code> not <code>3.0</code>). Defaults to <code>0</code> if never set.</td>
+          </tr>
+          <tr>
+            <td>{balance}</td>
+            <td>The player's current economy balance. Requires VaultUnlocked with a compatible economy provider. Shows <code>0</code> if unavailable.</td>
+          </tr>
+          <tr>
+            <td>{distancefrom:x:y:z}</td>
+            <td>The Euclidean distance from the player's current position to (x, y, z), rounded to one decimal place.</td>
+          </tr>
+          <tr>
+            <td>{mmo:skillId}</td>
+            <td>The player's current level in the named MMO skill (e.g. <code>{mmo:MINING}</code>). Returns <code>0</code> if MMOSkillTree is not active. Case-insensitive.</td>
+          </tr>
+          <tr>
+            <td>{rpglevel}</td>
+            <td>The player's current RPG level. Returns <code>0</code> if RPGLeveling is not active.</td>
+          </tr>
+          <tr>
+            <td>{rpgxp}</td>
+            <td>The player's current total RPG XP. Returns <code>0</code> if RPGLeveling is not active.</td>
+          </tr>
+          <tr>
+            <td>{rpgxpneeded}</td>
+            <td>XP needed for the player's next RPG level. Returns <code>0</code> if RPGLeveling is not active or the player is at max level.</td>
+          </tr>
+          <tr>
+            <td>{ellevel}</td>
+            <td>The player's current Endless Leveling level. Returns <code>0</code> if EndlessLeveling is not active.</td>
+          </tr>
+          <tr>
+            <td>{elxp}</td>
+            <td>The player's current EL XP. Returns <code>0</code> if EndlessLeveling is not active.</td>
+          </tr>
+          <tr>
+            <td>{elxpneeded}</td>
+            <td>XP needed for the player's next EL level. Returns <code>0</code> if EndlessLeveling is not active or the player is at their level cap.</td>
+          </tr>
+          <tr>
+            <td>{elprestige}</td>
+            <td>The player's EL prestige level. Returns <code>0</code> if EndlessLeveling is not active.</td>
+          </tr>
+          <tr>
+            <td>{elskill:SKILL}</td>
+            <td>The player's skill attribute level (e.g. <code>{elskill:STRENGTH}</code>). Skill IDs: <code>STRENGTH</code>, <code>HASTE</code>, <code>DEFENSE</code>, <code>LIFE_FORCE</code>, <code>STAMINA</code>, <code>FLOW</code>, <code>SORCERY</code>, <code>DISCIPLINE</code>, <code>PRECISION</code>, <code>FEROCITY</code> (case-insensitive). Returns <code>0</code> if EndlessLeveling is not active.</td>
+          </tr>
+          <tr>
+            <td>{elrace}</td>
+            <td>The player's race ID, or empty string if EndlessLeveling is not active.</td>
+          </tr>
+          <tr>
+            <td>{elclass} / {elclass:primary}</td>
+            <td>The player's primary class ID, or empty string.</td>
+          </tr>
+          <tr>
+            <td>{elclass:secondary}</td>
+            <td>The player's secondary class ID, or empty string.</td>
+          </tr>
+          <tr>
+            <td>{fishbagcount:fishItemId}</td>
+            <td>Live count of fish currently in the player's bag by item ID. Use <code>*</code> for a total count of all fish. Requires HyFishing.</td>
+          </tr>
+          <tr>
+            <td>{global:variable:name}</td>
+            <td>The current value of a server-wide global variable. Defaults to <code>0</code> if never set.</td>
+          </tr>
+          <tr>
+            <td>{regioncount}</td>
+            <td>The number of OrbisGuard regions the player is currently inside. Returns <code>0</code> if OrbisGuard is not active.</td>
+          </tr>
+          <tr>
+            <td>{regionnames}</td>
+            <td>Comma-separated list of OrbisGuard region IDs the player is currently inside. Returns an empty string if OrbisGuard is not active or the player is in no regions.</td>
+          </tr>
+          <tr>
+            <td>{escort:id:dist}</td>
+            <td>Integer blocks between the calling player and their escort clone with that <code>id</code>. Empty string if no active escort session exists. Requires HyCitizens.</td>
+          </tr>
+          <tr>
+            <td>{escort:id:name}</td>
+            <td>The escort clone's HyCitizens display name. Empty string if no active escort session exists. Requires HyCitizens.</td>
+          </tr>
+          <tr>
+            <td>{escort:id:active}</td>
+            <td><code>true</code> or <code>false</code> &mdash; whether the calling player has an escort session with that <code>id</code>. Useful for conditional dialogue text.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Example Usage">Example Usage</h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// In a kill quest progress page</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've slain {track:goblin_kills} of 10 goblins. Keep going, {username}!"</span>
+
+<span class="hl-cmt">// In a cooldown waiting page</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"You've already claimed your reward. Come back in {cooldown:daily_reward:86400}."</span>
+
+<span class="hl-cmt">// In a timed quest active page</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Hurry! You have {timeleft:courier_timer:300} to make the delivery."</span>
+
+<span class="hl-cmt">// Showing a named variable</span>
+<span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Your score is {variable:score}. Reach 5 to complete the challenge!"</span></code></pre>
+    </div>
+    </div>
+
+    <!-- ======================== INLINE FORMATTING ======================== -->
+    <div data-section-body="Inline Text Formatting">
+    <h2 data-section="Inline Text Formatting">Inline Text Formatting</h2>
+    <p>
+      Dialog and response text supports inline rich-text formatting tags. These are
+      processed by QuestLines' <code>TextFormatter</code> before the text is rendered
+      in the UI.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Tag</th><th>Effect</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{b}...{/}</td>
+            <td>Bold text</td>
+            <td><code>{b}important{/}</code></td>
+          </tr>
+          <tr>
+            <td>{i}...{/}</td>
+            <td>Italic text</td>
+            <td><code>{i}emphasis{/}</code></td>
+          </tr>
+          <tr>
+            <td>{m}...{/}</td>
+            <td>Monospace text</td>
+            <td><code>{m}code-like{/}</code></td>
+          </tr>
+          <tr>
+            <td>{#RRGGBB}...{/}</td>
+            <td>Colored text (hex color)</td>
+            <td><code>{#FF4444}danger{/}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Example">Example</h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"The {b}Sunstone Amulet{/} glows with a {#FFD700}golden light{/}. Bring it to me, {username}."</span>
+
+<span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"{i}I've already lost one today — I won't risk another.{/}"</span></code></pre>
+    </div>
+    </div>
+
+    <!-- ======================== QUICK SETUP CHECKLIST ======================== -->
+    <div data-section-body="Quick Setup Checklist">
+    <h2 data-section="Quick Setup Checklist">Quick Setup Checklist</h2>
+    <p>
+      When creating a new quest and linking it to an NPC for the first time, run through
+      this checklist:
+    </p>
+
+    <ol>
+      <li>Create the quest file with a title and ordered page IDs via <code>/ql create</code> or manually.</li>
+      <li>Create all page files. Ensure the most specific requirements come first in the Pages list.</li>
+      <li>Run <code>/ql wand &lt;questId&gt;</code> and punch the NPC in-world to link it.</li>
+      <li>Verify the NPC entry in <code>/ql ui</code> shows the quest ID correctly.</li>
+      <li>Test the full quest flow by interacting with the NPC as a player. Check all stages.</li>
+      <li>Confirm tracking tags are added on quest start and removed on quest complete.</li>
+      <li>Run <code>/ql reload</code> if you edited JSON files directly on disk.</li>
+    </ol>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Test With a Fresh Player Profile</div>
+        <p>
+          To test the full quest lifecycle from scratch, create a test account with no
+          quest progress. Alternatively, use the Player tab in <code>/ql ui</code> to
+          manually clear quest state and tags for your own account during development.
+        </p>
+      </div>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

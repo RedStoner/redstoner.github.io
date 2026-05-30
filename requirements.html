@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Requirements Reference</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="requirements" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Reference</div>
+      <h1 class="page-title">Requirements</h1>
+      <p class="page-subtitle">
+        Requirements are colon-delimited strings that evaluate to <strong>true</strong> or
+        <strong>false</strong> for a given player. They appear on both <em>pages</em>
+        (controlling whether the page is selected at all) and <em>responses</em>
+        (controlling whether the button is visible). All requirements in a list must pass.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Where Requirements Appear</div>
+        <p>
+          <strong>Page requirements</strong> determine whether a page is shown when the player
+          interacts with an NPC. <strong>Response requirements</strong> determine whether an
+          individual button is shown on that page. An empty <code>[]</code> requirements list
+          always passes.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== NAMED TRACKERS ======================== -->
+
+    <!-- ======================== ARENA (Core) ======================== -->
+    <div class="section-group" data-section-body="Achievements">
+      <h2 data-section="Achievements">Achievements</h2>
+      <p>
+        Gate quests on the player&rsquo;s achievement state. See the
+        <a href="core.html#achievements">Achievements</a> section in the Core overview for
+        how achievements are defined and unlocked. All four checks return false when the
+        AchievementManager is unavailable (e.g. before player data is loaded).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>achievement:id</td>
+              <td>True once the player has unlocked any stage of the named achievement.</td>
+            </tr>
+            <tr>
+              <td>achievement:id:minStage</td>
+              <td>True once the player has unlocked at least the given 1-based stage tier.</td>
+            </tr>
+            <tr>
+              <td>achievementstages:id:n</td>
+              <td>True once the player has unlocked at least <em>n</em> stages of the named achievement.</td>
+            </tr>
+            <tr>
+              <td>achievementcount:n</td>
+              <td>True once the player has unlocked at least <em>n</em> distinct achievements (any stage). Achievements whose config no longer exists are skipped.</td>
+            </tr>
+            <tr>
+              <td>achievementpoints:n</td>
+              <td>True once the player&rsquo;s total earned achievement points are &ge; <em>n</em>. Points are summed across all unlocked stages of every achievement.</td>
+            </tr>
+            <tr>
+              <td>questcompletedcount:n</td>
+              <td>True once the player has completed at least <em>n</em> distinct quests (any quest).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Gate a master-fisher quest behind unlocking the legendary catch milestone</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"achievement:legendary_catch"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Hidden bonus dialog once the player has 50+ achievement points</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"achievementpoints:50"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Arena">
+      <h2 data-section="Arena">Arena</h2>
+      <p>
+        Arena progress requirements use named trackers. Set up a tracker with type
+        <code>arena_complete</code> (counts full completions) or <code>arena_wave</code>
+        (counts waves cleared), then check with <code>track:id:qty</code>. The arena ID used as the
+        target matches what was passed to <code>startArena:</code>. Supports <code>*</code> wildcards
+        (e.g. <code>shadow_*</code> to count all shadow arenas).
+        Wave arenas are now a Core feature &mdash; no optional dependency required.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named arena tracker has count &ge; <em>qty</em>. Tracker types: <code>arena_complete</code>, <code>arena_wave</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require 3 Shadow Trial completions to unlock the final page</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"track:shadow_clears:3:arena_complete:[shadow_trial]"</span><span class="hl-punc">]</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"track:shadow_clears:3"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Block Breaking">
+      <h2 data-section="Block Breaking">Block Breaking</h2>
+      <p>
+        Count block breaks using a named tracker of type <code>block</code>. Set up the tracker
+        with <code>track:id:block:blockId</code> (typically in the quest-accept response), then
+        check with <code>track:id:qty</code>. The <code>*</code> wildcard is supported for partial
+        block ID matching (e.g. <code>track:ore_mined:block:*Ore*</code>).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named block tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require mining 20 iron ore</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:miners_task"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:ore_mined:20"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Block Placing">
+      <h2 data-section="Block Placing">Block Placing</h2>
+      <p>
+        Count block placements using a named tracker of type <code>place</code>. Set up with
+        <code>track:id:place:blockId</code>, then check with <code>track:id:qty</code>.
+        The <code>*</code> wildcard is supported for partial block ID matching
+        (e.g. <code>track:planks_placed:place:*Planks</code> counts any plank type).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named place tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require placing 10 stone bricks</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:build_the_wall"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:planks_placed:10"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Cooldown">
+      <h2 data-section="Cooldown">Cooldown</h2>
+      <p>
+        Checks whether enough time has elapsed since a timestamp was recorded via
+        <code>setTimestamp:key</code>. If the timestamp has <em>never</em> been set for
+        this player, the requirement returns <strong>true</strong>.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>cooldown:key:seconds</td>
+              <td>True if &ge; <em>seconds</em> have passed since <code>setTimestamp:key</code> was called, or if it was never called.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Daily Reward Pattern</div>
+          <p>
+            Because <code>cooldown</code> returns true when never set, place the
+            <em>ready</em> page (with <code>cooldown:key:86400</code>) <strong>before</strong>
+            the <em>waiting</em> page (with <code>not:cooldown:key:86400</code>). New players
+            will always see the ready page first. See
+            <a href="progression.html#daily">Quest Patterns &rarr; Daily Reward</a>.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Ready page: cooldown has elapsed (or never been set)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"cooldown:daily_key:86400"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Waiting page: cooldown is still active</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"not:cooldown:daily_key:86400"</span><span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use <code>{cooldown:key:totalSeconds}</code> in dialog text to show the remaining
+        wait time (e.g. "Come back in 4 hours 23 minutes.").
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="Daily Reset Gate">
+      <h2 data-section="Daily Reset Gate">Daily Reset Gate</h2>
+      <p>
+        Checks whether a timestamp was set <em>before</em> the most recent past occurrence of a
+        specific clock time (HH:MM, server local time). If the timestamp has <strong>never</strong>
+        been set, the requirement returns <strong>true</strong>.
+        Pair with <code>setTimestamp:key</code> in a load action to gate once-per-day events.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>timedExact:key:hour:minute</td>
+              <td>True if the <em>key</em> timestamp is unset, OR was set before the most recent past occurrence of HH:MM server local time.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Daily Reset Pattern</div>
+          <p>
+            Place a page with <code>timedExact:daily_key:4:00</code> (resets at 4 AM) and
+            a <code>setTimestamp:daily_key</code> load action. When a player visits before
+            4 AM and the timestamp is already set from the same day, the requirement is false.
+            After the clock passes 4 AM, the requirement returns true for any player whose
+            timestamp was recorded before that rollover, allowing the reward to be claimed again.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Daily reward resets at midnight (00:00)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"timedExact:daily_reward:0:0"</span><span class="hl-punc">]</span>
+<span class="hl-key">"LoadActions"</span><span class="hl-punc">:</span>  <span class="hl-punc">[</span><span class="hl-str">"setTimestamp:daily_reward"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Date">
+      <h2 data-section="Date">Date</h2>
+      <p>Server local-date checks. Useful for holiday quests, anniversaries, and limited-time events.</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>date:MM-dd</td>
+              <td>Recurring annual date &mdash; passes when today's month/day matches. E.g. <code>date:12-25</code> for Christmas.</td>
+            </tr>
+            <tr>
+              <td>date:yyyy-MM-dd</td>
+              <td>One-shot specific calendar date.</td>
+            </tr>
+            <tr>
+              <td>date:MM-dd:MM-dd</td>
+              <td>Inclusive date range. Year-wraps when start &gt; end (e.g. <code>date:12-20:01-05</code> covers late Dec through early Jan).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Holiday dialogue branch — only visible during the Yule window</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"date:12-20:01-05"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Economy &amp; Permissions">
+      <h2 data-section="Economy &amp; Permissions">Economy &amp; Permissions <span style="font-weight:400;opacity:0.55;font-size:0.75em">(VaultUnlocked optional dependency)</span></h2>
+      <p>
+        These requirements integrate with the optional VaultUnlocked plugin. They return
+        <strong>false</strong> if VaultUnlocked is not installed or the required provider
+        is not active.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>economy:canafford:amount</td>
+              <td>True if the player's account balance is &ge; <em>amount</em>. Requires VaultUnlocked with a compatible economy provider.</td>
+            </tr>
+            <tr>
+              <td>permission:has:perm.node</td>
+              <td>True if the player has the specified permission node. Requires VaultUnlocked with a compatible permissions provider.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Gate a response on the player being able to afford the cost</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"economy:canafford:500"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Only show VIP dialogue if player has the permission node</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"permission:has:myserver.vip"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Endless Leveling">
+      <h2 data-section="Endless Leveling">Endless Leveling <span style="font-weight:400;opacity:0.55;font-size:0.75em">(EndlessLeveling optional dependency)</span></h2>
+      <p>
+        Compares the player's Endless Leveling level, XP, skill attributes, race, or class.
+        Requires the EndlessLeveling plugin to be active; returns <strong>false</strong> silently
+        if it is not installed. The level cap is per-player (prestige-aware), so <code>ellevel:max</code>
+        uses <code>getLevelCap(uuid)</code>.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ellevel:max</td>
+              <td>True if the player is at their EL level cap.</td>
+            </tr>
+            <tr>
+              <td>ellevel:equal:value</td>
+              <td>True if the player's EL level equals <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>ellevel:greater:value</td>
+              <td>True if the player's EL level is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>ellevel:less:value</td>
+              <td>True if the player's EL level is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>ellevel:greaterOrEqual:value</td>
+              <td>True if the player's EL level is &ge; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>ellevel:lessOrEqual:value</td>
+              <td>True if the player's EL level is &le; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>elxp:equal:value</td>
+              <td>True if the player's EL XP equals <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>elxp:greater|less|greaterOrEqual|lessOrEqual:value</td>
+              <td>EL XP comparison operators.</td>
+            </tr>
+            <tr>
+              <td>elskill:SKILL:equal:value</td>
+              <td>True if the player's <em>SKILL</em> level equals <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>elskill:SKILL:greater|less|greaterOrEqual|lessOrEqual:value</td>
+              <td>Skill attribute level comparison. Skill IDs (case-insensitive): <code>STRENGTH</code>, <code>HASTE</code>, <code>DEFENSE</code>, <code>LIFE_FORCE</code>, <code>STAMINA</code>, <code>FLOW</code>, <code>SORCERY</code>, <code>DISCIPLINE</code>, <code>PRECISION</code>, <code>FEROCITY</code>.</td>
+            </tr>
+            <tr>
+              <td>elrace:raceId</td>
+              <td>True if the player's race ID matches (case-insensitive).</td>
+            </tr>
+            <tr>
+              <td>elclass:classId</td>
+              <td>True if the player's primary OR secondary class matches (case-insensitive).</td>
+            </tr>
+            <tr>
+              <td>elclass:primary:classId</td>
+              <td>True if the player's primary class matches.</td>
+            </tr>
+            <tr>
+              <td>elclass:secondary:classId</td>
+              <td>True if the player's secondary class matches.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require level 20 and some strength to start a raid</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"ellevel:greaterOrEqual:20"</span><span class="hl-punc">,</span> <span class="hl-str">"elskill:STRENGTH:greater:5"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Warrior-only dialogue branch</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"elclass:primary:warrior"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Fishing">
+      <h2 data-section="Fishing">Fishing <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyFishing optional dependency)</span></h2>
+      <p>
+        Fishing count requirements use named trackers. Set up a tracker with the appropriate
+        fishing type (<code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>,
+        <code>catchfishzone</code>, or <code>releasefish</code>), then check with <code>track:id:qty</code>.
+        All fishing requirements return <strong>false</strong> if HyFishing is not installed.
+        The <code>hasfishinbag</code> check is a live bag inventory check that requires no tracker.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named fishing tracker has count &ge; <em>qty</em>. Tracker types: <code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>, <code>catchfishzone</code>, <code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>releasefish</code>, <code>fishmiss</code>. Supports <code>*</code> wildcard on target. AA-specific types (<code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>fishmiss</code>) require Anglers' Almanac.</td>
+            </tr>
+            <tr>
+              <td>hasfishinbag:fishItemId:qty</td>
+              <td>Live check — true if the player currently has &ge; <em>qty</em> of the fish item in their bag. Use <code>*</code> to match any fish. No tracker needed.</td>
+            </tr>
+            <tr>
+              <td>fishmiss:fishItemId:qty</td>
+              <td>True if the player has lost (failed the AA minigame on) &ge; <em>qty</em> matching fish. Supports <code>*</code> wildcard. Requires <code>tracking:fishmiss:fishItemId</code> tag and Anglers' Almanac.</td>
+            </tr>
+            <tr>
+              <td>catchfishlegendary:qty</td>
+              <td>True if the player has caught &ge; <em>qty</em> legendary fish (AA <code>isLegendary</code> flag). Requires <code>tracking:catchfishlegendary</code> tag and Anglers' Almanac.</td>
+            </tr>
+            <tr>
+              <td>catchfishnew:qty</td>
+              <td>True if the player has caught &ge; <em>qty</em> new-discovery fish (AA <code>isNewDiscovery</code> flag). Requires <code>tracking:catchfishnew</code> tag and Anglers' Almanac.</td>
+            </tr>
+            <tr>
+              <td>catchfishperf:rating:qty</td>
+              <td>True if the player has &ge; <em>qty</em> catches at the given AA performance rating (<code>perfect</code>, <code>great</code>, <code>good</code>, <code>fail</code>, <code>nil</code>). Requires <code>tracking:catchfishperf:rating</code> tag and Anglers' Almanac.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require catching 10 fish of any type</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:fishing_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:fish_caught:10"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Gate a turn-in on having a specific fish in the bag right now</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"hasfishinbag:golden_trout:1"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Global State">
+      <h2 data-section="Global State">Global State <span style="font-weight:400;opacity:0.55;font-size:0.75em">(server-wide)</span></h2>
+      <p>
+        Global requirements check server-wide state stored in <code>GlobalData</code> rather
+        than per-player data. Tags and variables in the global store affect all players equally.
+        Mutate global state using the corresponding global actions.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>global:hastag:tagName</td>
+              <td>True if the server-wide global tag list contains <em>tagName</em>.</td>
+            </tr>
+            <tr>
+              <td>global:nottag:tagName</td>
+              <td>True if the server-wide global tag list does <em>not</em> contain <em>tagName</em>.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:equal:value</td>
+              <td>True if the global variable equals <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:greater:value</td>
+              <td>True if the global variable is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:less:value</td>
+              <td>True if the global variable is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:greaterOrEqual:value</td>
+              <td>True if the global variable is &ge; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>global:variable:name:lessOrEqual:value</td>
+              <td>True if the global variable is &le; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>global:string:name:equals:value</td>
+              <td>True if the global string variable equals <em>value</em> (case-sensitive). Other operators: <code>notequals</code>, <code>contains</code>, <code>notcontains</code>, <code>startswith</code>, <code>endswith</code>.</td>
+            </tr>
+            <tr>
+              <td>global:string:name:empty</td>
+              <td>True if the global string variable is empty (unset = empty). Companion: <code>global:string:name:notempty</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Global vs Per-Player</div>
+          <p>
+            Global tags and variables are <em>shared across all players</em>. Use them for
+            world events, server-wide flags, or counters that accumulate across players.
+            Per-player tags and variables (via <code>hasTag</code> and <code>variable:</code>)
+            remain per-player as before.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Show a world event page only when the server event is active</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"global:hastag:world_event_active"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Gate a reward on a server-wide counter reaching a threshold</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"global:variable:boss_kills:greaterOrEqual:100"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="HyCitizen Kill Count">
+      <h2 data-section="HyCitizen Kill Count">HyCitizen Kill Count</h2>
+      <p>
+        Count kills of HyCitizens NPCs using a named tracker of type <code>killcitizen</code>
+        (e.g. <code>track:bandit_kills:killcitizen:Bandit Guard</code>). The name match is
+        <strong>case-sensitive</strong> and matches the NPC's exact display name. The <code>*</code>
+        wildcard is supported in the tracker target — e.g. <code>track:bandit_kills:killcitizen:Bandit*</code>
+        matches all citizen names beginning with "Bandit".
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named killcitizen tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require killing 3 "Bandit Guard" citizens</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:bandit_raid"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:bandit_kills:3"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="HyCitizens NPC State">
+      <h2 data-section="HyCitizens NPC State">HyCitizens NPC State <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyCitizens optional dependency)</span></h2>
+      <p>
+        Gate a page on the runtime state of a HyCitizens NPC &mdash; whether it is patrolling,
+        what schedule slot is active, or how many citizens belong to a named group. All of
+        these are <code>false</code> when HyCitizens is not installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>patrolling:citizenId</td>
+              <td>True while the citizen is on any patrol.</td>
+            </tr>
+            <tr>
+              <td>patrolling:citizenId:pathName</td>
+              <td>True while the citizen is on the named patrol path.</td>
+            </tr>
+            <tr>
+              <td>citizenActive:citizenId</td>
+              <td>True when the citizen's HyCitizens schedule is in the <code>ACTIVE</code> runtime state (i.e. the NPC has reached its slot's location and is performing the slot activity).</td>
+            </tr>
+            <tr>
+              <td>citizenScheduleEntry:citizenId:entryName</td>
+              <td>True when the citizen's currently active schedule entry has the given name (case-insensitive).</td>
+            </tr>
+            <tr>
+              <td>groupCount:groupName:N</td>
+              <td>True when the named group contains exactly <em>N</em> citizens.</td>
+            </tr>
+            <tr>
+              <td>groupCount:groupName:op:N</td>
+              <td>Compare group size against <em>N</em> with operator <code>op</code> &mdash; one of <code>&gt;=</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>==</code>, <code>!=</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Shopkeeper page only shows during her ACTIVE schedule slot</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"citizenActive:shopkeeper_maren"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Reinforcements page only shows when fewer than 3 guards survive</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"groupCount:city_guards:&lt;:3"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Icon State">
+      <h2 id="icon-state" data-section="Icon State">Icon State <span style="font-weight:400;opacity:0.55;font-size:0.75em">(QuestLines Icons optional dependency)</span></h2>
+      <p>
+        Checks whether a per-player icon-state override is currently active on a
+        specific NPC. The override is set with the matching
+        <a href="actions.html#icon-state"><code>iconState:</code> action</a> &mdash; this
+        requirement only reads it. Use it to gate dialogue on a state previously
+        forced by another quest&rsquo;s action.
+      </p>
+      <p>
+        Only registered when the <strong>QuestLines Icons</strong> companion plugin
+        is active. On installs without Icons the requirement always evaluates to
+        <code>false</code>.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>iconState:npcId:state</td>
+              <td>True iff the player&rsquo;s override for <em>npcId</em> is currently set to <em>state</em>. <em>state</em> must be one of <code>available</code>, <code>inprogress</code>, <code>objectives_complete</code>, <code>completed</code>, <code>locked</code>, <code>waiting</code>, <code>repeatable_ready</code>, <code>story</code>, <code>custom</code>, <code>unknown</code>. False if no override is set or the override is a different state &mdash; this does <strong>not</strong> read the auto-computed state shown by Icons.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Page only opens once another quest has flagged the smith as ready</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"iconState:smith_id:objectives_complete"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Inventory">
+      <h2 data-section="Inventory">Inventory</h2>
+      <p>
+        Checks whether the player currently has a sufficient quantity of an item in their
+        inventory. The optional fourth segment <code>:true</code> marks the item as
+        <strong>consumable</strong> — if the response passes and is selected, the items
+        are removed before actions execute.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>item:itemId:qty</td>
+              <td>True if the player has &ge; <em>qty</em> of the item. Items are not consumed.</td>
+            </tr>
+            <tr>
+              <td>item:itemId:qty:true</td>
+              <td>True if the player has &ge; <em>qty</em> of the item. Items <strong>are consumed</strong> when the response is used.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Consumption Timing</div>
+          <p>
+            When <code>:true</code> is set, items are consumed <em>before</em> the response's
+            actions execute. This ensures the player cannot back out after the server takes
+            the items.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Check without consuming</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"item:gold_ingot:5"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Check AND consume on use (item turn-in)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"item:ancient_blade:1:true"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Item Group">
+      <h2 data-section="Item Group">Item Group</h2>
+      <p>
+        Matches when the player holds at least <em>qty</em> of <strong>any single item</strong>
+        whose id matches one of the target patterns (and does not match any exclude pattern).
+        Patterns use the same <code>*</code> wildcard semantics as the named tracker system.
+        The <code>id</code> is a human-readable label used in objective progress text
+        (e.g. <code>Ores: 15/25</code>).
+      </p>
+      <p>
+        When used as a <strong>response</strong> requirement with the trailing <code>:true</code>
+        flag, the dialogue prompts the player to pick which specific item id to turn in (if more
+        than one matching stack is present) and consumes <em>qty</em> of the chosen item on click.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>itemgroup:id:[patterns]:qty</td>
+              <td>True if any matching item id has &ge; <em>qty</em> in the player's inventory. Check only.</td>
+            </tr>
+            <tr>
+              <td>itemgroup:id:[patterns]:qty:true</td>
+              <td>Same check; on response click, prompts for selection (if needed) and consumes <em>qty</em> of the chosen item.</td>
+            </tr>
+            <tr>
+              <td>itemgroup:id:[patterns]:exclude:[patterns]:qty[:true]</td>
+              <td>Same with an exclusion filter — ids matching an exclude pattern are ignored even if they match a target pattern.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Objective Display</div>
+          <p>
+            When used in <code>Objectives</code>, the renderer shows progress as the
+            <em>highest</em> matching stack count (e.g. if the group requires 25 and the player
+            has 10 Iron_Ore and 18 Copper_Ore, the objective displays <code>18/25</code>).
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Bring 25 of any ore (but not the rare purple/green variants)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:ore_donation"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"itemgroup:Ores:[*Ore*,*Crustal*]:exclude:[*Purple*,*Green*]:25"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// On the response, prompt and consume 25 of whichever ore the player picks</span>
+<span class="hl-key">"Responses"</span><span class="hl-punc">:</span> <span class="hl-punc">[{</span>
+  <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"Here are the ores."</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"itemgroup:Ores:[*Ore*,*Crustal*]:exclude:[*Purple*,*Green*]:25:true"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"completequest:ore_donation"</span><span class="hl-punc">]</span>
+<span class="hl-punc">}]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Item Harvest">
+      <h2 data-section="Item Harvest">Item Harvest</h2>
+      <p>
+        Count block/crop harvests using a named tracker of type <code>harvest</code>. Set up with
+        <code>track:id:harvest:itemId</code>, then check with <code>track:id:qty</code>.
+        Fires on <code>InteractivelyPickupItemEvent</code> (block/crop harvest) — does
+        <em>not</em> fire for picking up dropped item entities from the ground.
+        The <code>*</code> wildcard is supported for matching multiple item IDs.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named harvest tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>. Supports <code>*</code> wildcard on target.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require harvesting 20 of any herb</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:herb_gathering"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:herb_harvest:20"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Item Pickup">
+      <h2 data-section="Item Pickup">Item Pickup</h2>
+      <p>
+        Count item pickups using a named tracker of type <code>pickup</code>. Set up with
+        <code>track:id:pickup:itemId</code>, then check with <code>track:id:qty</code>.
+        Fires on the same <code>InteractivelyPickupItemEvent</code> as harvest.
+        The <code>*</code> wildcard is supported for matching multiple item IDs.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named pickup tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>. Supports <code>*</code> wildcard on target.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Quest requiring picking up 20 of any herb</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:herb_gathering"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:herb_pickup:20"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Item Use">
+      <h2 data-section="Item Use">Item Use</h2>
+      <p>
+        Count item activations (mouse clicks while holding the item) using a named tracker
+        of type <code>use</code>. Set up with <code>track:id:use:itemId</code>, then check
+        with <code>track:id:qty</code>. Increments once per <em>Pressed</em> click; the
+        <code>*</code> wildcard is supported on the target. Use cases: counting melee
+        sword swings, bow shots, wand/spell-tome casts, potion drinks — anything the
+        client triggers via mouse input on a held item. Hytale has no separate
+        spell-cast event, so spells are tracked here on the spell-source item ID.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named <code>use</code> tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>. Supports <code>*</code> wildcard on target.</td>
+            </tr>
+            <tr>
+              <td>track:id:use:[items]:button:left|right</td>
+              <td>Setup-action variant restricting counting to one mouse button (left for melee swings, right for activations like wands and tomes). Omitted = either button.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Cast a fire tome 5 times (right-click only)</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"startquest:fire_training"</span><span class="hl-punc">,</span> <span class="hl-str">"track:fire_casts:use:Tome_Fire:button:right"</span><span class="hl-punc">]</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:fire_training"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:fire_casts:5"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Kill Counting">
+      <h2 data-section="Kill Counting">Kill Counting</h2>
+      <p>
+        Kill counting uses named trackers. Set up a tracker with
+        <code>track:id:kill:entityTypeId</code> (typically in the quest-accept response),
+        then check with <code>track:id:qty</code>. Kill counting is <strong>not automatic</strong>
+        — counts only accumulate while a tracker is active. Use <code>untrack:id</code> on
+        quest completion to reset the counter.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named kill tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Partial Name Matching</div>
+          <p>
+            The tracker target supports <code>*</code> as a wildcard for partial matching,
+            letting you count multiple enemy variants with a single tracker.
+          </p>
+          <ul style="margin:6px 0 0;padding-left:18px">
+            <li><code>track:goblin_kills:kill:Goblin*</code> — counts Goblin_Duke, Goblin_Miner, Goblin_Scout, etc.</li>
+            <li><code>track:boss_kills:kill:*Boss*</code> — counts any entity whose ID contains "Boss"</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require 10 goblin kills (any goblin variant)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:goblin_kills:10"</span>
+<span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use the variable <code>{track:id}</code> in dialog text to show
+        the player their current count. See <a href="npc-setup.html#variables">Text Variables</a>.
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="Logic Operators">
+      <h2 data-section="Logic Operators">Logic Operators</h2>
+      <p>
+        Requirements can be composed using <code>any</code> (OR logic), <code>not</code>
+        (negation), and the <code>!</code> shorthand. By default, listing multiple
+        requirements is AND — all must pass. Use <code>any</code> for OR logic.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>any:req1|req2|req3</td>
+              <td>True if <em>any</em> of the pipe-separated sub-requirements passes (OR logic).</td>
+            </tr>
+            <tr>
+              <td>not:type:value</td>
+              <td>Negates any requirement. Prefix any requirement with <code>not:</code> to invert it.</td>
+            </tr>
+            <tr>
+              <td>!requirement</td>
+              <td>Shorthand for <code>not:</code>. For example, <code>!hastag:flag</code> is equivalent to <code>not:hastag:flag</code>.</td>
+            </tr>
+            <tr>
+              <td>macro:name</td>
+              <td>Evaluates the named requirement macro (stored in <code>QuestLines/macros/&lt;name&gt;.json</code>). By default all requirements must pass (AND). If the macro has <code>"AnyMode": true</code>, at least one must pass (OR). Unknown macro names pass by default. Circular references are detected and pass with a warning log.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">not: syntax</div>
+          <p>
+            The <code>not:</code> prefix consumes the rest of the string as the inner
+            requirement. For example, <code>not:questCompleted:my_quest</code> parses as
+            <code>not( questCompleted:my_quest )</code>. For requirements that are already
+            negated by name (like <code>questNotStarted</code>), <code>not:</code> is
+            redundant but valid.
+          </p>
+        </div>
+      </div>
+
+      <h4>Examples</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Page visible if player has EITHER quest started</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"any:questStarted:quest_a|questStarted:quest_b"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Negate a cooldown to show a "still waiting" page</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"not:cooldown:daily_key:86400"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Multiple combined: started AND (has item OR has tag)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:delivery"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"any:item:package:1|hasTag:already_delivered"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Mailbox">
+      <h2 data-section="Mailbox">Mailbox <span style="font-weight:400;opacity:0.55;font-size:0.75em">(Books and Papers optional dependency)</span></h2>
+      <p>
+        Checks the player's mailbox queue from the <a href="https://github.com/Luke100000/BooksAndPapers" target="_blank" rel="noopener">Books and Papers</a> plugin. The check is per-world; the result reflects the mailbox in whichever world the player is currently in. Always evaluates <code>false</code> when Books and Papers is not installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>hasmail</td>
+              <td>True when the player has at least one queued item in their Books-and-Papers mailbox.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Show a "you have mail!" page only when something is waiting</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"hasmail"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="MMO Skill Level">
+      <h2 data-section="MMO Skill Level">MMO Skill Level <span style="font-weight:400;opacity:0.55;font-size:0.75em">(MMOSkillTree optional dependency)</span></h2>
+      <p>
+        Compares the player's current level in a named MMO skill. Requires the MMOSkillTree
+        plugin to be active; returns <strong>false</strong> silently if it is not installed.
+        Skill IDs are case-insensitive (e.g. <code>MINING</code> and <code>mining</code> are
+        the same).
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>mmo:skillId:equal:value</td>
+              <td>True if the player's skill level equals <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>mmo:skillId:greater:value</td>
+              <td>True if the player's skill level is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>mmo:skillId:less:value</td>
+              <td>True if the player's skill level is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>mmo:skillId:greaterOrEqual:value</td>
+              <td>True if the player's skill level is &ge; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>mmo:skillId:lessOrEqual:value</td>
+              <td>True if the player's skill level is &le; <em>value</em>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require Mining level 10 to access the deep mine quest</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"mmo:MINING:greaterOrEqual:10"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Gate a master trainer page on skill level</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:apprentice_path"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"mmo:CRAFTING:greaterOrEqual:25"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Moon Phase">
+      <h2 data-section="Moon Phase">Moon Phase</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>moonPhase:full</td>
+              <td>Moon phase index 0 (full moon).</td>
+            </tr>
+            <tr>
+              <td>moonPhase:waning</td>
+              <td>Moon phase indices 1&ndash;3.</td>
+            </tr>
+            <tr>
+              <td>moonPhase:new</td>
+              <td>Moon phase index 4 (new moon).</td>
+            </tr>
+            <tr>
+              <td>moonPhase:waxing</td>
+              <td>Moon phase indices 5&ndash;7.</td>
+            </tr>
+            <tr>
+              <td>moonPhase:3</td>
+              <td>Exact numeric phase check (0&ndash;7).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Werewolf quest only during full moon</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"moonPhase:full"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Named Trackers">
+      <h2 data-section="Named Trackers">Named Trackers</h2>
+      <p>
+        A tracker is created with the <code>track:id:type:[targets]</code> action and checked
+        here with <code>track:id:qty</code>. The tracker ID ties the setup action, this
+        requirement, the <code>{track:id}</code> variable, and the objective display together —
+        no need to repeat the type or target anywhere else.
+      </p>
+      <table class="ref-table">
+        <thead><tr><th>Format</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>track:id:qty</td>
+            <td>True if the named tracker's accumulated count &ge; <em>qty</em>. Returns false if the tracker does not exist (i.e. the <code>track:</code> action has not been run for this player).</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        In an <strong>Objectives</strong> list, use the <code>::</code> label override as normal:<br/>
+        <code>"track:kills:10::Defeat enemies"</code> renders as <em>Defeat enemies: 3/10</em>.
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="Named Variables">
+      <h2 data-section="Named Variables">Named Variables</h2>
+      <p>
+        Named variables are numeric values stored per-player. They are set and mutated via the
+        <code>variable:</code> action and compared here as a requirement. Values default to
+        <strong>0</strong> if never set. Comparisons use standard numeric rules; fractional
+        values are supported.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>variable:name:equal:value</td>
+              <td>True if the variable equals <em>value</em> exactly.</td>
+            </tr>
+            <tr>
+              <td>variable:name:greater:value</td>
+              <td>True if the variable is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:less:value</td>
+              <td>True if the variable is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:greaterOrEqual:value</td>
+              <td>True if the variable is greater than or equal to <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>variable:name:lessOrEqual:value</td>
+              <td>True if the variable is less than or equal to <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>string:name:equals:value</td>
+              <td>True if the per-player string variable equals <em>value</em> (case-sensitive). Other operators: <code>notequals</code>, <code>contains</code>, <code>notcontains</code>, <code>startswith</code>, <code>endswith</code>. The value captures everything after the operator so colons are preserved.</td>
+            </tr>
+            <tr>
+              <td>string:name:empty</td>
+              <td>True if the per-player string variable is empty (unset = empty). Companion: <code>string:name:notempty</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Page Ordering with Variables</div>
+          <p>
+            Put the most-specific variable page first. For example, place the
+            <em>threshold-met</em> page (using <code>greaterOrEqual</code>) before the
+            <em>in-progress</em> page (using <code>less</code>) in the quest's
+            <code>Pages</code> list so the completion page is checked first.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Complete page — shown once counter reaches 5</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"variable:counter:greaterOrEqual:5"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Progress page — shown while counter is still below 5</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:my_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"variable:counter:less:5"</span>
+<span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use <code>{variable:name}</code> in dialog text to display the current value to the
+        player. See <a href="npc-setup.html#variables">Text Variables</a>.
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="NPC Name">
+      <h2 data-section="NPC Name">NPC Name</h2>
+      <p>
+        Passes when the NPC that opened the current dialogue has a specific display name.
+        The comparison is <strong>case-insensitive</strong>. Colons in the name are
+        supported — everything after <code>npcname:</code> is treated as the name.
+        This is useful when multiple NPCs share a quest but you want different pages
+        to show depending on which NPC the player interacted with.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>npcname:displayName</td>
+              <td>True if the NPC that opened the dialogue has the given display name (case-insensitive).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Not available in auto-trigger</div>
+          <p>
+            The NPC name context is set automatically by the interaction listeners when
+            a player opens dialogue. It is <em>not</em> available in auto-trigger pages
+            (which fire without NPC interaction) — <code>npcname:</code> will always
+            return <strong>false</strong> in that context.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Show a special page only when talking to "Elder Maren"</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:main_story"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"npcname:Elder Maren"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="NPC Talk Count">
+      <h2 data-section="NPC Talk Count">NPC Talk Count</h2>
+      <p>
+        Talk counts are tracked automatically on every NPC interaction — no tracking tag is
+        needed. The counter is incremented before the dialogue page is resolved.
+        Use the NPC's <strong>display name</strong> (the name shown above their head) as the key.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>talk:citizenName:qty</td>
+              <td>True if the player has talked to this NPC &ge; <em>qty</em> times. Use the NPC's display name (e.g. <code>talk:Elder Maren:3</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Unlock dialogue on the 3rd visit to Elder Maren</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:Elder Maren:3"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// A "returning visitor" page for visits 2+</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"talk:Elder Maren:2"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Perfect Dodges">
+      <h2 data-section="Perfect Dodges">Perfect Dodges <span style="font-weight:400;opacity:0.55;font-size:0.75em">(Perfect Dodges optional dependency)</span></h2>
+      <p>
+        Counts perfect dodges via a named tracker. Set up a tracker with
+        <code>track:id:dodge:[targets]</code>, then check with <code>track:id:qty</code>.
+        Targets match the attacker's NPC type ID (e.g. <code>Trork</code>),
+        the literal <code>Player</code> for PvP, or <code>*</code> for any.
+        The tracker remains at 0 if Perfect Dodges is not installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:dodge:[targets]</td>
+              <td>Tracker setup. Increments once per successful perfect dodge. Targets match the attacker's entity type.</td>
+            </tr>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True when the named dodge tracker has reached <em>qty</em>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Quest start: count any perfect dodge, plus dodges against trorks</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:nimble_trial"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:any_dodges:dodge:[*]"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:trork_dodges:dodge:[Trork*]"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Turn-in page</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"track:any_dodges:25"</span><span class="hl-punc">,</span> <span class="hl-str">"track:trork_dodges:10"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Perfect Parries">
+      <h2 data-section="Perfect Parries">Perfect Parries <span style="font-weight:400;opacity:0.55;font-size:0.75em">(Perfect Parries optional dependency)</span></h2>
+      <p>
+        Counts perfect parries and counterattacks via named trackers. Set up a tracker with
+        <code>track:id:parry:[targets]</code> or <code>track:id:counter:[targets]</code>, then
+        check with <code>track:id:qty</code>. Targets match the attacker's NPC type ID
+        (e.g. <code>Zombie</code>), the literal <code>Player</code> for PvP, or <code>*</code> for any.
+        Both tracker types remain at 0 if Perfect Parries is not installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:parry:[targets]</td>
+              <td>Tracker setup. Increments once per successful perfect parry. Targets match the attacker's entity type.</td>
+            </tr>
+            <tr>
+              <td>track:id:counter:[targets]</td>
+              <td>Tracker setup. Increments once per successful counterattack landed after a parry. Targets match the countered entity's type.</td>
+            </tr>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True when the named parry/counter tracker has reached <em>qty</em>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Quest start: count any perfect parry, and counterattacks against zombies</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:duelist_trial"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:duelist_parries:parry:[*]"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:zombie_counters:counter:[Zombie]"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Turn-in page</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"track:duelist_parries:25"</span><span class="hl-punc">,</span> <span class="hl-str">"track:zombie_counters:10"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Player Stats">
+      <h2 data-section="Player Stats">Player Stats</h2>
+      <p>
+        Player-kill and travel-distance counts use named trackers, like all other count-based
+        requirements. Set up with <code>track:id:playerkill:*</code> or <code>track:id:travel:*</code>,
+        then check with <code>track:id:qty</code>. Travel distance is counted in blocks with no
+        progress notification.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named <code>playerkill</code> or <code>travel</code> tracker has count &ge; <em>qty</em>. See <a href="#named-tracker">Named Tracker</a>.</td>
+            </tr>
+            <tr>
+              <td>mountDistance:qty</td>
+              <td>True when the player has traveled at least <em>qty</em> blocks while mounted. Auto-tracked by <code>MountSystem</code> &mdash; no setup tag required.</td>
+            </tr>
+            <tr>
+              <td>isMounted</td>
+              <td><strong>Contextual.</strong> Passes while the player is currently riding a mount. Skipped by HUD requirement resolution so quests don't lock when the player dismounts.</td>
+            </tr>
+            <tr>
+              <td>isMounted:typePattern</td>
+              <td>Same as above, restricted to mounts whose NPC type id matches <em>typePattern</em> (e.g. <code>Tamed_Horse</code>, <code>Tamed_*</code>). Non-NPC mounts fall back to controller name (<code>Minecart</code>, <code>BlockMount</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Unlock a bounty page after 5 player kills</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:bounty_hunter"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:pkills:5"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Reward the player for exploring 1000 blocks</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:explorer_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:distance:1000"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Player Tags">
+      <h2 data-section="Player Tags">Player Tags</h2>
+      <p>
+        Tags are arbitrary string labels attached to a player's data. They are managed via
+        <code>addTag</code> and <code>removeTag</code> actions. Use them to track custom
+        state that doesn't map to a full quest.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>hasTag:tagName</td>
+              <td>True if the player currently has the named tag.</td>
+            </tr>
+            <tr>
+              <td>notTag:tagName</td>
+              <td><strong>Deprecated.</strong> True if the player does <em>not</em> have the named tag. Use <code>not:hastag:tagName</code> or <code>!hastag:tagName</code> instead.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Only show dialogue if player has the "vip" tag</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"hasTag:vip"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Show a path only if a branching choice has NOT been made</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"!hastag:chose_evil_path"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Position">
+      <h2 data-section="Position">Position</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>nearPosition:x:y:z:radius</td>
+              <td>True if the player is within <em>radius</em> blocks of the coordinate (x, y, z) — sphere check.</td>
+            </tr>
+            <tr>
+              <td>inArea:x1:y1:z1:x2:y2:z2</td>
+              <td>True if the player is inside the axis-aligned box (AABB) defined by the two corner coordinates. Corner order does not matter.</td>
+            </tr>
+            <tr>
+              <td>areaCheck:[entityA,entityB,...]:x:y:z:radius</td>
+              <td>True if at least one entity matching one of the bracket-list patterns is found within <em>radius</em> blocks of (x, y, z). Patterns use the same <code>*</code> wildcard rules as the tracker target system; literal <code>Player</code> matches any player entity. A bare single name (no brackets) is also accepted.</td>
+            </tr>
+            <tr>
+              <td>depth:less:value</td>
+              <td>True if the player's Y-position is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>depth:greater:value</td>
+              <td>True if the player's Y-position is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>depth:equal:value</td>
+              <td>True if the player's Y-position is exactly <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>distanceFrom:less:x:y:z:distance</td>
+              <td>True if the player's Euclidean distance to (x, y, z) is strictly less than <em>distance</em>.</td>
+            </tr>
+            <tr>
+              <td>distanceFrom:greater:x:y:z:distance</td>
+              <td>True if the player's Euclidean distance to (x, y, z) is strictly greater than <em>distance</em>.</td>
+            </tr>
+            <tr>
+              <td>distanceFrom:equal:x:y:z:distance</td>
+              <td>True if the player's Euclidean distance to (x, y, z) is exactly <em>distance</em>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Player must be near the quest location to turn in</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"nearPosition:120:64:-340:10"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Page only shows underground (below Y=40)</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"depth:less:40"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Page shows when player is far from a dangerous area</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"distanceFrom:greater:500:64:-200:100"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Escort" id="escort">
+      <h2 data-section="Escort">Escort <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyCitizens optional dependency)</span></h2>
+      <p>
+        Companion requirements for the <a href="actions.html">escort-quest actions</a>
+        (<code>startEscort</code>, <code>escortMove</code>, <code>escortPatrol</code>, etc.).
+        Both gate the page on escort progress; they fail (return false) when no session
+        with the given id exists yet for the calling player.
+      </p>
+      <p>
+        Coordinates for <code>escortAt</code> are <strong>absolute world coordinates</strong> &mdash;
+        the <code>~</code>-relative syntax that <em>actions</em> support does not apply here,
+        because requirements are evaluated outside the player-action tick context.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>escortAt:escortId:x:y:z:range</td>
+              <td>True when the player's escort clone is within <em>range</em> blocks of the coordinate (x, y, z) &mdash; arrival check.</td>
+            </tr>
+            <tr>
+              <td>escortPlayerInRange:escortId:range</td>
+              <td>True when the calling player is within <em>range</em> blocks of their own escort clone. Use to enforce "stay near the escort" leash semantics &mdash; pair with the page's <code>failActions</code> for an abandon penalty.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Arrival check: page resolves when the clone reaches the cave</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"escortAt:bob:1000:64:2000:5"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Leash check: pair with failActions so the player can't wander off</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"escortPlayerInRange:bob:15"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Quest Items">
+      <h2 data-section="Quest Items">Quest Items</h2>
+      <p>
+        Checks whether the player's <strong>virtual quest inventory</strong> contains at
+        least the given quantity of an item. Quest items are managed by the
+        <code>givequestitem:</code> and <code>removequestitem:</code> actions and are
+        never placed in the player's real pack.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>questitem:itemId:qty</td>
+              <td>True if the player's virtual quest inventory contains &ge; <em>qty</em> of the item.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require the medallion to show the turn-in page</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:artifact_hunt"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"questitem:Ancient_Medallion:1"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Quest State">
+      <h2 data-section="Quest State">Quest State</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>questCompleted:questId</td>
+              <td>True if the player has completed the named quest.</td>
+            </tr>
+            <tr>
+              <td>questNotCompleted:questId</td>
+              <td>True if the player has <em>not</em> completed the named quest.</td>
+            </tr>
+            <tr>
+              <td>questStarted:questId</td>
+              <td>True if the quest is currently in progress (started but not completed).</td>
+            </tr>
+            <tr>
+              <td>questNotStarted:questId</td>
+              <td>True if the quest has not been started (and is also not completed).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Show the turn-in page only when quest is in progress</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questStarted:lost_sword"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Show reward page only after completion</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questCompleted:lost_sword"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Regions">
+      <h2 data-section="Regions">Regions <span style="font-weight:400;opacity:0.55;font-size:0.75em">(QuestLines Claims or OrbisGuard)</span></h2>
+      <p>
+        Check whether the player is inside, owns, or is a member of a named region.
+        QuestLines Claims is checked first when installed; OrbisGuard is used as a fallback
+        for any region ID Claims does not recognise. Returns <strong>false</strong> if
+        neither plugin recognises the region ID.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>inregion:regionId</td>
+              <td>True if the player is currently inside the named region.</td>
+            </tr>
+            <tr>
+              <td>regionowner:regionId</td>
+              <td>True if the player is an owner of the named region. For QL Claims this is the current rent tenant (rent plots) or the current buy owner (buy plots); admin regions have no owner.</td>
+            </tr>
+            <tr>
+              <td>regionmember:regionId</td>
+              <td>True if the player is a member or owner of the named region.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Show dialogue only while inside the city region</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"inregion:city_of_auren"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Gate a landowner page on region ownership</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"regionowner:player_homestead"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="RPG Level &amp; XP">
+      <h2 data-section="RPG Level &amp; XP">RPG Level &amp; XP <span style="font-weight:400;opacity:0.55;font-size:0.75em">(RPGLeveling optional dependency)</span></h2>
+      <p>
+        Compares the player's global RPG level or total XP. Requires the RPGLeveling plugin to be
+        active; returns <strong>false</strong> silently if it is not installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>rpglevel:max</td>
+              <td>True if the player is at the maximum RPG level.</td>
+            </tr>
+            <tr>
+              <td>rpglevel:equal:value</td>
+              <td>True if the player's RPG level equals <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpglevel:greater:value</td>
+              <td>True if the player's RPG level is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpglevel:less:value</td>
+              <td>True if the player's RPG level is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpglevel:greaterOrEqual:value</td>
+              <td>True if the player's RPG level is &ge; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpglevel:lessOrEqual:value</td>
+              <td>True if the player's RPG level is &le; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpgxp:equal:value</td>
+              <td>True if the player's total RPG XP equals <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpgxp:greater:value</td>
+              <td>True if the player's total RPG XP is strictly greater than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpgxp:less:value</td>
+              <td>True if the player's total RPG XP is strictly less than <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpgxp:greaterOrEqual:value</td>
+              <td>True if the player's total RPG XP is &ge; <em>value</em>.</td>
+            </tr>
+            <tr>
+              <td>rpgxp:lessOrEqual:value</td>
+              <td>True if the player's total RPG XP is &le; <em>value</em>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require RPG level 10 to start a veteran quest</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"rpglevel:greaterOrEqual:10"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Show a special page only at max level</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"rpglevel:max"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Timed Quest">
+      <h2 data-section="Timed Quest">Timed Quest</h2>
+      <p>
+        Timed requirements check whether an active countdown is still running or has expired.
+        The timer is started via the <code>timedStart:key</code> action. Both requirements
+        return <strong>false</strong> if the timer was never started.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>timedActive:key:seconds</td>
+              <td>True if <code>timedStart:key</code> was called AND fewer than <em>seconds</em> have elapsed. Timer is still running.</td>
+            </tr>
+            <tr>
+              <td>timedExpired:key:seconds</td>
+              <td>True if <code>timedStart:key</code> was called AND &ge; <em>seconds</em> have elapsed. Time is up.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">&#9888;</span>
+        <div class="callout-body">
+          <div class="callout-title">Page Ordering for Timed Quests</div>
+          <p>
+            Place the <em>expired</em> page <strong>before</strong> the <em>active</em> page.
+            Both return false when never started, so the intro page (with
+            <code>questNotStarted</code>) catches those players. Once started, the expired
+            page is checked first — if time is up it shows the failure; otherwise the active
+            page shows. See <a href="progression.html#timed">Quest Patterns &rarr; Timed Quest</a>.
+          </p>
+        </div>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Expire page — must come BEFORE active page in Pages list</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"timedExpired:courier_timer:300"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Active page — shown while timer is running</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:courier_run"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"timedActive:courier_timer:300"</span>
+<span class="hl-punc">]</span></code></pre>
+
+      <p>
+        Use <code>{timeleft:key:totalSeconds}</code> in dialog text to show the remaining
+        time (e.g. "You have 2 minutes 45 seconds left.").
+      </p>
+    </div>
+
+    <div class="section-group" data-section-body="World">
+      <h2 data-section="World">World</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>world:worldName</td>
+              <td>True if the player is currently in the named world.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"world:overworld"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="World Time">
+      <h2 data-section="World Time">World Time</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>timeOfDay:morning</td>
+              <td>In-game hours 6&ndash;11.</td>
+            </tr>
+            <tr>
+              <td>timeOfDay:afternoon</td>
+              <td>In-game hours 12&ndash;16.</td>
+            </tr>
+            <tr>
+              <td>timeOfDay:evening</td>
+              <td>In-game hours 17&ndash;20.</td>
+            </tr>
+            <tr>
+              <td>timeOfDay:night</td>
+              <td>In-game hours 21&ndash;5.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// NPC only talks at night</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"timeOfDay:night"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Zone &amp; Biome">
+      <h2 data-section="Zone &amp; Biome">Zone &amp; Biome</h2>
+      <p>
+        Check the player's current world zone or biome. Zone names correspond to named
+        map regions (e.g. <code>emerald_grove</code>); biome names correspond to biome
+        identifiers (e.g. <code>temperate_forest</code>). No tracking tag required.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>zone:regionName</td>
+              <td>True if the player is currently in the named world zone.</td>
+            </tr>
+            <tr>
+              <td>biome:biomeName</td>
+              <td>True if the player is currently in the named biome.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Show dialogue only in the Emerald Grove zone</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"zone:emerald_grove"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Show a page only in the temperate forest biome</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"biome:temperate_forest"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <!-- ======================== QUICK REFERENCE ======================== -->
+    <div data-section-body="Quick Reference">
+    <h2 data-section="Quick Reference">Quick Reference</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Category</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>questCompleted:id</td><td>Quest State</td><td>Quest is completed</td></tr>
+          <tr><td>questNotCompleted:id</td><td>Quest State</td><td>Quest is not completed</td></tr>
+          <tr><td>questStarted:id</td><td>Quest State</td><td>Quest is in progress</td></tr>
+          <tr><td>questNotStarted:id</td><td>Quest State</td><td>Quest not started</td></tr>
+          <tr><td>hasTag:tag</td><td>Tags</td><td>Player has tag</td></tr>
+          <tr><td>notTag:tag</td><td>Tags</td><td>Player does not have tag — <em>deprecated</em>, use <code>!hastag:tag</code></td></tr>
+          <tr><td>track:id:N</td><td>Tracking</td><td>Named tracker count &ge; N (set up with track:id:type:target action; all count-based tracking uses this format). N is a positive integer.</td></tr>
+          <tr><td>item:itemId:qty</td><td>Inventory</td><td>Has item (no consume)</td></tr>
+          <tr><td>item:itemId:qty:true</td><td>Inventory</td><td>Has item (consume on use; Response Requirements only)</td></tr>
+          <tr><td>questitem:itemId:qty</td><td>Inventory</td><td>Has qty of a PROTECTED quest item (given via <code>givequestitem:</code>)</td></tr>
+          <tr><td>itemgroup:groupId:qty</td><td>Inventory</td><td>Has qty of any item in a server-defined group</td></tr>
+          <tr><td>talk:citizenName:qty</td><td>NPC Talk</td><td>Talk count threshold (auto-tracked; use the NPC's display name)</td></tr>
+          <tr><td>npcname:displayName</td><td>NPC Name</td><td>True if the NPC that opened the dialogue has this name (case-insensitive; always false in auto-trigger)</td></tr>
+          <tr><td>cooldown:key:seconds</td><td>Cooldown</td><td>Elapsed since setTimestamp (true if never set)</td></tr>
+          <tr><td>timedActive:key:seconds</td><td>Timer</td><td>Timer running and not yet expired</td></tr>
+          <tr><td>timedExpired:key:seconds</td><td>Timer</td><td>Timer started and expired</td></tr>
+          <tr><td>timedExact:key:hour:minute</td><td>Timer</td><td>Daily reset gate; true if timestamp unset or before last HH:MM</td></tr>
+          <tr><td>nearPosition:x:y:z:r</td><td>Position</td><td>Within radius blocks (sphere)</td></tr>
+          <tr><td>inArea:x1:y1:z1:x2:y2:z2</td><td>Position</td><td>Inside axis-aligned box defined by two corners</td></tr>
+          <tr><td>areaCheck:[entityA,entityB]:x:y:z:r</td><td>Position</td><td>Any listed entity exists within radius of point (* wildcards; <code>Player</code> = any player)</td></tr>
+          <tr><td>depth:less|greater|equal:value</td><td>Position</td><td>Player Y-position comparison</td></tr>
+          <tr><td>distanceFrom:less|greater|equal:x:y:z:dist</td><td>Position</td><td>Distance from fixed world point</td></tr>
+          <tr><td>timeOfDay:morning|afternoon|evening|night</td><td>World Time</td><td>Time of day</td></tr>
+          <tr><td>moonPhase:full|waning|new|waxing|&lt;int&gt;</td><td>Moon Phase</td><td>Moon phase check</td></tr>
+          <tr><td>date:MM-dd | date:yyyy-MM-dd | date:MM-dd:MM-dd</td><td>Date</td><td>Server local date / range (year-wrapping supported)</td></tr>
+          <tr><td>world:worldName</td><td>World</td><td>Current world</td></tr>
+          <tr><td>zone:regionName</td><td>Zone/Biome</td><td>Player is in named world zone</td></tr>
+          <tr><td>biome:biomeName</td><td>Zone/Biome</td><td>Player is in named biome</td></tr>
+          <tr><td>any:req1|req2|...</td><td>Logic</td><td>OR across sub-requirements</td></tr>
+          <tr><td>not:requirement</td><td>Logic</td><td>Negate any requirement</td></tr>
+          <tr><td>!requirement</td><td>Logic</td><td>Shorthand negation — equivalent to <code>not:requirement</code></td></tr>
+          <tr><td>macro:name</td><td>Logic</td><td>All requirements in named macro must pass (AND group); defined in macros.json</td></tr>
+          <tr><td>variable:name:equal:value</td><td>Variable</td><td>Named variable equals value</td></tr>
+          <tr><td>variable:name:greater:value</td><td>Variable</td><td>Named variable &gt; value</td></tr>
+          <tr><td>variable:name:less:value</td><td>Variable</td><td>Named variable &lt; value</td></tr>
+          <tr><td>variable:name:greaterOrEqual:value</td><td>Variable</td><td>Named variable &ge; value</td></tr>
+          <tr><td>variable:name:lessOrEqual:value</td><td>Variable</td><td>Named variable &le; value</td></tr>
+          <tr><td>economy:canafford:amount</td><td>Economy</td><td>Player balance &ge; amount (requires VaultUnlocked)</td></tr>
+          <tr><td>permission:has:perm.node</td><td>Permissions</td><td>Player has permission node (requires VaultUnlocked)</td></tr>
+          <tr><td>mmo:skillId:equal:value</td><td>MMO Skill</td><td>Skill level equals value (requires MMOSkillTree)</td></tr>
+          <tr><td>mmo:skillId:greater|less|greaterOrEqual|lessOrEqual:value</td><td>MMO Skill</td><td>Skill level comparison (requires MMOSkillTree)</td></tr>
+          <tr><td>rpglevel:max</td><td>RPG Level</td><td>Player is at max RPG level (requires RPGLeveling)</td></tr>
+          <tr><td>rpglevel:equal:value</td><td>RPG Level</td><td>RPG level equals value (requires RPGLeveling)</td></tr>
+          <tr><td>rpglevel:greater|less|greaterOrEqual|lessOrEqual:value</td><td>RPG Level</td><td>RPG level comparison (requires RPGLeveling)</td></tr>
+          <tr><td>rpgxp:greater|less|equal|greaterOrEqual|lessOrEqual:value</td><td>RPG XP</td><td>Total RPG XP comparison (requires RPGLeveling)</td></tr>
+          <tr><td>ellevel:max</td><td>EL Level</td><td>Player at EL level cap (requires EndlessLeveling)</td></tr>
+          <tr><td>ellevel:equal|greater|less|greaterOrEqual|lessOrEqual:value</td><td>EL Level</td><td>EL level comparison (requires EndlessLeveling)</td></tr>
+          <tr><td>elxp:equal|greater|less|greaterOrEqual|lessOrEqual:value</td><td>EL XP</td><td>EL XP comparison (requires EndlessLeveling)</td></tr>
+          <tr><td>elskill:SKILL:equal|greater|less|greaterOrEqual|lessOrEqual:value</td><td>EL Skill</td><td>Skill attribute level (requires EndlessLeveling)</td></tr>
+          <tr><td>elrace:raceId</td><td>EL Race</td><td>Player's race matches (requires EndlessLeveling)</td></tr>
+          <tr><td>elclass:classId, elclass:primary|secondary:classId</td><td>EL Class</td><td>Primary/secondary class match (requires EndlessLeveling)</td></tr>
+          <tr><td>hasfishinbag:fishItemId:qty</td><td>Fishing</td><td>Live bag check; * for any fish; no tracker needed (requires HyFishing)</td></tr>
+          <tr><td>inregion:regionId</td><td>Regions</td><td>Player is inside named region (QL Claims first, then OrbisGuard)</td></tr>
+          <tr><td>regionowner:regionId</td><td>Regions</td><td>Player owns named region (QL Claims first, then OrbisGuard)</td></tr>
+          <tr><td>regionmember:regionId</td><td>Regions</td><td>Player is member or owner of named region (QL Claims first, then OrbisGuard)</td></tr>
+          <tr><td>global:hastag:tagName</td><td>Global State</td><td>Server-wide tag list contains the tag</td></tr>
+          <tr><td>global:nottag:tagName</td><td>Global State</td><td>Server-wide tag list does not contain the tag</td></tr>
+          <tr><td>global:variable:name:op:value</td><td>Global State</td><td>Server-wide variable comparison (ops: greater, less, equal, greaterOrEqual, lessOrEqual)</td></tr>
+          <tr><td>string:name:op[:value]</td><td>Variable</td><td>Per-player string comparison (ops: equals, notequals, contains, notcontains, startswith, endswith, empty, notempty)</td></tr>
+          <tr><td>global:string:name:op[:value]</td><td>Global State</td><td>Server-wide string comparison (same operators as <code>string:</code>)</td></tr>
+          <tr><td>hasmail</td><td>Mailbox</td><td>Player has at least one queued item in their Books-and-Papers mailbox (requires Books and Papers)</td></tr>
+          <tr><td>iconState:npcId:state</td><td>Icon State</td><td>Player&rsquo;s per-NPC icon-state override is currently set to <em>state</em> (one of <code>available</code>, <code>inprogress</code>, <code>objectives_complete</code>, <code>completed</code>, <code>locked</code>, <code>waiting</code>, <code>repeatable_ready</code>, <code>story</code>, <code>custom</code>, <code>unknown</code>) (requires QuestLines Icons)</td></tr>
+          <tr><td>achievement:achievementId</td><td>Achievements</td><td>Player has unlocked any stage of the achievement</td></tr>
+          <tr><td>achievementstage:achievementId:N</td><td>Achievements</td><td>Player has reached at least stage N of a staged achievement</td></tr>
+          <tr><td>achievementcount:op:N</td><td>Achievements</td><td>Total unlocked achievement count comparison (op: greater, less, equal, greaterOrEqual, lessOrEqual)</td></tr>
+          <tr><td>achievementstages:op:N</td><td>Achievements</td><td>Total unlocked stages across all achievements (op as above)</td></tr>
+          <tr><td>achievementpoints:op:N</td><td>Achievements</td><td>Total achievement points earned (op as above)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

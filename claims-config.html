@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Config &amp; Permissions</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">Config &amp; Permissions</h1>
+      <p class="page-subtitle">
+        Plugin settings and database connection, the permission nodes, server-wide
+        permission groups, and the on-disk file layout.
+      </p>
+    </div>
+
+    <!-- Configuration -->
+    <div data-section-body="Configuration">
+    <h2 data-section="Configuration">Configuration</h2>
+    <p>
+      All plugin-level settings live in
+      <code>mods/QuestLinesClaims/questlinesclaims.conf</code>. Missing keys are
+      written back with defaults on first load.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>default_max_chunks</code></td>
+            <td><code>25</code></td>
+            <td>Base chunk budget for every player. Permissions and bonus grants add to this.</td>
+          </tr>
+          <tr>
+            <td><code>map_grid_size</code></td>
+            <td><code>15</code></td>
+            <td>Side length of the claim map grid. Rounded up to the next odd number.</td>
+          </tr>
+          <tr>
+            <td><code>distance_between_claims</code></td>
+            <td><code>1</code></td>
+            <td>Minimum chunk buffer between different players&rsquo; claims. <code>0</code> disables the check.</td>
+          </tr>
+          <tr>
+            <td><code>wilderness_flags</code></td>
+            <td><em>all</em></td>
+            <td>Comma-separated flag names allowed in unclaimed land. Valid flags: <code>BUILD,BREAK,INTERACT,CONTAINER,DOOR,PVP,FRIENDLY_FIRE,ENTRY,PORTAL,SIT,EXPLOSIONS,SPAWN</code>.</td>
+          </tr>
+          <tr>
+            <td><code>claim_decay_time</code></td>
+            <td><code>30d</code></td>
+            <td>Duration string (<code>30d</code>, <code>12h</code>, <code>1d2h</code>, etc.). Player claims are removed when the owner has been offline longer than this threshold. Set to <code>0</code> or empty to disable decay. Decay checks run on the <code>rent_check_interval</code> cadence.</td>
+          </tr>
+          <tr>
+            <td><code>rent_check_interval</code></td>
+            <td><code>300</code></td>
+            <td>Seconds between <code>RentExpireTask</code> and <code>ClaimDecayTask</code> runs.</td>
+          </tr>
+          <tr>
+            <td><code>rent_grace_days</code></td>
+            <td><code>3</code></td>
+            <td>Days a locked rent region stays locked before being reset.</td>
+          </tr>
+          <tr>
+            <td><code>expiry_warn_times</code></td>
+            <td><code>7d,1d,1h</code></td>
+            <td>Comma-separated duration strings (e.g. <code>7d</code>, <code>12h</code>, <code>30m</code>, <code>1d2h</code>) marking how far before lease expiry a warning fires.</td>
+          </tr>
+          <tr>
+            <td><code>refund_on_reset</code></td>
+            <td><code>false</code></td>
+            <td>When <code>true</code>, the pro-rated remaining lease balance is refunded to the tenant on reset.</td>
+          </tr>
+          <tr>
+            <td><code>groups</code></td>
+            <td><em>empty</em></td>
+            <td>Comma-separated list of server-wide permission-group IDs (e.g. <code>admin,moderator</code>). Each entry creates a <code>questlinesclaims.group.&lt;id&gt;</code> permission node and is auto-seeded as a <em>Permission Group</em> on every region and claim. See <a href="#permission-groups">Permission Groups</a> for details. Reserved IDs (<code>owner</code>, <code>trusted</code>, <code>untrusted</code>) are ignored.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Database">Database</h3>
+    <p>
+      Region and claim data is stored in a SQL database. SQLite is the default and
+      keeps a local file at <code>mods/QuestLinesClaims/claims.db</code>. Switch
+      to MySQL or MariaDB by setting <code>database_type</code> and filling in the
+      connection parameters. Database changes require a server restart.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>database_type</code></td><td><code>sqlite</code></td><td><code>sqlite</code>, <code>mysql</code>, or <code>mariadb</code>.</td></tr>
+          <tr><td><code>database_host</code></td><td><code>localhost</code></td><td>Remote database host (ignored for SQLite).</td></tr>
+          <tr><td><code>database_port</code></td><td><code>3306</code></td><td>Remote database port.</td></tr>
+          <tr><td><code>database_name</code></td><td><code>questlinesclaims</code></td><td>Schema / database name.</td></tr>
+          <tr><td><code>database_user</code></td><td><code>root</code></td><td>Connection user.</td></tr>
+          <tr><td><code>database_password</code></td><td><em>empty</em></td><td>Connection password.</td></tr>
+          <tr><td><code>database_use_ssl</code></td><td><code>false</code></td><td>Request SSL in the JDBC URL.</td></tr>
+          <tr><td><code>database_extra_params</code></td><td><em>empty</em></td><td>Raw parameters appended to the JDBC URL.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>questlinesclaims.admin</code></td>
+            <td>false</td>
+            <td>Full admin access: wand, admin UI, region CRUD, schematic saves, <code>/claim setowner</code>, <code>/claim addchunks</code>, <code>/claim reload</code>, manage any claim or region, and bypass <em>all</em> protection checks (including <code>ENTRY</code>).</td>
+          </tr>
+          <tr>
+            <td><code>questlinesclaims.claim.use</code></td>
+            <td>true</td>
+            <td>Required to open <code>/claim map</code> and <code>/claim rentbuy</code>.</td>
+          </tr>
+          <tr>
+            <td><code>questlinesclaims.claim.chunks.&lt;N&gt;</code></td>
+            <td>false</td>
+            <td>Adds <em>N</em> chunks to the player&rsquo;s claim budget. Multiple matching permissions stack (N ranges 1&ndash;500). Use a permission manager to grant e.g. <code>questlinesclaims.claim.chunks.50</code> for a +50 tier.</td>
+          </tr>
+          <tr>
+            <td><code>questlinesclaims.group.&lt;id&gt;</code></td>
+            <td>false</td>
+            <td>Server-wide permission group membership. One node per ID listed in the <code>groups</code> config key. Any player holding the node is treated as a member of the matching region/claim group on every region they visit, with that group&rsquo;s per-region flag set. See <a href="#permission-groups">Permission Groups</a>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Permission Groups -->
+    <div data-section-body="Permission Groups">
+    <h2 id="permission-groups" data-section="Permission Groups">Permission Groups</h2>
+    <p>
+      Permission groups are server-wide ranks (e.g. <code>admin</code>, <code>moderator</code>, <code>builder</code>)
+      defined once in the main config and applied automatically across every region and claim.
+      They&rsquo;re the cleanest way to give staff or VIP ranks access to all builds at once,
+      without trusting them individually on every claim.
+    </p>
+    <p>
+      <strong>How it works.</strong> Each ID listed in <code>groups</code> in
+      <code>questlinesclaims.conf</code> does three things at boot and on <code>/claim reload</code>:
+    </p>
+    <ol>
+      <li>Advertises the permission node <code>questlinesclaims.group.&lt;id&gt;</code>. Grant it to a player or rank to make them a member of that group.</li>
+      <li>Auto-seeds a matching <em>Permission Group</em> entry on every existing region and claim alongside Owner/Trusted/Untrusted, initialised with the <em>Trusted</em> default flag set. Newly created regions and claims pick the same seed up.</li>
+      <li>During every protection check, a player holding the permission gets the group&rsquo;s per-region flags on top of any UUID-keyed membership they already have. The two sources union additively &mdash; a regular member who also holds <code>questlinesclaims.group.admin</code> keeps everything their member group grants <em>plus</em> everything the admin group grants on that region.</li>
+    </ol>
+    <p>
+      <strong>Editing flags per region.</strong> Use the existing groups UI (the <em>Groups</em>
+      button on a region or claim&rsquo;s manage screen) to set the flag set for each
+      permission group on each region independently &mdash; e.g. the <code>builder</code> rank
+      could be given <code>BUILD</code>+<code>BREAK</code> on staff plots only, and nothing
+      on production claims. The seeded group is marked built-in so it can&rsquo;t be deleted
+      from the region UI; remove the entry from <code>groups</code> in the main config
+      instead to deactivate it.
+    </p>
+    <p>
+      <strong>Comparison with <code>questlinesclaims.admin</code>.</strong>
+      <code>questlinesclaims.admin</code> is a hard bypass of <em>all</em> protection checks
+      at the listener level &mdash; admins ignore claims and regions entirely. Permission
+      groups go through the normal flag check, so their access is bounded by the
+      flag set the region owner configured. Use <code>admin</code> for trusted operators;
+      use permission groups for ranks that should have controllable, per-flag access.
+    </p>
+    <p>
+      <strong>Reserved IDs.</strong> <code>owner</code>, <code>trusted</code>, and
+      <code>untrusted</code> are reserved built-in groups and are silently dropped if
+      added to <code>groups</code>.
+    </p>
+    </div>
+
+    <!-- File Layout -->
+    <div data-section-body="File Layout">
+    <h2 data-section="File Layout">File Layout</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>mods/QuestLinesClaims/questlinesclaims.conf</code></td>
+            <td>Plugin-level settings (chunk limits, rent tuning, wilderness flags, database connection).</td>
+          </tr>
+          <tr>
+            <td><code>mods/QuestLinesClaims/claims.db</code></td>
+            <td>SQLite store (when <code>database_type=sqlite</code>). Holds admin regions, rent/buy regions, player claims, region members, chunks, per-player data, and pending notifications.</td>
+          </tr>
+          <tr>
+            <td><code>prefabs/questlinesclaims/&lt;regionId&gt;.prefab</code></td>
+            <td>Saved prefab snapshots for rent/buy regions, restored on reset.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

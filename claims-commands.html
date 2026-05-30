@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Commands</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">Commands</h1>
+      <p class="page-subtitle">
+        Every <code>/claim</code> subcommand &mdash; player-facing tools and the
+        admin region/wand workflow.
+      </p>
+    </div>
+
+    <p>Root command: <code>/claim</code>.</p>
+
+    <!-- Player Commands -->
+    <div data-section-body="Player Commands">
+    <h2 data-section="Player Commands">Player Commands</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Permission</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/claim help</code></td>
+            <td><em>none</em></td>
+            <td>List all <code>/claim</code> subcommands in chat.</td>
+          </tr>
+          <tr>
+            <td><code>/claim info</code></td>
+            <td><em>none</em></td>
+            <td>Show details about the region or claim the player is standing in.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>/claim map</code>
+              <br/><span class="muted">aliases: <code>/claim c</code>, <code>/claim claims</code></span>
+            </td>
+            <td><code>questlinesclaims.claim.use</code></td>
+            <td>Open the chunk claim map centred on the player. Standing in own claim opens it in edit mode; standing in wilderness opens it in new-claim mode; standing in another player&rsquo;s claim is refused.</td>
+          </tr>
+          <tr>
+            <td><code>/claim members</code></td>
+            <td><em>none</em></td>
+            <td>Open the members UI for the claim the player is standing in. Only the owner may open it.</td>
+          </tr>
+          <tr>
+            <td><code>/claim manage</code></td>
+            <td><em>none</em> (context-dependent)</td>
+            <td>
+              Open the appropriate member manager at the player&rsquo;s position:
+              their own claim, a rent region they hold, or a buy region they own.
+              Admins can manage any region, any claim, or the wilderness member
+              list from this command.
+            </td>
+          </tr>
+          <tr>
+            <td><code>/claim rentbuy</code></td>
+            <td><code>questlinesclaims.claim.use</code></td>
+            <td>Open the Rent/Buy Browser to view and transact on available plots.</td>
+          </tr>
+          <tr>
+            <td><code>/claim show</code></td>
+            <td><em>none</em></td>
+            <td>Outline every claim and admin region within a 6-chunk radius of the player for 30 seconds. Useful for spotting boundaries on the ground without opening the map.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Admin Commands -->
+    <div data-section-body="Admin Commands">
+    <h2 data-section="Admin Commands">Admin Commands</h2>
+    <p>All commands below require <code>questlinesclaims.admin</code>.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/claim wand</code></td>
+            <td>Give yourself the Claim Staff and reset your wand selection.</td>
+          </tr>
+          <tr>
+            <td><code>/claim pos1</code></td>
+            <td>Set Pos1 to your current block position. Wand-less alternative for clients where a mod intercepts the Claim Staff clicks.</td>
+          </tr>
+          <tr>
+            <td><code>/claim pos2</code></td>
+            <td>Set Pos2 to your current block position. Wand-less alternative for clients where a mod intercepts the Claim Staff clicks.</td>
+          </tr>
+          <tr>
+            <td><code>/claim select &lt;x1&gt; &lt;y1&gt; &lt;z1&gt; &lt;x2&gt; &lt;y2&gt; &lt;z2&gt;</code></td>
+            <td>Set both Pos1 and Pos2 from explicit block coordinates in a single command.</td>
+          </tr>
+          <tr>
+            <td><code>/claim deselect</code></td>
+            <td>Clear your selection (rectangle corners <em>and</em> polygon vertices) and stop the selection box render.</td>
+          </tr>
+          <tr>
+            <td><code>/claim polymode</code></td>
+            <td>Toggle the wand session between rectangle mode and polygon mode. In polygon mode wand left-click adds a vertex and right-click removes the last one. Need 3+ vertices to save. Also registered as <code>/region polymode</code>.</td>
+          </tr>
+          <tr>
+            <td><code>/claim admin</code></td>
+            <td>Open the admin region list UI to create, edit, delete, and save prefabs.</td>
+          </tr>
+          <tr>
+            <td><code>/claim create</code></td>
+            <td>Shortcut for the admin region edit form, pre-filled with the player&rsquo;s current wand selection if set.</td>
+          </tr>
+          <tr>
+            <td><code>/claim addchunks &lt;username&gt; &lt;amount&gt;</code></td>
+            <td>Adjust a player&rsquo;s bonus chunks on top of their permission-based limit. Pass a negative amount to remove bonus chunks.</td>
+          </tr>
+          <tr>
+            <td><code>/claim setowner &lt;username&gt;</code></td>
+            <td>Transfer ownership of the claim at the player&rsquo;s current chunk to another player. Chunk count is checked against the new owner&rsquo;s limit (admins exempt). Pass <code>server</code> to transfer to the server pseudo-player.</td>
+          </tr>
+          <tr>
+            <td><code>/claim settenant &lt;username|clear&gt;</code></td>
+            <td>Set or clear the tenant of the rent region at the player&rsquo;s current position. Does not charge the new tenant and starts a fresh lease (<code>leaseStart</code> = now, <code>leaseEnd</code> = now + <code>durationSeconds</code>); members and warning thresholds are cleared. Pass <code>clear</code> to vacate the region instead. Also available as an Assign/Clear control on the admin region edit UI when the region is a rent region.</td>
+          </tr>
+          <tr>
+            <td><code>/claim reload</code></td>
+            <td>Reload plugin configs from disk.</td>
+          </tr>
+          <tr>
+            <td><code>/claim import &lt;source&gt; [--path=&lt;path&gt;]</code></td>
+            <td>Import claims from another plugin's data store. <code>source</code> is either <code>simpleclaims</code> (SQLite DB, defaults to <code>&lt;universe&gt;/SimpleClaims/SimpleClaims.db</code>) or <code>wiflowsclaims</code> (JSON data directory, defaults to <code>&lt;universe&gt;/WiFlowsClaims/</code>). Appends &mdash; existing QL claims are left untouched.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          The wand workflow is described on
+          <a href="claims-regions.html">Admin Regions</a>; permission nodes and
+          their defaults are on <a href="claims-config.html">Config &amp; Permissions</a>;
+          importing from other plugins is detailed on
+          <a href="claims-integrations.html">Integrations</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

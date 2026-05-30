@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Integrations</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">Integrations</h1>
+      <p class="page-subtitle">
+        How Claims plugs into the rest of the server &mdash; VaultUnlocked economy,
+        the world map, ECS enforcement systems, portal protection, claim decay, and
+        imports from other claims plugins.
+      </p>
+    </div>
+
+    <!-- VaultUnlocked -->
+    <div data-section-body="VaultUnlocked">
+    <h2 id="vaultunlocked" data-section="VaultUnlocked">VaultUnlocked</h2>
+    <p>
+      Rent and buy features require VaultUnlocked. At startup Claims probes for
+      <code>net.cfh.vault.VaultUnlockedServicesManager</code>; if absent, economy
+      is disabled, and rent/buy transactions return <code>ECONOMY_UNAVAILABLE</code>.
+      Withdrawals and refunds go through the standard Vault economy object so any
+      Vault-backed currency plugin works transparently.
+    </p>
+    </div>
+
+    <!-- World Map -->
+    <div data-section-body="World Map">
+    <h2 data-section="World Map">World Map</h2>
+    <p>
+      Claims installs its own <code>IWorldMapProvider</code> that draws the usual
+      terrain plus an overlay of claim colours and admin region boundaries.
+      Invalidation is automatic: claiming, unclaiming, renaming, or recolouring a
+      claim triggers a redraw of the affected chunks plus their neighbours.
+    </p>
+    </div>
+
+    <!-- ECS Systems -->
+    <div data-section-body="ECS Systems">
+    <h2 data-section="ECS Systems">ECS Systems</h2>
+    <p>
+      Several ECS systems run alongside the listener-based protection to cover
+      engine events that aren&rsquo;t delivered through the regular listener API:
+    </p>
+    <ul>
+      <li>
+        <strong>ClaimTitleSystem</strong> &mdash; shows a short title
+        announcement when a player crosses into a new claim or region: the
+        claim or region name for owned land, &ldquo;Wilderness&rdquo; for
+        unclaimed land.
+      </li>
+      <li>
+        <strong>EntryEnforcementSystem</strong> &mdash; remembers the player&rsquo;s
+        last allowed position and teleports them back when they enter a position
+        where the <code>ENTRY</code> flag is denied. Admins bypass this check.
+      </li>
+      <li>
+        <strong>ExplosionBlockDamageSystem</strong> &mdash; intercepts global
+        (non-player) block damage events &mdash; primarily explosions &mdash;
+        and cancels them when the <code>EXPLOSIONS</code> flag is denied at the
+        affected block.
+      </li>
+      <li>
+        <strong>SpawnPreventionSystem</strong> &mdash; removes vanilla mob
+        spawns inside admin regions where the <code>SPAWN</code> flag is denied.
+        Plugin-triggered spawns (identified by an unset spawn-configuration
+        index) pass through untouched, so HyCitizens NPCs and scripted spawns
+        still work.
+      </li>
+    </ul>
+    </div>
+
+    <!-- Portal and Teleporter Protection -->
+    <div data-section-body="Portal and Teleporter Protection">
+    <h2 data-section="Portal and Teleporter Protection">Portal &amp; Teleporter Protection</h2>
+    <p>
+      Claims replaces the built-in <code>Portal</code>, <code>PortalReturn</code>,
+      and <code>Teleporter</code> interaction codecs with claim-aware variants
+      (<code>ClaimEnterPortalInteraction</code>, <code>ClaimReturnPortalInteraction</code>,
+      <code>ClaimTeleporterInteraction</code>). Each wraps the vanilla interaction
+      and cancels it when the <code>PORTAL</code> flag is denied at the target
+      block.
+    </p>
+    </div>
+
+    <!-- Claim Decay -->
+    <div data-section-body="Claim Decay">
+    <h2 data-section="Claim Decay">Claim Decay</h2>
+    <p>
+      The <strong>ClaimDecayTask</strong> runs on the same cadence as the rent
+      check (<code>rent_check_interval</code>). Each tick it walks every player
+      with claim data and removes all claims owned by players whose
+      <code>lastSeenTime</code> is older than <code>claim_decay_time</code>. Online
+      players and the server pseudo-player are skipped. Decay is disabled when
+      <code>claim_decay_time</code> is empty or <code>0</code>.
+    </p>
+    </div>
+
+    <!-- Plugin Imports -->
+    <div data-section-body="Plugin Imports">
+    <h2 data-section="Plugin Imports">Plugin Imports</h2>
+    <p>
+      Servers migrating from another claims plugin can use
+      <code>/claim import &lt;source&gt;</code> to pull claims, members, and
+      claimed chunks into QuestLines Claims. Imports append to existing QL data
+      &mdash; no existing claims are modified or deleted. Two sources are
+      currently supported:
+    </p>
+    <ul>
+      <li>
+        <strong><code>simpleclaims</code></strong> &mdash; reads a SimpleClaims
+        SQLite database. Defaults to
+        <code>&lt;universe&gt;/SimpleClaims/SimpleClaims.db</code>; override
+        with <code>--path=</code>. Each SimpleClaims party maps to one or more
+        QL claims, split per world and then into connected components so every
+        resulting claim stays contiguous.
+      </li>
+      <li>
+        <strong><code>wiflowsclaims</code></strong> &mdash; reads a
+        WiFlowsClaims JSON data directory. Defaults to
+        <code>&lt;universe&gt;/WiFlowsClaims/</code>; override with
+        <code>--path=</code>.
+      </li>
+    </ul>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          Rent/buy economy behaviour is on
+          <a href="claims-rentbuy.html">Rent &amp; Buy Regions</a>; the
+          transaction event surface for ledger plugins is on the
+          <a href="claims-api.html">Developer API</a> page.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

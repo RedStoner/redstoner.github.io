@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Icons — Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="icons" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Icons Plugin</div>
+      <h1 class="page-title">QuestLines Icons</h1>
+      <p class="page-subtitle">
+        Floating per-player quest-state icons that appear above NPCs. At a glance, players
+        can see whether an NPC has a new quest for them, a quest in progress, all quests
+        completed, or a repeatable quest on cooldown.
+      </p>
+    </div>
+
+    <!-- How it works -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      QuestLines Icons reads NPC quest assignments from QuestLines&rsquo;
+      <code>mods/QuestLines/npcs.json</code> and displays a floating item above each NPC.
+      The icon shown is determined per player based on their quest state for the quests
+      assigned to that NPC. Icons are updated on every server tick and are invisible to
+      players who are not in range.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Requires QuestLines Core</div>
+        <p>
+          Icons reads quest assignments directly from QuestLines&rsquo; <code>npcs.json</code>.
+          QuestLines Core must be installed and configured for Icons to show anything.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Quest States -->
+    <div data-section-body="Quest States">
+    <h2 data-section="Quest States">Quest States</h2>
+    <p>
+      Each NPC is evaluated against the player&rsquo;s quest data to determine which state to
+      show. States are resolved in priority order: the highest-priority state that applies wins.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Key</th>
+            <th>Default Icon</th>
+            <th>Default Animation</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Available</td>
+            <td><code>available</code></td>
+            <td><code>Icons_Exclamation</code></td>
+            <td>Ping + Bob</td>
+            <td>The NPC has a quest the player has not yet started.</td>
+          </tr>
+          <tr>
+            <td>In Progress</td>
+            <td><code>inprogress</code></td>
+            <td><code>Icons_Dots</code></td>
+            <td>Rotate</td>
+            <td>The player has the quest and it is currently in progress.</td>
+          </tr>
+          <tr>
+            <td>Objectives Complete</td>
+            <td><code>objectives_complete</code></td>
+            <td><code>Icons_DownArrow</code></td>
+            <td>Bob + Ping</td>
+            <td>The player&rsquo;s current page on a started quest has all of its required objectives satisfied &mdash; a &ldquo;come back to me&rdquo; turn-in cue. Resolved automatically; can also be forced via the <code>iconState:</code> action (see <a href="#per-player-overrides">Per-Player Overrides</a>).</td>
+          </tr>
+          <tr>
+            <td>Completed</td>
+            <td><code>completed</code></td>
+            <td><code>Icons_Checkmark</code></td>
+            <td>Rotate</td>
+            <td>The player has completed every quest this NPC offers.</td>
+          </tr>
+          <tr>
+            <td>Locked</td>
+            <td><code>locked</code></td>
+            <td><code>Icons_Lock</code></td>
+            <td>Bob (slow)</td>
+            <td>The NPC has at least one quest the player has not started, but every offered quest&rsquo;s requirements currently fail &mdash; a prerequisite is missing. Distinguishes &ldquo;come back when you&rsquo;re ready&rdquo; from <code>unknown</code>.</td>
+          </tr>
+          <tr>
+            <td>Waiting</td>
+            <td><code>waiting</code></td>
+            <td><code>Icons_Clock</code></td>
+            <td>Bob</td>
+            <td>Every quest this NPC offers is a completed repeatable, and at least one is still on cooldown / waiting for its repeat condition.</td>
+          </tr>
+          <tr>
+            <td>Repeatable Ready</td>
+            <td><code>repeatable_ready</code></td>
+            <td><code>Icons_Clock</code></td>
+            <td>Bob + Ping</td>
+            <td>Quest is repeatable, the player has completed it before, and it is ready to be done again (cooldown over). Visually distinguishes a daily/weekly that&rsquo;s back in rotation from a fresh first-time quest.</td>
+          </tr>
+          <tr>
+            <td>Story</td>
+            <td><code>story</code></td>
+            <td><code>Icons_Exclamation</code></td>
+            <td>Bob + Ping (fast)</td>
+            <td><strong>Override-only.</strong> Not auto-resolved &mdash; quest authors set it via the <code>iconState:</code> action to mark a main-story / critical-path NPC so its icon visibly outranks regular side content.</td>
+          </tr>
+          <tr>
+            <td>Custom</td>
+            <td><code>custom</code></td>
+            <td><code>Icons_QuestionMark</code></td>
+            <td>None</td>
+            <td><strong>Override-only.</strong> No built-in semantics &mdash; pair a per-NPC <code>NpcQuestIconStates</code> entry and animation override with the <code>iconState:</code> action to bind any visual to a name of your choosing.</td>
+          </tr>
+          <tr>
+            <td>Unknown</td>
+            <td><code>unknown</code></td>
+            <td><code>Icons_QuestionMark</code></td>
+            <td>Orbit</td>
+            <td>Quest state is not yet resolved for this player / NPC pair.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Commands -->
+    <div data-section-body="Commands">
+    <h2 data-section="Commands">Commands</h2>
+    <p>
+      All configuration is done via <code>/icons</code> (alias: <code>/i</code>) using a
+      wand-style workflow: run the command, then click an NPC in-world to apply the setting.
+      Every <code>/icons</code> subcommand requires the <code>questlinesicons.admin</code>
+      permission.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/icons reload</td>
+            <td>Reload <code>icons.json</code> and re-sync NPC assignments from <code>npcs.json</code>.</td>
+          </tr>
+          <tr>
+            <td>/icons icon &lt;itemId&gt;</td>
+            <td>Click an NPC to set its floating icon item. Use <code>none</code> to disable the icon for that NPC entirely.</td>
+          </tr>
+          <tr>
+            <td>/icons offset &lt;offset&gt;</td>
+            <td>Click an NPC to set the Y-offset of its icon in blocks (e.g. <code>0.5</code> to raise it). Default is <code>0.0</code>.</td>
+          </tr>
+          <tr>
+            <td>/icons scale &lt;scale&gt;</td>
+            <td>Click an NPC to set the icon scale multiplier (e.g. <code>1.5</code> for 50% larger). Default is <code>1.0</code>.</td>
+          </tr>
+          <tr>
+            <td>/icons rotation &lt;degrees&gt;</td>
+            <td>Click an NPC to set a fixed Y-axis rotation for the icon in degrees. Default is <code>0</code>.</td>
+          </tr>
+          <tr>
+            <td>/icons animate &lt;animation&gt; [state]</td>
+            <td>Click an NPC to apply an animation. Optionally target a specific quest state (e.g. <code>available</code>). See <a href="#animations">Animations</a> for format.</td>
+          </tr>
+          <tr>
+            <td>/icons list</td>
+            <td>List all NPC IDs that have explicit icon configuration in <code>icons.json</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Animations -->
+    <div data-section-body="Animations">
+    <h2 id="animations" data-section="Animations">Animations</h2>
+    <p>
+      Animations are applied via <code>/icons animate &lt;animation&gt;</code>. Multiple
+      animation types can be active simultaneously on the same NPC icon. Each animation
+      takes an optional speed and amplitude parameter.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Animation</th>
+            <th>Format</th>
+            <th>Speed</th>
+            <th>Amplitude</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>bob</code></td>
+            <td><code>bob[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz (cycles/sec)</td>
+            <td>Max Y displacement (blocks)</td>
+            <td>Bobs the icon up and down.</td>
+          </tr>
+          <tr>
+            <td><code>rotate</code></td>
+            <td><code>rotate[:<em>speed</em>]</code></td>
+            <td>Degrees/sec</td>
+            <td>&mdash;</td>
+            <td>Continuously spins the icon on the Y axis.</td>
+          </tr>
+          <tr>
+            <td><code>pulsate</code></td>
+            <td><code>pulsate[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz</td>
+            <td>Max scale delta added to base scale</td>
+            <td>Smoothly oscillates the icon&rsquo;s size.</td>
+          </tr>
+          <tr>
+            <td><code>sway</code></td>
+            <td><code>sway[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz</td>
+            <td>Max rotation in degrees</td>
+            <td>Rocks the icon side-to-side on the Z axis.</td>
+          </tr>
+          <tr>
+            <td><code>orbit</code></td>
+            <td><code>orbit[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz</td>
+            <td>Orbit radius (blocks)</td>
+            <td>Circles the icon horizontally around the NPC.</td>
+          </tr>
+          <tr>
+            <td><code>ping</code></td>
+            <td><code>ping[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz (pops/sec)</td>
+            <td>Max scale delta per pop</td>
+            <td>Brief sharp scale pop — attention-grabbing.</td>
+          </tr>
+          <tr>
+            <td><code>ring</code></td>
+            <td><code>ring[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz (burst freq)</td>
+            <td>Max lateral displacement (blocks)</td>
+            <td>Rapid side-to-side shake in periodic bursts.</td>
+          </tr>
+          <tr>
+            <td><code>float</code></td>
+            <td><code>float[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz</td>
+            <td>Drift radius (blocks)</td>
+            <td>Organic figure-8 Lissajous XZ drift.</td>
+          </tr>
+          <tr>
+            <td><code>stamp</code></td>
+            <td><code>stamp[:<em>speed</em>[:<em>amp</em>]]</code></td>
+            <td>Hz (stamps/sec)</td>
+            <td>Drop distance (blocks)</td>
+            <td>Periodic sharp downward drop; idles high.</td>
+          </tr>
+          <tr>
+            <td><code>none</code></td>
+            <td><code>none</code> or <code>none:&lt;type&gt;</code></td>
+            <td>&mdash;</td>
+            <td>&mdash;</td>
+            <td>Clears all animations, or clears only the specified type.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Animation Examples">Animation Examples</h3>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Bob at default speed (1 Hz) and amplitude (0.2 blocks)</span>
+/icons animate bob
+
+<span class="hl-cmt">// Spin at 90 degrees per second</span>
+/icons animate rotate:90
+
+<span class="hl-cmt">// Orbit slowly at 0.5 Hz with a 1.5-block radius</span>
+/icons animate orbit:0.5:1.5
+
+<span class="hl-cmt">// Ping animation only on the "available" state icon</span>
+/icons animate ping:0.5:0.4 available
+
+<span class="hl-cmt">// Remove only the rotate animation</span>
+/icons animate none:rotate
+
+<span class="hl-cmt">// Clear all animations</span>
+/icons animate none</code></pre>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Tip: State-targeted animations</div>
+        <p>
+          Add an optional state name after the animation to apply it only when the icon is
+          showing that quest state — e.g. <code>/icons animate ping:0.5:0.4 available</code>.
+          This lets you have the &ldquo;available&rdquo; icon draw more attention than the
+          &ldquo;completed&rdquo; one.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Configuration File -->
+    <div data-section-body="Configuration File">
+    <h2 data-section="Configuration File">Configuration File</h2>
+    <p>
+      All icon settings are persisted in <code>mods/QuestLinesIcons/icons.json</code>.
+      You can edit this file directly or use the <code>/icons</code> commands to update it
+      in-game. Below is the full structure.
+    </p>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-cmt">// Global fallback item shown on any NPC that has no per-NPC override</span>
+  <span class="hl-key">"DefaultIconItemId"</span><span class="hl-punc">:</span> <span class="hl-str">"Recipe_Page"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"DefaultIconOffset"</span><span class="hl-punc">:</span>  <span class="hl-num">0.0</span><span class="hl-punc">,</span>
+
+  <span class="hl-cmt">// Global item overrides per quest state (used for all QuestLines NPCs)</span>
+  <span class="hl-key">"DefaultQuestStateIcons"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"available"</span><span class="hl-punc">:</span>           <span class="hl-str">"Icons_Exclamation"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"inprogress"</span><span class="hl-punc">:</span>          <span class="hl-str">"Icons_Dots"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"objectives_complete"</span><span class="hl-punc">:</span> <span class="hl-str">"Icons_DownArrow"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"completed"</span><span class="hl-punc">:</span>           <span class="hl-str">"Icons_Checkmark"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"locked"</span><span class="hl-punc">:</span>              <span class="hl-str">"Icons_Lock"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"waiting"</span><span class="hl-punc">:</span>             <span class="hl-str">"Icons_Clock"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"repeatable_ready"</span><span class="hl-punc">:</span>    <span class="hl-str">"Icons_Clock"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"story"</span><span class="hl-punc">:</span>               <span class="hl-str">"Icons_Exclamation"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"custom"</span><span class="hl-punc">:</span>              <span class="hl-str">"Icons_QuestionMark"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"unknown"</span><span class="hl-punc">:</span>             <span class="hl-str">"Icons_QuestionMark"</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Global default animations per quest state</span>
+  <span class="hl-key">"DefaultQuestStateAnimations"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"available"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"ping"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"speed"</span><span class="hl-punc">:</span> <span class="hl-num">0.5</span><span class="hl-punc">,</span> <span class="hl-key">"amplitude"</span><span class="hl-punc">:</span> <span class="hl-num">0.4</span> <span class="hl-punc">},</span>
+      <span class="hl-key">"bob"</span><span class="hl-punc">:</span>  <span class="hl-punc">{</span> <span class="hl-key">"speed"</span><span class="hl-punc">:</span> <span class="hl-num">0.5</span><span class="hl-punc">,</span> <span class="hl-key">"amplitude"</span><span class="hl-punc">:</span> <span class="hl-num">0.12</span> <span class="hl-punc">}</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Per-NPC item override (any item ID or "none" to disable)</span>
+  <span class="hl-key">"NpcQuestIcons"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-str">"Custom_Star"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"citizen_07"</span><span class="hl-punc">:</span> <span class="hl-str">"none"</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Per-NPC per-state item overrides</span>
+  <span class="hl-key">"NpcQuestIconStates"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"available"</span><span class="hl-punc">:</span> <span class="hl-str">"Icons_Exclamation"</span><span class="hl-punc">,</span>
+      <span class="hl-key">"completed"</span><span class="hl-punc">:</span> <span class="hl-str">"Icons_Checkmark"</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Per-NPC Y-offsets in blocks</span>
+  <span class="hl-key">"NpcQuestIconOffsets"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-num">0.5</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Per-NPC scale multipliers</span>
+  <span class="hl-key">"NpcQuestIconScales"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-num">1.25</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Per-NPC fixed Y rotation in degrees</span>
+  <span class="hl-key">"NpcQuestIconRotations"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-num">45.0</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Per-NPC animations (multiple types active at once)</span>
+  <span class="hl-key">"NpcAnimations"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"bob"</span><span class="hl-punc">:</span>    <span class="hl-punc">{</span> <span class="hl-key">"speed"</span><span class="hl-punc">:</span> <span class="hl-num">1.0</span><span class="hl-punc">,</span> <span class="hl-key">"amplitude"</span><span class="hl-punc">:</span> <span class="hl-num">0.2</span> <span class="hl-punc">},</span>
+      <span class="hl-key">"rotate"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"speed"</span><span class="hl-punc">:</span> <span class="hl-num">60.0</span><span class="hl-punc">,</span> <span class="hl-key">"amplitude"</span><span class="hl-punc">:</span> <span class="hl-num">0.0</span> <span class="hl-punc">}</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">},</span>
+
+  <span class="hl-cmt">// Per-NPC per-state animation overrides</span>
+  <span class="hl-key">"NpcStateAnimations"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"citizen_42"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"available"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+        <span class="hl-key">"ping"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span> <span class="hl-key">"speed"</span><span class="hl-punc">:</span> <span class="hl-num">0.5</span><span class="hl-punc">,</span> <span class="hl-key">"amplitude"</span><span class="hl-punc">:</span> <span class="hl-num">0.3</span> <span class="hl-punc">}</span>
+      <span class="hl-punc">}</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Cloned NPCs share icon configuration</div>
+        <p>
+          When multiple NPCs share the same citizen ID (e.g. cloned HyCitizens spawned
+          via <code>spawnCitizen:</code>), they share an <em>iconKey</em> and therefore
+          the same icon, scale, rotation, and animation settings. Each cloned NPC still
+          renders its own dedicated icon entity above its head, and command-issued
+          changes (<code>/icons icon</code>, <code>scale</code>, <code>rotation</code>)
+          propagate to every clone on the next tick.
+        </p>
+      </div>
+    </div>
+
+    <div data-section-body="Configuration Override Priority">
+    <h2 data-section="Configuration Override Priority">Configuration Override Priority</h2>
+    <p>When determining which icon and animation to show for a given NPC and player, the plugin uses the following priority chain:</p>
+
+    <h3 data-section="Icon item">Icon item</h3>
+    <ol>
+      <li>Per-NPC entry in <code>NpcQuestIcons</code> (static override, ignores quest state)</li>
+      <li>Per-NPC per-state entry in <code>NpcQuestIconStates</code> for the player&rsquo;s current state</li>
+      <li>Global per-state entry in <code>DefaultQuestStateIcons</code></li>
+      <li>Built-in default for the state (e.g. <code>Icons_Exclamation</code> for <em>available</em>)</li>
+    </ol>
+
+    <h3 data-section="Animation">Animation</h3>
+    <ol>
+      <li>Per-NPC per-state entry in <code>NpcStateAnimations</code></li>
+      <li>Global per-state entry in <code>DefaultQuestStateAnimations</code></li>
+      <li>Built-in defaults per state (see <a href="#quest-states">Quest States</a> table above)</li>
+      <li>Per-NPC entry in <code>NpcAnimations</code> (NPC-level, state-agnostic)</li>
+    </ol>
+    </div>
+
+    <div data-section-body="Per-Player Overrides">
+    <h2 id="per-player-overrides" data-section="Per-Player Overrides">Per-Player Overrides</h2>
+    <p>
+      Quest authors can force a specific icon state for a single player from QuestLines Core, bypassing the auto-computed state for that player only.
+      Useful for narrative beats &mdash; e.g. force <code>unknown</code> on a fallen NPC the player just discovered until they read a clue, or hold an NPC at <code>objectives_complete</code> after a scripted cutscene.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Format</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>iconState:npcId:state</code></td>
+            <td>Action</td>
+            <td>Set a per-player icon state override for the named NPC. <em>state</em> must be one of <code>available</code>, <code>inprogress</code>, <code>objectives_complete</code>, <code>completed</code>, <code>locked</code>, <code>waiting</code>, <code>repeatable_ready</code>, <code>story</code>, <code>custom</code>, <code>unknown</code>. Invalid state names silently no-op. <code>story</code> and <code>custom</code> are override-only (no auto-resolution) &mdash; useful for narrative beats and admin-defined visuals.</td>
+          </tr>
+          <tr>
+            <td><code>iconState:npcId:state:clear</code></td>
+            <td>Action</td>
+            <td>Guarded clear &mdash; removes the override only if it currently equals <em>state</em>. This prevents one quest&rsquo;s cleanup from stomping another quest&rsquo;s override.</td>
+          </tr>
+          <tr>
+            <td><code>iconState:npcId:state</code></td>
+            <td>Requirement</td>
+            <td>True iff the player&rsquo;s override for that NPC is currently set to <em>state</em>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Override resolution priority</div>
+        <p>
+          The override is read at the very top of <code>resolveIconState</code> and wins over the auto-computed state. The action and requirement are only registered when the QuestLines Icons plugin is active &mdash; on installs without Icons they no-op and pass through validation.
+        </p>
+      </div>
+    </div>
+
+    <h4>Example</h4>
+    <div class="example-block">
+    <pre class="code-block"><code><span class="hl-cmt">// Mark the smith as "ready to turn in" while a quest is gated on a scene</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"iconState:smith_id:objectives_complete"</span><span class="hl-punc">]</span>
+
+<span class="hl-cmt">// On turn-in, only clear if our quest set it -- another quest may have</span>
+<span class="hl-cmt">// since switched the icon to its own override.</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questCompleted:trial"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"iconState:smith_id:objectives_complete:clear"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Gate dialogue on the override being active</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"iconState:smith_id:objectives_complete"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+    </div>
+
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>questlinesicons.admin</code></td>
+            <td>false</td>
+            <td>Required for all <code>/icons</code> subcommands (icon, offset, scale, rotation, animate, list, reload).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

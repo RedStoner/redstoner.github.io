@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Knowledge — Privacy Policy</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="bot-privacy" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">QuestLines Knowledge</div>
+      <h1 class="page-title">Privacy Policy</h1>
+      <p class="page-subtitle">
+        How the QuestLines Knowledge Discord bot handles your data. In short: it stores as little
+        as possible, never sells anything, and lets you delete what little it keeps at any time.
+      </p>
+      <p style="color: var(--ink-soft); font-size: 0.9rem;">Last updated: 30 May 2026</p>
+    </div>
+
+    <!-- Overview -->
+    <div data-section-body="Overview">
+    <h2 data-section="Overview">Overview</h2>
+    <p>
+      QuestLines Knowledge (&ldquo;the bot&rdquo;) is a Discord bot that provides QuestLines
+      documentation, search, and AI-assisted quest tooling. This policy explains what data the
+      bot processes, why, who it is shared with, and how to remove it. By adding the bot to a
+      server or using its commands, you agree to this policy.
+    </p>
+    </div>
+
+    <!-- Data collected -->
+    <div data-section-body="What the Bot Stores">
+    <h2 data-section="What the Bot Stores">What the Bot Stores</h2>
+    <p>The bot keeps only the small amount of data needed to function:</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>When it is stored</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Your Discord user ID</td>
+            <td>When you use an AI command (<code>/ask</code>, <code>/debug</code>, <code>/newquest</code>) or set a key</td>
+            <td>To enforce per-user usage cooldowns and to associate your saved API key with you.</td>
+          </tr>
+          <tr>
+            <td>Your Groq API key</td>
+            <td>Only if you run <code>/setkey</code> and submit one</td>
+            <td>To authenticate your own AI requests so they run on your key with no cooldown. Stored on the bot&rsquo;s host and used only for your commands. Removable anytime with <code>/forgetkey</code>.</td>
+          </tr>
+          <tr>
+            <td>Usage counts &amp; timestamps</td>
+            <td>When you use an AI command</td>
+            <td>A small per-user counter and last-used time, used purely to apply cooldowns.</td>
+          </tr>
+          <tr>
+            <td>Server &amp; channel IDs</td>
+            <td>When a server admin configures the bot via <code>/config</code></td>
+            <td>To remember per-server settings (which channels <code>!</code> commands work in, auto-translate opt-in and target language).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Message content is processed, not logged</div>
+        <p>
+          To respond to commands the bot reads the text of messages that invoke it (and, in
+          channels where an admin has enabled auto-translation, messages in those channels for
+          language detection). This content is processed in the moment to produce a reply and is
+          <strong>not</strong> stored as a chat log by the bot.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Third parties -->
+    <div data-section-body="Third-Party Services">
+    <h2 data-section="Third-Party Services">Third-Party Services</h2>
+    <p>
+      Some features send data to external services to do their job. Those services process it
+      under their own privacy policies:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>What is sent</th>
+            <th>For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Groq (AI)</td>
+            <td>The text of your question and any quest JSON you attach to <code>/ask</code>, <code>/debug</code>, or <code>/newquest</code></td>
+            <td>Generating AI answers and quest content. Subject to Groq&rsquo;s privacy policy. If you supplied your own key with <code>/setkey</code>, the request is billed to your Groq account.</td>
+          </tr>
+          <tr>
+            <td>Translation service (LibreTranslate)</td>
+            <td>Message text in channels where an admin enabled auto-translation</td>
+            <td>Detecting the language and producing a translation. Typically self-hosted by the bot operator.</td>
+          </tr>
+          <tr>
+            <td>CurseForge</td>
+            <td>Nothing about you &mdash; the bot only polls CurseForge for plugin release info</td>
+            <td>Posting release announcements (operator feature). No user data is sent.</td>
+          </tr>
+          <tr>
+            <td>Discord</td>
+            <td>Everything transits Discord, the platform the bot runs on</td>
+            <td>Delivering messages and commands. Subject to Discord&rsquo;s privacy policy.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Retention -->
+    <div data-section-body="How Long Data Is Kept">
+    <h2 data-section="How Long Data Is Kept">How Long Data Is Kept</h2>
+    <ul>
+      <li><strong>Your API key</strong> &mdash; until you run <code>/forgetkey</code> or the operator removes it.</li>
+      <li><strong>Usage counters</strong> &mdash; retained to enforce cooldowns; they hold only a count and a timestamp, no message content.</li>
+      <li><strong>Server settings</strong> &mdash; kept until an admin changes them or the bot is removed from the server.</li>
+      <li><strong>Message content</strong> &mdash; not retained; used only to produce the immediate response.</li>
+    </ul>
+    </div>
+
+    <!-- Your choices -->
+    <div data-section-body="Your Choices &amp; Removing Data">
+    <h2 data-section="Your Choices &amp; Removing Data">Your Choices &amp; Removing Data</h2>
+    <ul>
+      <li><strong>Remove your API key:</strong> run <code>/forgetkey</code> at any time.</li>
+      <li><strong>Avoid AI features:</strong> simply don&rsquo;t use <code>/ask</code>, <code>/debug</code>, or <code>/newquest</code> &mdash; the reference and search commands need no stored data.</li>
+      <li><strong>Server data:</strong> a Manage-Server admin can clear settings with <code>/config</code>; removing the bot from a server discards its configuration.</li>
+      <li><strong>Other requests:</strong> contact the operator (see below) to request deletion of any data associated with your Discord user ID.</li>
+    </ul>
+    </div>
+
+    <!-- What we don't do -->
+    <div data-section-body="What the Bot Does Not Do">
+    <h2 data-section="What the Bot Does Not Do">What the Bot Does Not Do</h2>
+    <ul>
+      <li>It does not sell, rent, or trade your data.</li>
+      <li>It does not store chat logs or message history.</li>
+      <li>It does not track you across servers for advertising.</li>
+      <li>It does not request the Server Members or Presence privileged intents.</li>
+    </ul>
+    </div>
+
+    <!-- Children -->
+    <div data-section-body="Age Requirement">
+    <h2 data-section="Age Requirement">Age Requirement</h2>
+    <p>
+      The bot is used through Discord and is intended for users who meet Discord&rsquo;s minimum
+      age requirement (at least 13, or older where local law requires). It is not directed at
+      children below that age.
+    </p>
+    </div>
+
+    <!-- Changes -->
+    <div data-section-body="Changes to This Policy">
+    <h2 data-section="Changes to This Policy">Changes to This Policy</h2>
+    <p>
+      This policy may be updated as the bot changes. Material changes will be reflected here with
+      a new &ldquo;Last updated&rdquo; date. Continued use of the bot after a change constitutes
+      acceptance of the updated policy.
+    </p>
+    </div>
+
+    <!-- Contact -->
+    <div data-section-body="Contact">
+    <h2 data-section="Contact">Contact</h2>
+    <p>
+      Questions about this policy, or requests to delete your data, can be directed to the bot
+      operator via the QuestLines community (<a href="https://evilcraft.net" target="_blank" rel="noopener">evilcraft.net</a>)
+      or the QuestLines Discord server.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Operators: add your contact</div>
+        <p>
+          If you host this bot, replace this section with a direct contact (an email address or a
+          link to your support server) so users have a clear way to reach you.
+        </p>
+      </div>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

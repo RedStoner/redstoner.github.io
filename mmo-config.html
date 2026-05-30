@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; Configuration</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">Configuration</h1>
+      <p class="page-subtitle">
+        Plugin tunables in <code>config.json</code>, the folder-backed registry
+        files that define content, the on-disk layout, and what
+        <code>/qlmmo reload</code> does.
+      </p>
+    </div>
+
+    <!-- Configuration -->
+    <div data-section-body="Configuration">
+    <h2 data-section="Configuration">Configuration</h2>
+    <p>
+      Plugin tunables live in <code>mods/QuestLinesMMO/config.json</code>.
+      Subsections cover party, guild, guild hall, dungeon, LFG, events, world
+      bosses, and POIs. Almost every section is hot-reloadable via
+      <code>/qlmmo reload</code> &mdash; the reload also rescans every registry
+      folder.
+    </p>
+
+    <h3 data-section="party">party</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>maxSize</code></td><td><code>5</code></td><td>Maximum players per party.</td></tr>
+          <tr><td><code>inviteExpirySeconds</code></td><td><code>60</code></td><td>Time before a pending party invite expires.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="guild">guild</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>nameMinLength</code></td><td><code>3</code></td><td>Minimum guild name length.</td></tr>
+          <tr><td><code>nameMaxLength</code></td><td><code>24</code></td><td>Maximum guild name length.</td></tr>
+          <tr><td><code>tagMinLength</code></td><td><code>2</code></td><td>Minimum guild tag length.</td></tr>
+          <tr><td><code>tagMaxLength</code></td><td><code>5</code></td><td>Maximum guild tag length.</td></tr>
+          <tr><td><code>maxMembers</code></td><td><code>100</code></td><td>Maximum players in a single guild.</td></tr>
+          <tr><td><code>inviteExpirySeconds</code></td><td><code>60</code></td><td>Time before a pending guild invite expires.</td></tr>
+          <tr><td><code>motdMaxLength</code></td><td><code>120</code></td><td>Maximum MOTD length.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="guildHall">guildHall</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>mode</code></td><td><code>"PREFAB"</code></td><td>Server-wide hall build mode: <code>"PREFAB"</code> or <code>"BUILD"</code>.</td></tr>
+          <tr><td><code>unloadGraceMinutes</code></td><td><code>5</code></td><td>How long an empty hall world stays loaded before being unloaded.</td></tr>
+          <tr><td><code>maxChestSections</code></td><td><code>10</code></td><td>Hard cap on chest sections per guild.</td></tr>
+          <tr><td><code>defaultSectionSlots</code></td><td><code>54</code></td><td>Slots per chest section (54 matches a Hytale double chest).</td></tr>
+          <tr><td><code>allowVisitorDefault</code></td><td><code>false</code></td><td>Whether the default permission table grants <code>VISIT_OPEN</code>.</td></tr>
+          <tr><td><code>maxClaimsPerGuild</code></td><td><code>25</code></td><td>(BUILD-mode) Maximum chunks a guild can claim inside its hall.</td></tr>
+          <tr><td><code>wildernessProtectedInBuild</code></td><td><code>true</code></td><td>(BUILD-mode) Block edits outside guild claims are denied.</td></tr>
+          <tr><td><code>wildernessProtectedInPrefab</code></td><td><code>true</code></td><td>(PREFAB-mode) Block edits anywhere in the hall world are denied.</td></tr>
+          <tr><td><code>disableMobSpawning</code></td><td><code>true</code></td><td>Disable natural mob and NPC spawning in every hall world.</td></tr>
+          <tr><td><code>upgradeLevels</code></td><td><code>[]</code></td><td>(BUILD-mode) Inline global upgrade ladder &mdash; see below.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Each entry of <code>upgradeLevels</code> defines a BUILD-mode tier: a
+      <code>level</code> number, a <code>displayName</code>,
+      <code>maxChestSections</code>, <code>maxSlotsPerSection</code>,
+      <code>maxGuildMembers</code>, <code>maxPlots</code>, an
+      <code>unlockedFeatures</code> string list (e.g. <code>"guild_bank"</code>,
+      <code>"npc_vendor"</code>), and a <code>cost</code> in guild currency.
+    </p>
+
+    <h3 data-section="dungeon">dungeon</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>rejoinGraceSeconds</code></td><td><code>300</code></td><td>How long a disconnected player can reconnect to their instance.</td></tr>
+          <tr><td><code>postCompleteCleanupSeconds</code></td><td><code>30</code></td><td>Delay before an instance world is unloaded after completion.</td></tr>
+          <tr><td><code>respawnDelaySeconds</code></td><td><code>3</code></td><td>Delay before a dead player respawns at the last checkpoint.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="lfg">lfg</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>listingTtlMinutes</code></td><td><code>30</code></td><td>How long an LFG listing stays active before auto-expiring.</td></tr>
+          <tr><td><code>listingExpiryCheckIntervalSeconds</code></td><td><code>60</code></td><td>How often expired listings are pruned.</td></tr>
+          <tr><td><code>maxDescriptionLength</code></td><td><code>80</code></td><td>Maximum length of an LFG description.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="events">events</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>dynamicEventCheckIntervalMinutes</code></td><td><code>10</code></td><td>How often the manager rolls for an eligible region/event pair.</td></tr>
+          <tr><td><code>minPlayersPerRegion</code></td><td><code>3</code></td><td>Default minimum player count to consider a region for events. Per-region <code>minPlayers</code> overrides this.</td></tr>
+          <tr><td><code>eventBossMinDamageThreshold</code></td><td><code>50.0</code></td><td>Minimum damage a player must deal to count as a participant for boss rewards.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="worldBosses">worldBosses</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>announcementTimes</code></td><td><code>["15m","5m","1m"]</code></td><td>Default announcement windows before a world boss spawn. Boss-specific overrides take precedence.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="poi">poi</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>proximityCheckIntervalSeconds</code></td><td><code>2</code></td><td>How often the proximity scanner ticks. Lower is snappier but more expensive.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Registries -->
+    <div data-section-body="Registry Files">
+    <h2 data-section="Registry Files">Registry Files</h2>
+    <p>
+      Most content lives in folder-backed registries. Every folder is scanned
+      for <code>*.json</code> files at startup and on <code>/qlmmo reload</code>;
+      the filename (minus <code>.json</code>) becomes the entity id and must
+      match the <code>id</code> field inside the JSON. Unknown fields are
+      ignored. Defaults from <code>src/main/resources/defaults/</code> are
+      copied to disk on first run and never overwritten afterwards.
+    </p>
+
+    <h3 data-section="dungeons">dungeons/</h3>
+    <p>Each file defines one dungeon.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>Dungeon id (must match filename).</td></tr>
+          <tr><td><code>displayName</code></td><td>string</td><td>UI name.</td></tr>
+          <tr><td><code>worldTemplate</code></td><td>string</td><td>Path to the prefab/template used to seed the instance world.</td></tr>
+          <tr><td><code>instanceSpawn</code></td><td>SpawnPos</td><td>Where party members land on entry.</td></tr>
+          <tr><td><code>maxPartySize</code></td><td>int</td><td>Maximum players allowed in this dungeon.</td></tr>
+          <tr><td><code>recommendedLevel</code></td><td>int</td><td>Suggested player level for the dungeon.</td></tr>
+          <tr><td><code>objectives</code></td><td>string[]</td><td>Objective ids that must be completed to clear the run.</td></tr>
+          <tr><td><code>bossPhases</code></td><td>BossPhase[]</td><td>Optional ordered phases keyed to HP fractions.</td></tr>
+          <tr><td><code>completionReward</code></td><td>Reward</td><td>XP / currency / guild currency / items granted on completion.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="events/definitions">events/definitions/</h3>
+    <p>Each file defines one dynamic event type.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>Event id.</td></tr>
+          <tr><td><code>displayName</code></td><td>string</td><td>UI name.</td></tr>
+          <tr><td><code>minDurationSeconds</code></td><td>int</td><td>Lower bound of the random duration.</td></tr>
+          <tr><td><code>maxDurationSeconds</code></td><td>int</td><td>Upper bound of the random duration.</td></tr>
+          <tr><td><code>successReward</code></td><td>Reward</td><td>Granted to every contributing player on success.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="events/regions">events/regions/</h3>
+    <p>Each file defines one trigger region.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>Region id.</td></tr>
+          <tr><td><code>region</code></td><td>RegionBounds</td><td>XZ box (<code>x1</code>, <code>z1</code>, <code>x2</code>, <code>z2</code>).</td></tr>
+          <tr><td><code>eligibleEvents</code></td><td>string[]</td><td>Event ids that can fire here (must reference <code>events/definitions/</code>).</td></tr>
+          <tr><td><code>minPlayers</code></td><td>int</td><td>Override of the global <code>events.minPlayersPerRegion</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="events/bosses">events/bosses/</h3>
+    <p>Each file defines one event boss.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>Boss id.</td></tr>
+          <tr><td><code>displayName</code></td><td>string</td><td>UI name.</td></tr>
+          <tr><td><code>entityType</code></td><td>string</td><td>Hytale entity type id (e.g. <code>Golem_Crystal_Earth</code>).</td></tr>
+          <tr><td><code>maxHealth</code></td><td>double</td><td>Boss HP pool override.</td></tr>
+          <tr><td><code>despawnAfter</code></td><td>string</td><td>Duration string (<code>30m</code>, <code>1h</code>) before an unkilled boss despawns.</td></tr>
+          <tr><td><code>reward</code></td><td>Reward</td><td>Distributed by participation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="bosses">bosses/</h3>
+    <p>Each file defines one scheduled world boss.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>World boss id.</td></tr>
+          <tr><td><code>displayName</code></td><td>string</td><td>UI name.</td></tr>
+          <tr><td><code>schedule</code></td><td>string</td><td>Cron expression (e.g. <code>0,30 * * * *</code>).</td></tr>
+          <tr><td><code>spawn</code></td><td>SpawnPos</td><td>Spawn coordinates.</td></tr>
+          <tr><td><code>announcementTimes</code></td><td>string[] | null</td><td>Per-boss announcement override; <code>null</code> uses the global default.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="guildHalls/biomes">guildHalls/biomes/</h3>
+    <p>Each file defines one selectable biome for hall creation.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>Biome id.</td></tr>
+          <tr><td><code>displayName</code></td><td>string</td><td>UI name.</td></tr>
+          <tr><td><code>description</code></td><td>string</td><td>Description shown in the picker.</td></tr>
+          <tr><td><code>previewImage</code></td><td>string</td><td>Asset path for the preview thumbnail.</td></tr>
+          <tr><td><code>worldSeed</code></td><td>long</td><td>Generation seed (<code>0</code> for void).</td></tr>
+          <tr><td><code>generatorType</code></td><td>string</td><td>World generator: <code>"NORMAL"</code>, <code>"Void"</code>, <code>"Flat"</code>, etc.</td></tr>
+          <tr><td><code>buildingSpawn</code></td><td>SpawnPos</td><td>Origin where the chosen template is pasted.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="guildHalls/templates">guildHalls/templates/</h3>
+    <p>Each file defines one selectable hall template.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>Template id.</td></tr>
+          <tr><td><code>displayName</code></td><td>string</td><td>UI name.</td></tr>
+          <tr><td><code>description</code></td><td>string</td><td>Description shown in the picker.</td></tr>
+          <tr><td><code>previewImage</code></td><td>string</td><td>Asset path for the preview thumbnail.</td></tr>
+          <tr><td><code>worldTemplate</code></td><td>string</td><td>Prefab pasted at base level.</td></tr>
+          <tr><td><code>spawnOffset</code></td><td>SpawnPos</td><td>Player spawn relative to the paste origin.</td></tr>
+          <tr><td><code>initialChestPositions</code></td><td>SpawnPos[]</td><td>Chest block positions placed at base level.</td></tr>
+          <tr><td><code>upgradeTiers</code></td><td>UpgradeTier[]</td><td>Ordered tier progression (PREFAB-mode upgrades).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Each <code>UpgradeTier</code> entry contains a <code>tier</code> number,
+      <code>displayName</code>, <code>description</code>,
+      <code>previewImage</code>, <code>structurePath</code> (the prefab pasted
+      at this tier), <code>spawnOffset</code>, <code>cost</code> in guild
+      currency, and a <code>chestPositions</code> array of new chest blocks at
+      this tier.
+    </p>
+
+    <h3 data-section="pois">pois/</h3>
+    <p>Each file defines one POI.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>POI id.</td></tr>
+          <tr><td><code>displayName</code></td><td>string</td><td>UI name.</td></tr>
+          <tr><td><code>description</code></td><td>string</td><td>Discovery flavour text.</td></tr>
+          <tr><td><code>world</code></td><td>string</td><td>World name where the POI lives.</td></tr>
+          <tr><td><code>center</code></td><td>SpawnPos</td><td>Centre of the discovery sphere.</td></tr>
+          <tr><td><code>radius</code></td><td>double</td><td>Discovery radius in blocks.</td></tr>
+          <tr><td><code>icon</code></td><td>string</td><td>Map icon image (empty for default).</td></tr>
+          <tr><td><code>category</code></td><td>string</td><td>Free-form bucket (e.g. <code>"city"</code>, <code>"dungeon"</code>).</td></tr>
+          <tr><td><code>hidden</code></td><td>bool</td><td>If true, the POI stays invisible until discovered.</td></tr>
+          <tr><td><code>discoverMessage</code></td><td>string</td><td>Toast on discovery; empty for the default.</td></tr>
+          <tr><td><code>discoverReward</code></td><td>Reward</td><td>Optional XP / currency / guild currency / items granted on discovery.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- File Layout -->
+    <div data-section-body="File Layout">
+    <h2 data-section="File Layout">File Layout</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Path</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>mods/QuestLinesMMO/config.json</code></td><td>All non-registry plugin tunables.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/dungeons/</code></td><td>Dungeon definitions.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/events/definitions/</code></td><td>Dynamic event definitions.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/events/regions/</code></td><td>Dynamic event region triggers.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/events/bosses/</code></td><td>Event boss definitions.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/bosses/</code></td><td>Scheduled world boss definitions.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/guildHalls/biomes/</code></td><td>Hall biome definitions.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/guildHalls/templates/</code></td><td>Hall template definitions (with PREFAB upgrade tiers).</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/pois/</code></td><td>POI definitions.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/guilds/&lt;guildId&gt;.json</code></td><td>Per-guild record (members, ranks, MOTD, currency, permission overrides).</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/guilds/index.json</code></td><td>Player-UUID to guild-id map.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/guilds/&lt;guildId&gt;/chest.json</code></td><td>Per-guild chest sections and inventories.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/guildhalls/&lt;guildId&gt;/hall.json</code></td><td>Per-guild hall metadata (mode, tier/level, spawn, biome/template ids).</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/friends/&lt;playerUuid&gt;.json</code></td><td>Per-player friend list.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/progress/&lt;playerUuid&gt;.json</code></td><td>Per-player progression: dungeon clears, last checkpoints, POI discoveries.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/events/region_cooldowns.json</code></td><td>Per-region cooldown timestamps for dynamic events.</td></tr>
+          <tr><td><code>mods/QuestLinesMMO/bosses/schedule_state.json</code></td><td>Per-boss last-spawn timestamps for cron recovery.</td></tr>
+          <tr><td><code>worlds/guildhall_&lt;guildId&gt;/</code></td><td>Per-guild instanced hall world (loaded on demand).</td></tr>
+          <tr><td><code>worlds/dungeon_&lt;dungeonId&gt;_&lt;uuid&gt;/</code></td><td>Per-run instanced dungeon world (deleted on cleanup).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Reload -->
+    <div data-section-body="Hot Reload">
+    <h2 data-section="Hot Reload">Hot Reload</h2>
+    <p>
+      <code>/qlmmo reload</code> reloads <code>config.json</code> and every
+      registry folder, then pushes the refreshed values into all running
+      managers (<code>applyConfig(...)</code>). The following are <em>not</em>
+      affected by a reload &mdash; they keep running with their captured
+      settings until they end:
+    </p>
+    <ul>
+      <li>Active dungeon instances.</li>
+      <li>Active dynamic events.</li>
+      <li>In-flight party, guild, and LFG invites.</li>
+      <li>Currently loaded guild hall worlds (their hall metadata reloads, but in-progress upgrades complete with their original cost).</li>
+      <li>Player data &mdash; friend lists, progression, guild membership are unaffected.</li>
+    </ul>
+    <p>
+      The reload command logs per-entry results to console; if a registry file
+      fails to parse, the broken file is skipped and the previous in-memory
+      definition (if any) is retained.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

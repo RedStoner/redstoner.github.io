@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — In-Game Editor Walkthrough</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="in-game-editor" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Getting Started</div>
+      <h1 class="page-title">In-Game Editor Walkthrough</h1>
+      <p class="page-subtitle">
+        Build a quest end-to-end without ever leaving the game. The in-game editor
+        (<code>/ql quest</code>) covers everything: quests, pages, responses,
+        requirements, actions, NPC assignment, macros, achievements, and events.
+        This page walks you through making your first quest step-by-step.
+      </p>
+    </div>
+
+    <!-- ======================== OPENING THE EDITOR ======================== -->
+    <h2>Opening the Editor</h2>
+    <p>
+      Run <code>/ql quest</code> in chat (aliases: <code>/ql q</code>, <code>/ql ui</code>,
+      <code>/ql create</code>). The editor opens to the last tab you used; first-time users
+      land on the <strong>EDITOR</strong> tab.
+    </p>
+    <p>
+      You need the <code>questlines.admin</code> permission to use it. All editor changes
+      autosave to disk immediately — there is no global "Save" button.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Six top tabs</div>
+        <p>
+          <strong>EDITOR</strong> — quests + pages + responses<br>
+          <strong>USERS</strong> — per-player state, tags, trackers, quest grants<br>
+          <strong>NPCS</strong> — link quests to NPCs<br>
+          <strong>MACROS</strong> — reusable requirement / action bundles<br>
+          <strong>ACHIEVEMENTS</strong> — server-defined milestones<br>
+          <strong>EVENTS</strong> — server-lifecycle action triggers
+        </p>
+        <p>
+          The <strong>? HELP</strong> button in the title bar opens the in-game reference
+          panel — the most up-to-date listing of every requirement, action, tracker type,
+          objective syntax, and dialog variable.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== WALKTHROUGH ======================== -->
+    <h2>Your First Quest, Step-by-Step</h2>
+    <p>
+      We'll build a simple kill quest: <em>"Bandit Patrol — talk to the Guard Captain,
+      kill 5 Zombies, return for a reward."</em>
+    </p>
+
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>1. Open the editor and pick the EDITOR tab.</strong>
+          <p>
+            <code>/ql quest</code>. The <strong>EDITOR</strong> tab is selected by default.
+            The left sidebar has three section buttons — <strong>QUEST</strong>,
+            <strong>PAGE</strong>, <strong>RESPONSES</strong> — plus the Pages list.
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>2. Create a new quest from the Quest dropdown.</strong>
+          <p>
+            At the top of the editor, the <strong>Quest</strong> dropdown is searchable.
+            Type a brand-new ID (lowercase + underscores, e.g.
+            <code>bandit_patrol</code>) and press Enter. The dropdown autocreates the
+            entry as soon as you begin filling fields below.
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>3. Fill out the QUEST section.</strong>
+          <p>
+            Click <strong>QUEST</strong> in the left sidebar to make sure the section is
+            visible. Fill:
+          </p>
+          <ul>
+            <li><strong>Quest ID</strong> — <code>bandit_patrol</code> (matches the filename)</li>
+            <li><strong>Quest Title</strong> — <code>Bandit Patrol</code></li>
+            <li><strong>Description</strong> — short journal summary</li>
+            <li><strong>Rewards</strong> — display-only string ("1 Iron Sword + 100g")</li>
+            <li><strong>Repeatable</strong> — leave unchecked for a one-off quest</li>
+            <li><strong>Requirements</strong> — leave EMPTY. (Top-level requirements are a
+              hard gate that hides the entire quest from every player who fails the check.
+              Conditional gates belong on individual pages, not here.)</li>
+            <li><strong>Load Actions</strong> / <strong>Actions</strong> — leave empty.
+              Top-level Actions fire on quest completion, not acceptance.</li>
+          </ul>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>4. Add your pages.</strong>
+          <p>
+            The Pages list sits below the section buttons in the left sidebar. Click
+            <strong>+</strong> three times to create three pages. Use the
+            <strong>/\</strong> and <strong>\/</strong> arrows to reorder, the
+            <strong>X</strong> to delete, and click a page row to edit it.
+          </p>
+          <p>
+            Name your pages in the <strong>Page ID</strong> field on the right (e.g.
+            <code>finished</code>, <code>complete</code>, <code>progress</code>,
+            <code>intro</code>). Order matters — see step 9.
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>5. Fill out each page's PAGE section.</strong>
+          <p>
+            Click a page in the Pages list, then click <strong>PAGE</strong> in the left
+            sidebar. For each page set:
+          </p>
+          <ul>
+            <li><strong>Page ID</strong> — must be unique within the quest</li>
+            <li><strong>NPC Name</strong> — display name shown above the dialogue text
+              (<code>Guard Captain</code>)</li>
+            <li><strong>Dialog</strong> — the NPC's spoken text. Supports inline variables
+              like <code>{username}</code>, <code>{track:zombie_kills}</code>, and
+              formatting tags like <code>{b}…{/}</code>, <code>{#FF8800}…{/}</code>.</li>
+            <li><strong>Journal Text</strong> — what the player sees when they open the
+              quest in their journal</li>
+            <li><strong>Requirements</strong> — see step 9 for the layered order</li>
+            <li><strong>Load Actions</strong> — fire every time this page is shown</li>
+            <li><strong>Objectives</strong> — live HUD/journal progress bars; one entry
+              per goal (e.g. <code>track:zombie_kills:5</code>). Append
+              <code>::Custom Label</code> to override the auto-generated text. Use
+              <code>text:Find the cave</code> for static lines that don't track progress.</li>
+          </ul>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>6. Add responses on the intro page.</strong>
+          <p>
+            With the intro page selected, click <strong>RESPONSES</strong> in the left
+            sidebar. Use <strong>+</strong> / <strong>-</strong> to add or remove a
+            response. There is no limit on response count — empty <em>Text</em> hides a
+            response.
+          </p>
+          <p>
+            For each response set:
+          </p>
+          <ul>
+            <li><strong>Text</strong> — button label ("Accept" / "Not interested")</li>
+            <li><strong>Requirements</strong> — must all pass for the button to show</li>
+            <li><strong>Actions</strong> — run in order when clicked</li>
+          </ul>
+          <p>
+            On the "Accept" response, add these Actions via the <strong>+</strong> on the
+            Actions field:
+          </p>
+          <ul>
+            <li><code>startquest:bandit_patrol</code> — marks the quest started</li>
+            <li><code>track:zombie_kills:kill:Zombie</code> — creates the named tracker</li>
+          </ul>
+          <p>
+            On the "Claim Reward" response of the completion page:
+          </p>
+          <ul>
+            <li><code>completequest:bandit_patrol</code> — marks the quest complete</li>
+            <li><code>untrack:zombie_kills</code> — clears the tracker</li>
+            <li><code>item:Weapon_Sword_Iron:1</code> — gives the reward</li>
+          </ul>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>7. Use the Add Entry builder for requirements and actions.</strong>
+          <p>
+            Clicking <strong>+</strong> on any Requirements or Actions field opens the
+            <strong>Add Entry</strong> overlay. Pick a <strong>Type</strong> from the
+            searchable dropdown (~50 types — kill, track, item, hasTag, cooldown,
+            timeOfDay, economy, …). The <strong>Param 1/2/3</strong> fields reshape
+            themselves to match the selected type and offer autocomplete from baked
+            catalogs (every entity ID, item ID, page ID, quest ID, macro ID).
+          </p>
+          <p>
+            Click <strong>Insert</strong> to add the entry; <strong>Cancel</strong> to
+            back out.
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>8. Assign the quest to an NPC.</strong>
+          <p>
+            Switch to the <strong>NPCS</strong> tab. Pick the NPC in the main dropdown
+            (the list includes both HyCitizens NPCs and standard Hytale entities — the
+            entries are populated from <code>npcs.json</code>). Open the
+            <strong>QUESTS</strong> section in the sidebar, pick
+            <code>bandit_patrol</code> in the Quest dropdown, and click
+            <strong>ADD</strong>. <strong>REMOVE</strong> unassigns;
+            <strong>EDIT</strong> jumps back to the EDITOR tab with that quest loaded.
+          </p>
+          <p>
+            <em>Shortcut:</em> close the editor, run
+            <code>/ql wand bandit_patrol</code>, then punch the NPC. The wand reads
+            its citizen ID (or entity UUID) and writes the assignment instantly. Cancel
+            with <code>/ql wandcancel</code>.
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>9. Double-check page order.</strong>
+          <p>
+            Page resolution is <strong>top-to-bottom: first match wins</strong>. The
+            page with the most restrictive Requirements goes FIRST, the catch-all intro
+            page goes LAST. For this quest the correct order is:
+          </p>
+          <ul>
+            <li><code>finished</code> — Requirements: <code>questCompleted:bandit_patrol</code></li>
+            <li><code>complete</code> — Requirements: <code>questStarted:bandit_patrol</code>, <code>track:zombie_kills:5</code></li>
+            <li><code>progress</code> — Requirements: <code>questStarted:bandit_patrol</code></li>
+            <li><code>intro</code> — Requirements: <code>questNotStarted:bandit_patrol</code></li>
+          </ul>
+          <p>
+            If you put <code>intro</code> first, every player who hasn't started the
+            quest will see it forever — including players in progress.
+          </p>
+        </div>
+      </li>
+
+      <li>
+        <div>
+          <strong>10. Test it.</strong>
+          <p>
+            Close the editor and talk to the NPC. Accept the quest, kill some Zombies
+            (watch the HUD objective tick up), and return for the reward. If something
+            doesn't behave the way you expected, run <code>/ql validate</code> for a
+            non-destructive lint pass — it reports unreachable pages, unknown
+            requirements, missing trackers, etc. without reloading.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <!-- ======================== AUTOSAVE & FILES ======================== -->
+    <h2>Where Things Get Saved</h2>
+    <p>
+      The editor autosaves on every field change. There is no Save button. Files written:
+    </p>
+    <ul>
+      <li><code>QuestLines/quests/&lt;questId&gt;.json</code> — one file per quest with
+        all pages embedded under <code>PageData</code></li>
+      <li><code>QuestLines/npcs.json</code> — NPC-to-quest assignments</li>
+      <li><code>QuestLines/macros/&lt;macroId&gt;.json</code> — macro definitions</li>
+      <li><code>QuestLines/achievements/&lt;achievementId&gt;.json</code> — achievements</li>
+      <li><code>QuestLines/events.json</code> — event-triggered action lists</li>
+      <li><code>QuestLines/players.json</code> — per-player state (auto-managed)</li>
+    </ul>
+    <p>
+      Quest validation runs automatically on plugin start and on <code>/ql reload</code>.
+      <code>/ql validate</code> runs the same checks on demand without reloading.
+    </p>
+
+    <!-- ======================== QUALITY OF LIFE ======================== -->
+    <h2>Quality-of-Life Features</h2>
+    <ul>
+      <li>
+        <strong>Searchable dropdowns everywhere.</strong> Every Quest / Page / NPC /
+        Type dropdown supports inline search — start typing to filter.
+      </li>
+      <li>
+        <strong>Wand mode.</strong> <code>/ql wand &lt;questId&gt;</code> + punch NPC
+        skips the NPCS tab entirely. <code>/ql wandcancel</code> to abort.
+      </li>
+      <li>
+        <strong>Sticky state.</strong> The editor remembers your last tab, selected
+        quest, selected page, and selected response between sessions.
+      </li>
+      <li>
+        <strong>Help panel.</strong> The <strong>? HELP</strong> button in the title bar
+        is the single most-authoritative reference for every action / requirement /
+        tracker type / variable / formatting tag the plugin supports.
+      </li>
+      <li>
+        <strong>Translate Quest.</strong> In the QUEST section, the
+        <strong>Translate Quest</strong> button auto-fills missing locale strings via
+        the configured translation backend (MyMemory by default; can be swapped to
+        self-hosted LibreTranslate or disabled in <code>config.yml</code>).
+      </li>
+      <li>
+        <strong>Per-response styling.</strong> The RESPONSES section's right column lets
+        you customise <strong>Portrait Override</strong>, <strong>Portrait Side</strong>,
+        <strong>Dialog Width</strong>, <strong>Response Mode</strong> (buttons vs
+        continue prompt), <strong>Auto Trigger</strong>, <strong>Requires Response</strong>,
+        and per-button colour / icon.
+      </li>
+    </ul>
+
+    <!-- ======================== ADMIN OPS ======================== -->
+    <h2>Admin Operations from the Console</h2>
+    <p>
+      Some operations are quicker from chat than from the editor:
+    </p>
+    <ul>
+      <li><code>/ql reload</code> — reload all configs from disk (use on the second server in a network after editing on the first)</li>
+      <li><code>/ql validate</code> — lint all quest configs without reloading</li>
+      <li><code>/ql list</code> — list every quest ID and title</li>
+      <li><code>/ql remove &lt;questId&gt;</code> — delete a quest (run twice within 30s to confirm)</li>
+      <li><code>/ql wand &lt;questId&gt;</code> — assign a quest to an NPC by punching it</li>
+      <li><code>/ql action startquest:&lt;questId&gt; --player=&lt;name&gt;</code> — force-start a quest on a player (works with any action — completequest:, addTag:, etc.)</li>
+      <li><code>/ql requirement &lt;value&gt; --player=&lt;name&gt;</code> — test a requirement and print PASS or FAIL</li>
+      <li><code>/ql player reset &lt;player&gt; &lt;field&gt;</code> — reset a player's <code>tags</code>, <code>completed</code>, <code>started</code>, <code>progress</code>, <code>timestamps</code>, <code>variables</code>, <code>stringvars</code>, <code>tracked</code>, <code>trackers</code>, <code>questitems</code>, <code>markers</code>, <code>blockoverrides</code>, <code>achievements</code>, <code>iconoverrides</code>, <code>escorts</code>, <code>journal</code>, or <code>all</code> (escorts despawns live NPC clones; blockoverrides repaints real blocks for online players)</li>
+      <li><code>/ql achievement grant|revoke|reset &lt;player&gt; &lt;achievementId&gt;</code> — adjust achievements</li>
+    </ul>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Pair the editor with the AI tools</div>
+        <p>
+          Scaffold a quest end-to-end with <code>!newquest</code> in the QuestLines
+          Discord bot (see <a href="ai-generation.html">AI Generation</a>), drop the
+          generated file into <code>QuestLines/quests/</code>, run <code>/ql reload</code>,
+          then fine-tune dialog and rewards in the in-game editor. The AI is great at
+          scaffolding the skeleton; the editor is great at polishing the details.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

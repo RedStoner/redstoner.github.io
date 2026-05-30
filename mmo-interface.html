@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; UI &amp; Commands</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">UI &amp; Commands</h1>
+      <p class="page-subtitle">
+        Every in-game screen the plugin opens, and the full player and admin
+        command reference.
+      </p>
+    </div>
+
+    <!-- UI Screens -->
+    <div data-section-body="UI Screens">
+    <h2 data-section="UI Screens">UI Screens</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Screen</th>
+            <th>Opened by</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dashboard</td>
+            <td><code>/qlmmo ui</code> (aliases: <code>dashboard</code>, <code>gui</code>)</td>
+            <td>Root hub with tabs for Party, Guild, and LFG.</td>
+          </tr>
+          <tr>
+            <td>Guild Shortcuts</td>
+            <td><code>/guild</code></td>
+            <td>Quick-action menu &mdash; Home, Roster, Permissions, Hall Upgrade, Chest. Buttons hide based on the player&rsquo;s permissions.</td>
+          </tr>
+          <tr>
+            <td>Guild Panel</td>
+            <td><code>/guild ui</code></td>
+            <td>Tabbed roster, info (MOTD, founded date, member count), and treasury views.</td>
+          </tr>
+          <tr>
+            <td>Guild Permissions</td>
+            <td>From the guild panel or the shortcuts menu</td>
+            <td>Owner-only matrix editor for rank permissions and per-player overrides.</td>
+          </tr>
+          <tr>
+            <td>Guild Chest</td>
+            <td><code>/guild chest</code></td>
+            <td>Tabbed multi-section inventory with deposit and withdraw controls (gated by chest permissions).</td>
+          </tr>
+          <tr>
+            <td>Hall Creation Carousel</td>
+            <td>Auto-opens for the owner on first <code>/guild home</code></td>
+            <td>Two-step picker: biome then template, with preview images and confirmation.</td>
+          </tr>
+          <tr>
+            <td>Hall Upgrade</td>
+            <td>Guild Shortcuts &gt; Hall Upgrade</td>
+            <td>Mode-aware: PREFAB shows next-tier preview and cost; BUILD shows next-level features and cost.</td>
+          </tr>
+          <tr>
+            <td>LFG Browser</td>
+            <td><code>/lfg</code></td>
+            <td>Searchable, clickable listing rows with role filter, role-aware join, an in-UI Create Listing form, and a request-management panel (with Cancel Listing) for the listing author.</td>
+          </tr>
+          <tr>
+            <td>Discoveries</td>
+            <td><code>/discoveries</code> / <code>/poi</code></td>
+            <td>Player&rsquo;s POI log with progress count and per-POI details.</td>
+          </tr>
+          <tr>
+            <td>Dungeon HUD</td>
+            <td>Auto-opens on instance entry</td>
+            <td>Persistent overlay: boss health, timed objective countdown, member status (ALIVE/DEAD/DISCONNECTED).</td>
+          </tr>
+          <tr>
+            <td>Checkpoint Respawn</td>
+            <td>Auto-opens on death in a dungeon</td>
+            <td>Modal screen showing last checkpoint, respawn countdown, Respawn / Leave buttons.</td>
+          </tr>
+          <tr>
+            <td>Event Tracker HUD</td>
+            <td>Auto-opens for players in an active event region</td>
+            <td>Read-only HUD showing the current event objective and time remaining; world boss countdowns.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Player Commands -->
+    <div data-section-body="Player Commands">
+    <h2 data-section="Player Commands">Player Commands</h2>
+
+    <h3 data-section="Party Commands">Party</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/party</code></td><td><code>questlinesmmo.party</code></td><td>Open the party panel UI.</td></tr>
+          <tr><td><code>/party help</code></td><td><code>questlinesmmo.party</code></td><td>Print the party subcommand listing in chat.</td></tr>
+          <tr><td><code>/party invite &lt;player&gt;</code></td><td><code>questlinesmmo.party.invite</code></td><td>Invite a player; auto-creates a party if you&rsquo;re not in one.</td></tr>
+          <tr><td><code>/party accept</code></td><td><code>questlinesmmo.party.accept</code></td><td>Accept the most recent pending invite.</td></tr>
+          <tr><td><code>/party decline</code></td><td><code>questlinesmmo.party.decline</code></td><td>Decline the most recent pending invite.</td></tr>
+          <tr><td><code>/party kick &lt;player&gt;</code></td><td><code>questlinesmmo.party.kick</code></td><td>Leader-only. Remove a member from the party.</td></tr>
+          <tr><td><code>/party leave</code></td><td><code>questlinesmmo.party.leave</code></td><td>Leave the party. Leaders must transfer or disband first.</td></tr>
+          <tr><td><code>/party disband</code></td><td><code>questlinesmmo.party.disband</code></td><td>Leader-only. Dissolve the party for everyone.</td></tr>
+          <tr><td><code>/party list</code></td><td><code>questlinesmmo.party.list</code></td><td>Show the current party members and their roles.</td></tr>
+          <tr><td><code>/party transfer &lt;player&gt;</code></td><td><code>questlinesmmo.party.transfer</code></td><td>Leader-only. Hand leadership to another member.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Friend Commands">Friends</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/friend add &lt;player&gt;</code></td><td><code>questlinesmmo.friend.add</code></td><td>Add a player to your friend list.</td></tr>
+          <tr><td><code>/friend remove &lt;player&gt;</code></td><td><code>questlinesmmo.friend.remove</code></td><td>Remove a player from your friend list.</td></tr>
+          <tr><td><code>/friend list</code></td><td><code>questlinesmmo.friend.list</code></td><td>List your friends with online status.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Guild Commands">Guild</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/guild</code></td><td><code>questlinesmmo.guild</code></td><td>Open the guild shortcuts UI.</td></tr>
+          <tr><td><code>/guild create &lt;name&gt; &lt;tag&gt;</code></td><td><code>questlinesmmo.guild.create</code></td><td>Create a new guild. You become its OWNER.</td></tr>
+          <tr><td><code>/guild invite &lt;player&gt;</code></td><td><code>questlinesmmo.guild.invite</code></td><td>Send a guild invite (requires <code>INVITE</code>).</td></tr>
+          <tr><td><code>/guild accept</code></td><td><code>questlinesmmo.guild.accept</code></td><td>Accept the most recent pending guild invite.</td></tr>
+          <tr><td><code>/guild decline</code></td><td><code>questlinesmmo.guild.decline</code></td><td>Decline the most recent pending guild invite.</td></tr>
+          <tr><td><code>/guild kick &lt;player&gt;</code></td><td><code>questlinesmmo.guild.kick</code></td><td>Remove a member (requires <code>KICK</code> and a higher rank than the target).</td></tr>
+          <tr><td><code>/guild leave</code></td><td><code>questlinesmmo.guild.leave</code></td><td>Leave your current guild. Owners must transfer or disband first.</td></tr>
+          <tr><td><code>/guild disband</code></td><td><code>questlinesmmo.guild.disband</code></td><td>Owner-only. Disband the guild and archive its hall.</td></tr>
+          <tr><td><code>/guild promote &lt;player&gt;</code></td><td><code>questlinesmmo.guild.promote</code></td><td>Owner-only. Raise a member by one rank.</td></tr>
+          <tr><td><code>/guild demote &lt;player&gt;</code></td><td><code>questlinesmmo.guild.demote</code></td><td>Owner-only. Lower a member by one rank.</td></tr>
+          <tr><td><code>/guild transfer &lt;player&gt;</code></td><td><code>questlinesmmo.guild.transfer</code></td><td>Owner-only. Hand the OWNER rank to another member.</td></tr>
+          <tr><td><code>/guild motd &lt;message&gt;</code></td><td><code>questlinesmmo.guild.motd</code></td><td>Set the guild message of the day (requires <code>SET_MOTD</code>).</td></tr>
+          <tr><td><code>/guild info [--guildName=NAME]</code></td><td><code>questlinesmmo.guild.info</code></td><td>Show guild metadata (defaults to your guild).</td></tr>
+          <tr><td><code>/guild roster [--guildName=NAME]</code></td><td><code>questlinesmmo.guild.roster</code></td><td>List members sorted by rank.</td></tr>
+          <tr><td><code>/guild ui</code></td><td><code>questlinesmmo.guild.ui</code></td><td>Open the guild panel UI.</td></tr>
+          <tr><td><code>/guild bank &lt;amount&gt;</code></td><td><code>questlinesmmo.guild.bank.deposit</code></td><td>Deposit currency into the guild treasury (requires <code>guild_bank</code> feature).</td></tr>
+          <tr><td><code>/guild chest</code></td><td><code>questlinesmmo.guild.chest</code></td><td>Open the guild chest (requires <code>CHEST_VIEW</code>).</td></tr>
+          <tr><td><code>/guild home</code></td><td><code>questlinesmmo.guild.home</code></td><td>Enter your guild hall, or leave it if you&rsquo;re already inside.</td></tr>
+          <tr><td><code>/guild claim add</code></td><td><code>questlinesmmo.guild.claim.add</code></td><td>Claim the chunk you&rsquo;re standing in for the guild (requires Claims).</td></tr>
+          <tr><td><code>/guild claim remove</code></td><td><code>questlinesmmo.guild.claim.remove</code></td><td>Release the chunk you&rsquo;re standing in (requires Claims).</td></tr>
+          <tr><td><code>/guild perms set &lt;rank&gt; &lt;perm&gt; &lt;true|false&gt;</code></td><td><code>questlinesmmo.guild.perms.set</code></td><td>Owner-only. Set a default permission for a rank.</td></tr>
+          <tr><td><code>/guild perms list [--rank=RANK]</code></td><td><code>questlinesmmo.guild.perms.list</code></td><td>Show the guild permission matrix.</td></tr>
+          <tr><td><code>/guild perms player &lt;player&gt; &lt;perm|clear&gt; [--value=&lt;true|false&gt;]</code></td><td><code>questlinesmmo.guild.perms.player</code></td><td>Owner-only. Add or remove a per-player permission override.</td></tr>
+          <tr><td><code>/guild hall</code></td><td><code>questlinesmmo.guild.hall</code></td><td>Open the guild shortcuts UI (same as bare <code>/guild</code>). Teleporting in/out is <code>/guild home</code>.</td></tr>
+          <tr><td><code>/guild hall upgrade [confirm]</code></td><td><code>questlinesmmo.guild.hall.upgrade</code></td><td>Owner-only. Show the next upgrade or, with <code>confirm</code>, apply it.</td></tr>
+          <tr><td><code>/guild hall setspawn</code></td><td><code>questlinesmmo.guild.hall.setspawn</code></td><td>Set the hall spawn to your current position (requires <code>MANAGE_HALL</code>).</td></tr>
+          <tr><td><code>/guild hall visit &lt;guildName&gt;</code></td><td><code>questlinesmmo.guild.hall.visit</code></td><td>Visit another guild&rsquo;s hall if they have <code>VISIT_OPEN</code> open.</td></tr>
+          <tr><td><code>/guild hall plot rent &lt;name&gt; &lt;price&gt; &lt;days&gt;</code></td><td><code>questlinesmmo.guild.hall.plot.rent</code></td><td>Define a rent plot from your <code>/claim wand</code> selection (requires <code>MANAGE_PLOTS</code>).</td></tr>
+          <tr><td><code>/guild hall plot buy &lt;name&gt; &lt;price&gt;</code></td><td><code>questlinesmmo.guild.hall.plot.buy</code></td><td>Define a one-time-purchase plot from your wand selection.</td></tr>
+          <tr><td><code>/guild hall plot list</code></td><td><code>questlinesmmo.guild.hall.plot.list</code></td><td>List the guild&rsquo;s defined plots.</td></tr>
+          <tr><td><code>/guild hall plot delete &lt;plotId&gt;</code></td><td><code>questlinesmmo.guild.hall.plot.delete</code></td><td>Delete a plot by id.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="LFG Commands">LFG</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/lfg</code></td><td><code>questlinesmmo.lfg.use</code></td><td>Open the LFG browser. All flows (post, browse, join, cancel, accept/decline) live in the UI &mdash; there are no subcommands.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Other Player Commands">Dungeons &amp; Discoveries</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/dungeon enter &lt;dungeonId&gt;</code></td><td><code>questlinesmmo.dungeon.enter</code></td><td>Leader-only. Take your party into a dungeon instance.</td></tr>
+          <tr><td><code>/discoveries</code> (alias <code>/poi</code>)</td><td><code>questlinesmmo.discoveries</code></td><td>Open your Discoveries panel.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Admin Commands -->
+    <div data-section-body="Admin Commands">
+    <h2 data-section="Admin Commands">Admin Commands</h2>
+    <p>
+      All admin commands live under <code>/qlmmo</code>. The base permission
+      <code>questlinesmmo.admin</code> gates the <code>/qlmmo admin</code>
+      hierarchy.
+    </p>
+
+    <h3 data-section="Plugin Admin">Plugin</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/qlmmo help</code></td><td><code>questlinesmmo.qlmmo.help</code></td><td>List subcommands.</td></tr>
+          <tr><td><code>/qlmmo info</code></td><td><code>questlinesmmo.qlmmo.info</code></td><td>Plugin status and counts.</td></tr>
+          <tr><td><code>/qlmmo ui</code> (aliases <code>dashboard</code>, <code>gui</code>)</td><td><code>questlinesmmo.qlmmo.ui</code></td><td>Open the plugin dashboard.</td></tr>
+          <tr><td><code>/qlmmo reload</code></td><td><code>questlinesmmo.qlmmo.reload</code></td><td>Reload <code>config.json</code> and every registry folder; pushes the new values into all running managers.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Boss and Instance Admin">Bosses &amp; Instances</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/qlmmo admin spawnboss &lt;bossId&gt; [--x=0] [--y=64] [--z=0]</code></td><td><code>questlinesmmo.qlmmo.admin.spawnboss</code></td><td>Force-spawn an event boss at the given coordinates.</td></tr>
+          <tr><td><code>/qlmmo admin forceboss &lt;worldBossId&gt;</code></td><td><code>questlinesmmo.qlmmo.admin.forceboss</code></td><td>Force a world boss spawn now, bypassing its schedule.</td></tr>
+          <tr><td><code>/qlmmo admin instance debug &lt;playerName&gt;</code></td><td><code>questlinesmmo.qlmmo.admin.instance.debug</code></td><td>Print live dungeon-instance state for the named player.</td></tr>
+          <tr><td><code>/qlmmo admin instance cleanup &lt;instanceId&gt;</code></td><td><code>questlinesmmo.qlmmo.admin.instance.cleanup</code></td><td>Force-clean a dungeon instance by id.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Guild Admin">Guilds</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/qlmmo admin guild currency &lt;guildName&gt; &lt;amount&gt;</code></td><td><code>questlinesmmo.qlmmo.admin.guild.currency</code></td><td>Credit (positive) or deduct (negative) currency from a guild treasury.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="POI Authoring">POI Authoring</h3>
+    <p>
+      POI authoring writes JSON files to <code>mods/QuestLinesMMO/pois/</code>
+      directly. Each command requires its corresponding permission node;
+      players use <code>/discoveries</code> for the read-only player-facing UI.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Permission</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/qlmmo poi here &lt;id&gt; [radius=16] [displayName...]</code></td><td><code>questlinesmmo.qlmmo.poi.here</code></td><td>Create a POI at your current position; writes <code>pois/&lt;id&gt;.json</code>.</td></tr>
+          <tr><td><code>/qlmmo poi remove &lt;id&gt;</code></td><td><code>questlinesmmo.qlmmo.poi.remove</code></td><td>Delete a POI by id.</td></tr>
+          <tr><td><code>/qlmmo poi list</code></td><td><code>questlinesmmo.qlmmo.poi.list</code></td><td>List every registered POI with id, world, centre, and radius.</td></tr>
+          <tr><td><code>/qlmmo poi info &lt;id&gt;</code></td><td><code>questlinesmmo.qlmmo.poi.info</code></td><td>Show full details of a single POI.</td></tr>
+          <tr><td><code>/qlmmo poi tp &lt;id&gt;</code></td><td><code>questlinesmmo.qlmmo.poi.tp</code></td><td>Teleport to a POI&rsquo;s centre.</td></tr>
+          <tr><td><code>/qlmmo poi grant &lt;player&gt; &lt;id&gt;</code></td><td><code>questlinesmmo.qlmmo.poi.grant</code></td><td>Mark a POI as discovered for a player without their visiting it.</td></tr>
+          <tr><td><code>/qlmmo poi revoke &lt;player&gt; &lt;id&gt;</code></td><td><code>questlinesmmo.qlmmo.poi.revoke</code></td><td>Remove a single POI discovery from a player.</td></tr>
+          <tr><td><code>/qlmmo poi reset &lt;player&gt;</code></td><td><code>questlinesmmo.qlmmo.poi.reset</code></td><td>Wipe every POI discovery for a player.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Permissions</div>
+        <p>
+          For default values and the umbrella permission nodes, see
+          <a href="mmo-reference.html">Permissions &amp; Integrations</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

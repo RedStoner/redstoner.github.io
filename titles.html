@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Titles — Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="titles" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Titles Plugin</div>
+      <h1 class="page-title">QuestLines Titles</h1>
+      <p class="page-subtitle">
+        A player title system for Hytale servers. Grant players richly formatted titles
+        as quest rewards, display them as chat prefixes, and let players choose their
+        active title from a selection UI.
+      </p>
+    </div>
+
+    <!-- How It Works -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      QuestLinesTitles maintains two stores: a server-wide <strong>title catalogue</strong>
+      (<code>titles.json</code>) that defines every available title, and per-player
+      <strong>title data</strong> that records which titles each player has unlocked and
+      which one is currently active.
+    </p>
+    <p>
+      Titles are awarded through QuestLines actions (<code>giveTitle:</code>), admin
+      commands (<code>/titleadmin grant</code>), or directly via the
+      <a href="developer-api.html">developer API</a>. Once a player owns at least one
+      title they can open <code>/title</code> to browse their collection and set an
+      active title. The active title is then exposed to chat plugins and PlaceholderAPI.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Standalone or with QuestLines Core</div>
+        <p>
+          QuestLinesTitles works as a standalone plugin. The
+          <a href="#questlines-integration">QuestLines integration</a> (actions,
+          requirements, and the <code>{title}</code> variable) is automatically enabled
+          when QuestLines Core is also installed on the server.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- titles.json Config File -->
+    <div data-section-body="titles.json">
+    <h2 data-section="titles.json">titles.json</h2>
+    <p>
+      All available titles are defined in <code>mods/QuestLinesTitles/titles.json</code>.
+      The file is created with a set of defaults on first start and can be edited
+      directly or updated via <code>/titleadmin ui</code>. The order of categories and
+      titles within a category is preserved on disk and used for display order in the
+      <code>/title</code> selector — reorder by drag in the admin UI or by reshuffling
+      the JSON keys.
+    </p>
+    <p>
+      Each entry is keyed by a unique title ID (convention: <code>category:name</code>)
+      and carries a <code>category</code> string and a <code>value</code> display string.
+      The display string supports rich formatting — see
+      <a href="#title-formatting">Title Formatting</a> below.
+    </p>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"misc:newcomer"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"category"</span><span class="hl-punc">:</span> <span class="hl-str">"misc"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"value"</span><span class="hl-punc">:</span>    <span class="hl-str">"&3Newcomer"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"misc:king"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"category"</span><span class="hl-punc">:</span> <span class="hl-str">"misc"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"value"</span><span class="hl-punc">:</span>    <span class="hl-str">"{#FFAA00}{b}King{/}{/}"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"pvp:champion"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"category"</span><span class="hl-punc">:</span> <span class="hl-str">"pvp"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"value"</span><span class="hl-punc">:</span>    <span class="hl-str">"&lt;gradient:#FF4444:#FFAA00&gt;Champion&lt;/gradient&gt;"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"builder:artisan"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"category"</span><span class="hl-punc">:</span> <span class="hl-str">"builder"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"value"</span><span class="hl-punc">:</span>    <span class="hl-str">"&lt;rainbow&gt;Artisan&lt;/rainbow&gt;"</span>
+  <span class="hl-punc">},</span>
+  <span class="hl-key">"donor:king"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"category"</span><span class="hl-punc">:</span>   <span class="hl-str">"misc"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"value"</span><span class="hl-punc">:</span>      <span class="hl-str">"{#FFAA00}{b}King{/}{/}"</span><span class="hl-punc">,</span>
+    <span class="hl-key">"permission"</span><span class="hl-punc">:</span> <span class="hl-str">"questlinestitles.title.king"</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Required</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>category</code></td>
+            <td>No (defaults to <code>misc</code>)</td>
+            <td>Groups related titles together in the selection UI. Can be any string.</td>
+          </tr>
+          <tr>
+            <td><code>value</code></td>
+            <td>No (defaults to the ID)</td>
+            <td>The display text shown in chat, the UI, and placeholders. Supports rich formatting tags.</td>
+          </tr>
+          <tr>
+            <td><code>permission</code></td>
+            <td>No</td>
+            <td>Permission node that dynamically grants the title while the player holds it. See <a href="#permission-granted-titles">Permission-Granted Titles</a>.</td>
+          </tr>
+          <tr>
+            <td><code>source</code></td>
+            <td>No</td>
+            <td>Predefined source category id used for &ldquo;How to get&rdquo; hints on locked titles. See <a href="#how-to-obtain-hints">How-to-Obtain Hints</a>.</td>
+          </tr>
+          <tr>
+            <td><code>sourceDetail</code></td>
+            <td>No</td>
+            <td>Free-text detail shown beneath the source label in the player UI.</td>
+          </tr>
+          <tr>
+            <td><code>visible</code></td>
+            <td>No (defaults to the global / per-category default)</td>
+            <td>When <code>false</code>, the title is hidden from players who have not yet unlocked it. Owned titles are always shown. Omit to inherit from <a href="#hidden-titles">config.json</a>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Permission-Granted Titles -->
+    <div data-section-body="Permission-Granted Titles">
+    <h2 id="permission-granted-titles" data-section="Permission-Granted Titles">Permission-Granted Titles</h2>
+    <p>
+      A title with a <code>permission</code> field is automatically considered owned
+      by any player holding that permission node - no <code>/titleadmin grant</code>
+      or <code>giveTitle:</code> action required. This is ideal for rank-based or
+      donor-tier titles managed by a permissions plugin.
+    </p>
+    <p>
+      Ownership is evaluated dynamically at read time. A title appears in the
+      player's <code>/title</code> UI, satisfies <code>hasTitle:</code> requirements,
+      and can be set active as long as the permission is held. When the permission
+      is revoked the title disappears on the player's next login and the active
+      selection is cleared.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Dynamic + persistent grants stack</div>
+        <p>
+          <code>/titleadmin grant</code> and <code>giveTitle:</code> write a
+          persistent unlock that is independent of the permission check. A
+          permission-configured title granted that way stays owned even if the
+          permission is later removed - use this as an admin override.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Online-only evaluation</div>
+        <p>
+          Permission checks require the player to be online. Admin views like
+          <code>/titleadmin list &lt;offlinePlayer&gt;</code> show only persistent
+          unlocks for offline targets.
+        </p>
+      </div>
+    </div>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// titles.json</span>
+<span class="hl-key">"donor:king"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"category"</span><span class="hl-punc">:</span>   <span class="hl-str">"donor"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"value"</span><span class="hl-punc">:</span>      <span class="hl-str">"{#FFAA00}{b}King{/}{/}"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"permission"</span><span class="hl-punc">:</span> <span class="hl-str">"questlinestitles.title.king"</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Hidden Titles & Categories -->
+    <div data-section-body="Hidden Titles &amp; Categories">
+    <h2 id="hidden-titles" data-section="Hidden Titles &amp; Categories">Hidden Titles &amp; Categories</h2>
+    <p>
+      Titles can be hidden from the <code>/title</code> selection UI until a player
+      owns them. Visibility is resolved in three layers — per-title override,
+      per-category override, then a global default. Owned titles are always shown
+      regardless of these settings.
+    </p>
+
+    <p>
+      Global defaults and per-category overrides live in
+      <code>mods/QuestLinesTitles/config.json</code>, which is created with defaults
+      on first start:
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"defaultVisible"</span><span class="hl-punc">:</span>     <span class="hl-num">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"categoryVisibility"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"secret"</span><span class="hl-punc">:</span> <span class="hl-num">false</span><span class="hl-punc">,</span>
+    <span class="hl-key">"pvp"</span><span class="hl-punc">:</span>    <span class="hl-num">true</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>defaultVisible</code></td>
+            <td>Default &ldquo;Show to players&rdquo; state for titles and categories without an explicit override. Defaults to <code>true</code>, preserving the pre-1.2 behaviour where every title is shown.</td>
+          </tr>
+          <tr>
+            <td><code>categoryVisibility</code></td>
+            <td>Per-category overrides keyed by category name (lowercase). Categories not listed inherit <code>defaultVisible</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Individual titles can override their category with the <code>visible</code>
+      field on the title entry in <code>titles.json</code>. Omit it to inherit. The
+      admin UI exposes the same toggle as a <strong>Show to players</strong>
+      checkbox on both the category and the title edit row.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Owned titles always show</div>
+        <p>
+          A player who has unlocked a title always sees it in their
+          <code>/title</code> UI, even if the title or its category is marked
+          hidden. Hiding only affects the locked-title preview surface.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Title Formatting -->
+    <div data-section-body="Title Formatting">
+    <h2 id="title-formatting" data-section="Title Formatting">Title Formatting</h2>
+    <p>
+      Title values support three overlapping formatting syntaxes. All three are parsed
+      by the same formatter and can be mixed freely in a single value string.
+    </p>
+
+    <h3 data-section="Brace Tags">Brace Tags</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>{b}text{/}</code></td><td>Bold</td></tr>
+          <tr><td><code>{i}text{/}</code></td><td>Italic</td></tr>
+          <tr><td><code>{u}text{/}</code></td><td>Underline</td></tr>
+          <tr><td><code>{m}text{/}</code></td><td>Monospace</td></tr>
+          <tr><td><code>{#RRGGBB}text{/}</code></td><td>Hex color (3- or 6-digit)</td></tr>
+          <tr><td><code>{link:URL}text{/}</code></td><td>Clickable link</td></tr>
+          <tr><td><code>{/}</code></td><td>Closes the innermost open tag</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="XML-style Tags">XML-style Tags</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>&lt;b&gt;text&lt;/b&gt;</code> or <code>&lt;bold&gt;</code></td><td>Bold</td></tr>
+          <tr><td><code>&lt;i&gt;text&lt;/i&gt;</code> or <code>&lt;italic&gt;</code></td><td>Italic</td></tr>
+          <tr><td><code>&lt;u&gt;text&lt;/u&gt;</code> or <code>&lt;underlined&gt;</code></td><td>Underline</td></tr>
+          <tr><td><code>&lt;m&gt;text&lt;/m&gt;</code> or <code>&lt;monospace&gt;</code></td><td>Monospace</td></tr>
+          <tr><td><code>&lt;#RRGGBB&gt;text&lt;/#RRGGBB&gt;</code></td><td>Hex color</td></tr>
+          <tr><td><code>&lt;gold&gt;text&lt;/gold&gt;</code></td><td>Named color (Minecraft palette: <code>gold</code>, <code>red</code>, <code>aqua</code>, <code>green</code>, etc.)</td></tr>
+          <tr><td><code>&lt;rainbow&gt;text&lt;/rainbow&gt;</code></td><td>Per-character rainbow colors</td></tr>
+          <tr><td><code>&lt;gradient:#FF0000:#0000FF&gt;text&lt;/gradient&gt;</code></td><td>Color gradient (2+ stops)</td></tr>
+          <tr><td><code>&lt;url:https://...&gt;text&lt;/url&gt;</code></td><td>Clickable link</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="&amp;-Codes">&amp;-Codes</h3>
+    <p>
+      Standard Minecraft <code>&amp;X</code> codes are supported. A color code resets
+      all active formatting before applying the new color.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>&amp;0</code>&ndash;<code>&amp;9</code>, <code>&amp;a</code>&ndash;<code>&amp;f</code></td><td>Minecraft color palette</td></tr>
+          <tr><td><code>&amp;l</code></td><td>Bold</td></tr>
+          <tr><td><code>&amp;o</code></td><td>Italic</td></tr>
+          <tr><td><code>&amp;r</code></td><td>Reset all formatting</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// &-code color + bold</span>
+<span class="hl-str">"&amp;6&amp;lLegend"</span>
+
+<span class="hl-cmt">// Brace-tag hex color with bold</span>
+<span class="hl-str">"{#FFAA00}{b}King{/}{/}"</span>
+
+<span class="hl-cmt">// XML gradient</span>
+<span class="hl-str">"&lt;gradient:#FF4444:#FFAA00&gt;Champion&lt;/gradient&gt;"</span>
+
+<span class="hl-cmt">// Tags can nest freely</span>
+<span class="hl-str">"{b}{#FF55FF}Grand{/} Explorer{/}"</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Commands -->
+    <div data-section-body="Commands">
+    <h2 data-section="Commands">Commands</h2>
+
+    <h3 data-section="Player Commands">Player Commands</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Permission</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/title</code></td>
+            <td><em>none</em></td>
+            <td>Opens the title selection UI. Players can browse their unlocked titles and set one as active.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Admin Commands">Admin Commands</h3>
+    <p>All <code>/titleadmin</code> subcommands require the <code>questlinestitles.admin</code> permission. Authoring changes inside <code>/titleadmin ui</code> save back to <code>titles.json</code> automatically; to pick up external edits to <code>titles.json</code> or <code>config.json</code>, restart the server — there is currently no standalone <code>reload</code> subcommand.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/titleadmin grant &lt;username&gt; &lt;titleId&gt;</code></td>
+            <td>Unlock a title for a player. No-op if they already own it.</td>
+          </tr>
+          <tr>
+            <td><code>/titleadmin remove &lt;username&gt; &lt;titleId&gt;</code></td>
+            <td>Revoke a title from a player. Also clears active title if it was the removed one.</td>
+          </tr>
+          <tr>
+            <td><code>/titleadmin set &lt;username&gt; [titleId]</code></td>
+            <td>Equip a title as the player&rsquo;s active worn title. The player must already own the title (use <code>grant</code> first). Omit <code>titleId</code> to clear the active title.</td>
+          </tr>
+          <tr>
+            <td><code>/titleadmin list &lt;username&gt;</code></td>
+            <td>List all titles a player has unlocked.</td>
+          </tr>
+          <tr>
+            <td><code>/titleadmin available</code></td>
+            <td>List all titles defined in <code>titles.json</code>.</td>
+          </tr>
+          <tr>
+            <td><code>/titleadmin ui &lt;username&gt;</code></td>
+            <td>Open the admin title management UI, optionally viewing a specific player&rsquo;s data.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- QuestLines Integration -->
+    <div data-section-body="QuestLines Integration">
+    <h2 id="questlines-integration" data-section="QuestLines Integration">QuestLines Integration</h2>
+    <p>
+      When QuestLines Core is installed alongside QuestLinesTitles, the following
+      actions, requirements, and text variables are automatically registered with
+      the QuestLines engine.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Auto-detected at startup</div>
+        <p>
+          No extra configuration is needed. QuestLinesTitles detects QuestLines Core
+          at runtime and registers the integration automatically. A log line confirms:
+          <code>[Titles] QuestLines detected &ndash; registering requirements, actions &amp; variables</code>.
+        </p>
+      </div>
+    </div>
+
+    <h3 data-section="Actions">Actions</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>giveTitle:&lt;titleId&gt;</code></td>
+            <td>Unlock the specified title for the player. No-op if already owned.</td>
+          </tr>
+          <tr>
+            <td><code>removeTitle:&lt;titleId&gt;</code></td>
+            <td>Revoke the specified title from the player. Also clears active title if it matches.</td>
+          </tr>
+          <tr>
+            <td><code>setTitle:&lt;titleId&gt;</code></td>
+            <td>
+              Equip the specified title as the player's active worn title. Fails silently if the
+              player does not effectively own it (use <code>giveTitle:</code> first, or grant the
+              configured <code>permission</code>). Pass an empty id (<code>setTitle:</code>) to clear
+              the active title.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="how-to-obtain-hints" data-section="How-to-Obtain Hints">How-to-Obtain Hints</h3>
+    <p>
+      Each title can carry an optional <em>source hint</em> shown to players who don&rsquo;t yet own
+      it. In the admin UI&rsquo;s title edit row, pick a <strong>Source</strong> category from the
+      dropdown and write any extra context into <strong>How to get</strong>.
+    </p>
+    <p>
+      In the player&rsquo;s <code>/title</code> UI, locked titles are shown alongside owned ones
+      (greyed out, not clickable to equip) unless hidden by the visibility settings described
+      in <a href="#hidden-titles">Hidden Titles &amp; Categories</a>. Clicking a locked title
+      surfaces its &ldquo;How to get&rdquo; line in the info panel.
+    </p>
+    <p>Stored on the title&rsquo;s JSON entry as:</p>
+    <pre><code>{
+  "id":           "pvp:champion",
+  "category":     "pvp",
+  "value":        "&amp;4&amp;lChampion",
+  "source":       "quest",
+  "sourceDetail": "Complete the Tournament questline"
+}</code></pre>
+    <p>Built-in <code>source</code> values:</p>
+    <ul>
+      <li><code>quest</code> &mdash; Quest</li>
+      <li><code>achievement</code> &mdash; Achievement</li>
+      <li><code>event</code> &mdash; Event</li>
+      <li><code>donation</code> &mdash; Donation</li>
+      <li><code>rank</code> &mdash; Rank / Permission</li>
+      <li><code>purchase</code> &mdash; In-game Purchase</li>
+      <li><code>secret</code> &mdash; Hidden / Secret</li>
+      <li><code>other</code> &mdash; Other</li>
+    </ul>
+    <p>
+      Both <code>source</code> and <code>sourceDetail</code> are optional. The info panel is
+      hidden when neither field is set, so existing titles render unchanged.
+    </p>
+
+    <h3 data-section="Requirements">Requirements</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Requirement</th>
+            <th>Passes when&hellip;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>hasTitle:&lt;titleId&gt;</code></td>
+            <td>The player has unlocked the specified title (whether or not it is active). Passes for <a href="#permission-granted-titles">permission-granted</a> titles while the permission is held.</td>
+          </tr>
+          <tr>
+            <td><code>titleActive:&lt;titleId&gt;</code></td>
+            <td>The player&rsquo;s currently active title is the specified title.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Text Variable">Text Variable</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Replaced with&hellip;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>{title}</code></td>
+            <td>The player&rsquo;s active title as plain text (all formatting stripped). Empty string if no title is active.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Quest response action: award a title on quest completion</span>
+<span class="hl-str">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questCompleted:dragon_slayer"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"giveTitle:pvp:dragonslayer"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"message:You earned the title: {title}!"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Requirement: only show page if player has the title</span>
+<span class="hl-str">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span> <span class="hl-str">"hasTitle:pvp:dragonslayer"</span> <span class="hl-punc">]</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Nameplate Display -->
+    <div data-section-body="Nameplate Display">
+    <h2 data-section="Nameplate Display">Nameplate Display</h2>
+    <p>
+      The active title is automatically appended to each player&rsquo;s nameplate (the
+      label rendered above their head in-world). By default the plugin writes
+      <code>&lt;title&gt; &lt;username&gt;</code> into the native Hytale
+      <code>Nameplate</code> component, stripping colors and formatting tags so the
+      engine&rsquo;s name renderer can display the value.
+    </p>
+    <p>
+      When <strong>NameplateBuilder</strong> is installed the plugin detects it at
+      startup and instead registers a <code>title</code> segment with the
+      NameplateBuilder API (segment id <code>title</code>, enabled by default for
+      players, refreshed every 20 ticks plus on title-change). This lets server
+      admins reorder, restyle, or disable the title alongside other nameplate
+      segments without conflict. See
+      <a href="#nameplatebuilder">NameplateBuilder</a> under Integrations.
+    </p>
+    </div>
+
+    <!-- Integrations -->
+    <div data-section-body="Integrations">
+    <h2 data-section="Integrations">Integrations</h2>
+    <p>
+      Every integration below is optional and auto-detected at startup &mdash;
+      install the partner plugin and QuestLinesTitles wires itself in. None of them
+      need to be configured on the Titles side.
+    </p>
+
+    <h3 id="nameplatebuilder" data-section="NameplateBuilder">NameplateBuilder</h3>
+    <p>
+      When <a href="https://www.curseforge.com/hytale/mods/nameplate-builder" target="_blank" rel="noopener">NameplateBuilder</a>
+      is installed, QuestLinesTitles registers a <code>title</code> segment
+      (display name <em>Player Title</em>) targeted at players. The segment is
+      enabled by default, refreshes every 20 ticks, and is force-pushed whenever the
+      player&rsquo;s active title changes. While NameplateBuilder is active the
+      plugin stops writing the native <code>Nameplate</code> component directly so
+      the two systems don&rsquo;t fight over it.
+    </p>
+
+    <h3 data-section="VaultUnlocked">VaultUnlocked</h3>
+    <p>
+      When VaultUnlocked is installed, QuestLinesTitles registers as a
+      <strong>ChatUnlocked provider</strong>. Chat plugins that consume VaultUnlocked&rsquo;s
+      chat API will automatically receive the player&rsquo;s active title as a chat prefix.
+    </p>
+
+    <h3 data-section="PlaceholderAPIs">PlaceholderAPIs</h3>
+    <p>
+      QuestLinesTitles ships expansions for three Hytale PlaceholderAPI
+      implementations. All three resolve to the player&rsquo;s currently active
+      title with <code>{&hellip;}</code> formatting tags stripped, retaining
+      <code>&amp;</code>-codes and &sect;-codes for downstream color-code
+      processing. An empty string is returned when the player has no active title.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Placeholder</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://www.curseforge.com/hytale/mods/placeholder-api" target="_blank" rel="noopener">HelpChat PlaceholderAPI</a></td>
+            <td><code>%title%</code></td>
+            <td>Identifier <code>title</code>; persistent expansion.</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.curseforge.com/hytale/mods/placeholderapi" target="_blank" rel="noopener">CreeperFace PlaceholderAPI 2.0</a></td>
+            <td><code>{title}</code></td>
+            <td>Visitor-sensitive placeholder registered under the <code>GlobalScope</code>.</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.curseforge.com/hytale/mods/wiflows-placeholderapi" target="_blank" rel="noopener">WiFlow PlaceholderAPI</a></td>
+            <td><code>{title_active}</code> (or any <code>{title_*}</code>)</td>
+            <td>Expansion identifier <code>title</code>; works in EssentialsPlus chat formats.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- File Layout -->
+    <div data-section-body="File Layout">
+    <h2 data-section="File Layout">File Layout</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>mods/QuestLinesTitles/titles.json</code></td>
+            <td>Server-wide title catalogue. Edit to add, rename, or remove titles.</td>
+          </tr>
+          <tr>
+            <td><code>mods/QuestLinesTitles/config.json</code></td>
+            <td>Global plugin configuration. Currently holds the <code>defaultVisible</code> toggle and <code>categoryVisibility</code> overrides used by <a href="#hidden-titles">Hidden Titles &amp; Categories</a>.</td>
+          </tr>
+          <tr>
+            <td><code>mods/QuestLinesTitles/playerdata/&lt;username&gt;.json</code></td>
+            <td>Per-player title state: unlocked titles, timestamps, and active title.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>questlinestitles.admin</code></td>
+            <td>false</td>
+            <td>Required for all <code>/titleadmin</code> subcommands.</td>
+          </tr>
+          <tr>
+            <td><code>&lt;custom node&gt;</code></td>
+            <td>false</td>
+            <td>Any node referenced in a title's <code>permission</code> field dynamically grants that title while held. Node name is server-defined (e.g. <code>questlinestitles.title.king</code>). See <a href="#permission-granted-titles">Permission-Granted Titles</a>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

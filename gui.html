@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines GUI &mdash; Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="gui" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">GUI Plugin</div>
+      <h1 class="page-title">QuestLines GUI</h1>
+      <p class="page-subtitle">
+        Build custom in-game screens as declarative <code>.gui.html</code> files written in
+        Hytale&rsquo;s native HyUIML markup. Sprinkle a handful of <code>data-ql-*</code>
+        attributes on any element to wire it into QuestLines Core &mdash; hide elements by
+        requirement, execute actions on click, and substitute text variables anywhere.
+      </p>
+    </div>
+
+    <!-- What It Is -->
+    <div data-section-body="What It Is">
+    <h2 data-section="What It Is">What It Is</h2>
+    <p>
+      QuestLines GUI lets server admins build custom in-game UI screens using the same
+      HyUIML syntax Hytale uses internally for its own UIs. Each screen is a single
+      <code>.gui.html</code> file in <code>mods/QuestLinesGUI/guis/</code>. The plugin
+      loads these at startup and exposes them via the <code>/qlgui</code> command, the
+      <code>opengui:</code> Core action, and optional per-GUI alias commands.
+    </p>
+    <p>
+      At open time the plugin processes the raw HyUIML per-player: it removes elements
+      whose <code>data-ql-req</code> requirements fail, substitutes Core text variables
+      (<code>{player}</code>, <code>{track:id}</code>, etc.) throughout the markup, wires
+      up event listeners for buttons, item slots, checkboxes, and dropdowns, and finally
+      hands the cleaned HyUIML to the Hytale UI renderer.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Optional Core dependency</div>
+        <p>
+          QuestLines GUI fails open if Core is missing: requirements pass, actions no-op,
+          and text is returned unchanged. The <code>opengui:</code> action is only
+          registered when Core is present.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Web Editor -->
+    <div data-section-body="Web Editor">
+    <h2 data-section="Web Editor">Web Editor</h2>
+    <p>
+      The recommended way to build GUIs is the online point-and-click editor at
+      <a href="https://evilcraft.net/GUIEditor">evilcraft.net/GUIEditor</a>. Build the
+      screen visually, then export a <code>.gui.html</code> file and drop it into
+      <code>mods/QuestLinesGUI/guis/</code>. The editor also imports existing
+      <code>.gui.html</code> files for editing.
+    </p>
+    <p>
+      Run <code>/qlgui editor</code> in-game to get the link sent to chat as a clickable
+      URL. After importing a file on disk (or editing one by hand), run
+      <code>/qlgui reload</code> to pick up the changes without restarting the server.
+    </p>
+    </div>
+
+    <!-- File Format -->
+    <div data-section-body="File Format">
+    <h2 data-section="File Format">File Format</h2>
+    <p>
+      Each file in <code>mods/QuestLinesGUI/guis/</code> named <code>&lt;id&gt;.gui.html</code>
+      defines one screen. The id is taken from the filename stem; an explicit
+      <code>data-ql-id</code> on the outermost container overrides it.
+    </p>
+    <p>
+      A GUI is a single HyUIML document with a <code>&lt;div class="container"&gt;</code>
+      at the root and a <code>&lt;div class="container-contents"&gt;</code> wrapper inside.
+      All QuestLines-specific metadata goes on the root container via <code>data-ql-*</code>
+      attributes.
+    </p>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">&lt;!-- mods/QuestLinesGUI/guis/blacksmith.gui.html --&gt;</span>
+<span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">class</span>=<span class="hl-str">"container"</span>
+     <span class="hl-key">data-hyui-title</span>=<span class="hl-str">"Aldric's Forge"</span>
+     <span class="hl-key">style</span>=<span class="hl-str">"anchor-width: 480; anchor-height: 420;"</span>
+     <span class="hl-key">data-ql-id</span>=<span class="hl-str">"blacksmith"</span>
+     <span class="hl-key">data-ql-command</span>=<span class="hl-str">"shop"</span>
+     <span class="hl-key">data-ql-close</span>=<span class="hl-str">"false"</span>
+     <span class="hl-key">data-ql-refresh</span>=<span class="hl-str">"true"</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">class</span>=<span class="hl-str">"container-contents"</span><span class="hl-punc">&gt;</span>
+    <span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">style</span>=<span class="hl-str">"layout-mode: TopScrolling;"</span><span class="hl-punc">&gt;</span>
+      <span class="hl-cmt">&lt;!-- elements go here --&gt;</span>
+    <span class="hl-punc">&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span>
+<span class="hl-punc">&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span></code></pre>
+    </div>
+
+    <h3>Root container <code>data-ql-*</code> attributes</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Attribute</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>data-ql-id</code></td><td><em>filename stem</em></td><td>GUI id used by <code>opengui:&lt;id&gt;</code> and <code>/qlgui open</code>.</td></tr>
+          <tr><td><code>data-ql-command</code></td><td><em>none</em></td><td>Optional alias command. If set, <code>/&lt;command&gt;</code> is registered on startup and opens the GUI for the player who runs it.</td></tr>
+          <tr><td><code>data-ql-close</code></td><td><code>false</code></td><td>Default close-on-click for every interactive element. Individual elements may override.</td></tr>
+          <tr><td><code>data-ql-refresh</code></td><td><code>true</code></td><td>Default refresh (re-render after action) for every interactive element. Individual elements may override.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">HyUIML is Hytale&rsquo;s native markup</div>
+        <p>
+          This plugin does not invent a new UI language. Standard HyUIML features &mdash;
+          <code>layout-mode</code>, <code>anchor-width</code>, <code>flex-weight</code>,
+          <code>font-bold</code>, <code>horizontal-align</code>, CSS classes like
+          <code>container</code> / <code>container-contents</code> /
+          <code>small-secondary-button</code>, and every built-in element
+          (<code>&lt;label&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;progress&gt;</code>,
+          <code>&lt;sprite&gt;</code>, etc.) &mdash; all work as documented by Hytale. QuestLines
+          only adds the <code>data-ql-*</code> attributes described below.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Data-QL Attributes -->
+    <div data-section-body="data-ql Attributes">
+    <h2 data-section="data-ql Attributes">data-ql Attributes</h2>
+    <p>
+      All QuestLines hooks are <code>data-ql-*</code> attributes. Pipe (<code>|</code>) is
+      the separator for lists of requirements or actions. Attributes apply to any element
+      unless noted otherwise &mdash; you can hide a whole <code>&lt;sprite&gt;</code> with
+      <code>data-ql-req</code>, or put <code>data-ql-actions</code> on an
+      <code>&lt;option&gt;</code> inside a dropdown.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Attribute</th><th>Applies to</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>data-ql-req</code></td>
+            <td>Any element</td>
+            <td>
+              Pipe-separated list of Core requirements. If <em>any</em> fails, the
+              entire element (and its subtree) is removed before render.
+            </td>
+          </tr>
+          <tr>
+            <td><code>data-ql-actions</code></td>
+            <td><code>&lt;button&gt;</code>, <code>.item-grid-slot</code>, <code>&lt;option&gt;</code></td>
+            <td>Pipe-separated list of Core actions fired on click / value change.</td>
+          </tr>
+          <tr>
+            <td><code>data-ql-close</code></td>
+            <td>Root container + interactive elements</td>
+            <td>Override the GUI-level close-on-click default for this element.</td>
+          </tr>
+          <tr>
+            <td><code>data-ql-refresh</code></td>
+            <td>Root container + interactive elements</td>
+            <td>Override the GUI-level refresh default for this element.</td>
+          </tr>
+          <tr>
+            <td><code>data-ql-click-req</code></td>
+            <td><code>.item-grid-slot</code></td>
+            <td>
+              Click-time requirements. If any fail, the click is silently blocked but the
+              slot remains visible. If set, the slot gets a green (passing) or red
+              (failing) background tint.
+            </td>
+          </tr>
+          <tr>
+            <td><code>data-ql-check-req</code></td>
+            <td><code>&lt;input type="checkbox"&gt;</code></td>
+            <td>Determines the initial checked state at render time.</td>
+          </tr>
+          <tr>
+            <td><code>data-ql-check-actions</code></td>
+            <td><code>&lt;input type="checkbox"&gt;</code></td>
+            <td>Actions fired when the player toggles the box on.</td>
+          </tr>
+          <tr>
+            <td><code>data-ql-uncheck-actions</code></td>
+            <td><code>&lt;input type="checkbox"&gt;</code></td>
+            <td>Actions fired when the player toggles the box off.</td>
+          </tr>
+          <tr>
+            <td><code>data-ql-label</code></td>
+            <td><code>&lt;input type="checkbox"&gt;</code></td>
+            <td>Text rendered next to the checkbox.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Click flow: close vs refresh</h3>
+    <p>
+      After an interactive element fires its actions, the plugin decides what to do next:
+    </p>
+    <ul>
+      <li>If the resolved <code>close</code> is <code>true</code>, the GUI is closed.</li>
+      <li>Otherwise, if the resolved <code>refresh</code> is <code>true</code>, the GUI is
+        re-opened for the same player &mdash; re-evaluating all <code>data-ql-req</code>,
+        re-substituting text variables, and re-applying slot click-req tints.</li>
+      <li>Otherwise, the GUI stays open as-is.</li>
+    </ul>
+    <p>
+      Resolution precedence is <em>element override &rarr; GUI default</em>. For dropdowns,
+      precedence is <em>option &rarr; select &rarr; GUI default</em>.
+    </p>
+    </div>
+
+    <!-- Interactive Elements -->
+    <div data-section-body="Interactive Elements">
+    <h2 data-section="Interactive Elements">Interactive Elements</h2>
+    <p>
+      Four element kinds are &ldquo;live&rdquo; &mdash; the plugin registers an event listener
+      on each and fires Core actions when the player interacts. Every listener runs on the
+      world thread, so actions that mutate world state are safe.
+    </p>
+
+    <h3>Button</h3>
+    <p>
+      Any <code>&lt;button&gt;</code> with <code>data-ql-actions</code> becomes clickable.
+      Buttons with <code>class="disabled"</code> are skipped.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">&lt;</span><span class="hl-kw">button</span> <span class="hl-key">class</span>=<span class="hl-str">"primary"</span>
+        <span class="hl-key">data-ql-req</span>=<span class="hl-str">"economy:canafford:10"</span>
+        <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"economy:take:10|item:iron_sword:1|message:Bought!"</span>
+        <span class="hl-key">data-ql-close</span>=<span class="hl-str">"true"</span><span class="hl-punc">&gt;</span>Buy Iron Sword (10g)<span class="hl-punc">&lt;/</span><span class="hl-kw">button</span><span class="hl-punc">&gt;</span></code></pre>
+    </div>
+
+    <h3>Item Grid</h3>
+    <p>
+      An inventory-style grid. Use <code>&lt;div class="item-grid"&gt;</code> as the
+      container and <code>&lt;div class="item-grid-slot"&gt;</code> for each slot. Hytale
+      attributes <code>data-hyui-slots-per-row</code>, <code>data-hyui-item-id</code>,
+      <code>data-hyui-quantity</code>, <code>data-hyui-name</code>, and
+      <code>data-hyui-description</code> control rendering; QuestLines adds
+      <code>data-ql-req</code>, <code>data-ql-actions</code>, and
+      <code>data-ql-click-req</code> per slot.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">class</span>=<span class="hl-str">"item-grid"</span> <span class="hl-key">data-hyui-slots-per-row</span>=<span class="hl-str">"5"</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">class</span>=<span class="hl-str">"item-grid-slot"</span>
+       <span class="hl-key">data-hyui-item-id</span>=<span class="hl-str">"iron_sword"</span>
+       <span class="hl-key">data-hyui-quantity</span>=<span class="hl-str">"1"</span>
+       <span class="hl-key">data-hyui-name</span>=<span class="hl-str">"Iron Sword"</span>
+       <span class="hl-key">data-hyui-description</span>=<span class="hl-str">"A sturdy blade. 10g."</span>
+       <span class="hl-key">data-ql-click-req</span>=<span class="hl-str">"economy:canafford:10"</span>
+       <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"economy:take:10|item:iron_sword:1"</span><span class="hl-punc">&gt;&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span>
+<span class="hl-punc">&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span></code></pre>
+    </div>
+    <p>
+      When a slot has <code>data-ql-click-req</code>, the plugin paints the slot background
+      green (click allowed) or red (click blocked) so players see at a glance what&rsquo;s
+      affordable. Without <code>data-ql-click-req</code>, no tint is applied.
+    </p>
+
+    <h3>Checkbox</h3>
+    <p>
+      A checkbox is an <code>&lt;input type="checkbox"&gt;</code>. Initial state comes from
+      <code>data-ql-check-req</code>; clicking fires <code>data-ql-check-actions</code> when
+      toggling on, or <code>data-ql-uncheck-actions</code> when toggling off. The label next
+      to the box comes from <code>data-ql-label</code>.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">&lt;</span><span class="hl-kw">input</span> <span class="hl-key">type</span>=<span class="hl-str">"checkbox"</span>
+       <span class="hl-key">data-ql-label</span>=<span class="hl-str">"Show quest notifications"</span>
+       <span class="hl-key">data-ql-check-req</span>=<span class="hl-str">"hasTag:notif_on"</span>
+       <span class="hl-key">data-ql-check-actions</span>=<span class="hl-str">"addTag:notif_on"</span>
+       <span class="hl-key">data-ql-uncheck-actions</span>=<span class="hl-str">"removeTag:notif_on"</span> <span class="hl-punc">/&gt;</span></code></pre>
+    </div>
+
+    <h3>Dropdown</h3>
+    <p>
+      A <code>&lt;select&gt;</code> with one or more <code>&lt;option&gt;</code> children.
+      Each option may have its own <code>data-ql-actions</code>; when the player changes the
+      selection to a given option, those actions fire. Options may also have
+      <code>data-ql-req</code> to hide themselves, and their own
+      <code>data-ql-close</code> / <code>data-ql-refresh</code> overrides.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">&lt;</span><span class="hl-kw">select</span> <span class="hl-key">data-ql-close</span>=<span class="hl-str">"false"</span> <span class="hl-key">data-ql-refresh</span>=<span class="hl-str">"true"</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;</span><span class="hl-kw">option</span> <span class="hl-key">value</span>=<span class="hl-str">"peaceful"</span> <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"setVariable:difficulty:peaceful"</span><span class="hl-punc">&gt;</span>Peaceful<span class="hl-punc">&lt;/</span><span class="hl-kw">option</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;</span><span class="hl-kw">option</span> <span class="hl-key">value</span>=<span class="hl-str">"hard"</span>     <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"setVariable:difficulty:hard"</span><span class="hl-punc">&gt;</span>Hard<span class="hl-punc">&lt;/</span><span class="hl-kw">option</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;</span><span class="hl-kw">option</span> <span class="hl-key">value</span>=<span class="hl-str">"nightmare"</span> <span class="hl-key">data-ql-req</span>=<span class="hl-str">"hasTag:beaten_game"</span>
+                                <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"setVariable:difficulty:nightmare"</span><span class="hl-punc">&gt;</span>Nightmare<span class="hl-punc">&lt;/</span><span class="hl-kw">option</span><span class="hl-punc">&gt;</span>
+<span class="hl-punc">&lt;/</span><span class="hl-kw">select</span><span class="hl-punc">&gt;</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Display Elements -->
+    <div data-section-body="Display Elements">
+    <h2 data-section="Display Elements">Display Elements</h2>
+    <p>
+      These elements just render &mdash; they don&rsquo;t fire actions. All of them accept
+      <code>data-ql-req</code> to be hidden conditionally, and text variables in their text
+      content and attributes are substituted automatically.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Element</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>&lt;label&gt;</code></td><td>Styled text. Use <code>style</code> for <code>font-size</code>, <code>color</code>, <code>font-bold</code>, <code>horizontal-align</code>, etc.</td></tr>
+          <tr><td><code>&lt;img src="..."&gt;</code></td><td>Static image from a resource-pack path.</td></tr>
+          <tr><td><code>&lt;sprite src="..."&gt;</code></td><td>Animated sprite. Hytale frame attributes (<code>data-hyui-frame-width</code>, <code>data-hyui-frame-height</code>, <code>data-hyui-frame-per-row</code>, <code>data-hyui-frame-count</code>, <code>data-hyui-fps</code>) control playback.</td></tr>
+          <tr><td><code>&lt;progress value="..." max="..."&gt;</code></td><td>Progress bar. Add <code>class="circular"</code> and <code>data-hyui-color="#rrggbb"</code> for a ring-style fill.</td></tr>
+          <tr><td><code>&lt;hyvatar username="..." render="head" size="64"&gt;</code></td><td>Player avatar. <code>render</code> accepts <code>head</code>, <code>body</code>, <code>bust</code>, or <code>full</code>. Use <code>username="{player}"</code> for the viewing player.</td></tr>
+          <tr><td><code>&lt;span class="item-icon" data-hyui-item-id="..."&gt;</code></td><td>Single item icon rendered by the Hytale item renderer.</td></tr>
+          <tr><td><code>&lt;hotkey-label input-binding-key="..."&gt;</code></td><td>Displays the player&rsquo;s bound keybind for a given input action.</td></tr>
+          <tr><td><code>&lt;div style="layout-mode: ..."&gt;</code></td><td>Layout panel. Use <code>data-ql-req</code> to hide the whole subtree.</td></tr>
+          <tr><td><code>&lt;div style="anchor-height: N;"&gt;</code></td><td>Spacer (fixed-height empty box).</td></tr>
+          <tr><td><code>&lt;div style="anchor-height: N; background-color: #rrggbb;"&gt;</code></td><td>Divider (thin coloured rule).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Core Integration -->
+    <div data-section-body="Core Integration">
+    <h2 data-section="Core Integration">Core Integration</h2>
+
+    <h3>opengui: action</h3>
+    <p>
+      When both QuestLines GUI and QuestLines Core are installed, the plugin registers an
+      <code>opengui:&lt;guiId&gt;</code> action with Core. Use it anywhere Core actions are
+      accepted &mdash; response <code>Actions</code> lists, page <code>LoadActions</code>,
+      buttons in other GUIs, or via the developer API.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Open a shop screen from a dialogue response</span>
+<span class="hl-str">"opengui:blacksmith"</span>
+
+<span class="hl-cmt">// Auto-open a welcome screen once (via LoadActions)</span>
+<span class="hl-key">Requirements</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"questNotStarted:welcome"</span><span class="hl-punc">]</span>
+<span class="hl-key">LoadActions</span><span class="hl-punc">:</span>  <span class="hl-punc">[</span><span class="hl-str">"startquest:welcome"</span><span class="hl-punc">,</span> <span class="hl-str">"opengui:welcome_screen"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <h3>Requirements on elements</h3>
+    <p>
+      Any element with <code>data-ql-req</code> is removed (along with its subtree) when any
+      requirement fails. Requirements use the exact same syntax as quest page requirements
+      &mdash; <code>hasTag:vip</code>, <code>questCompleted:intro</code>,
+      <code>track:killboss:5</code>, <code>economy:canafford:50</code>, and everything else
+      in the <a href="requirements.html">Requirements reference</a>.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">&lt;</span><span class="hl-kw">button</span> <span class="hl-key">class</span>=<span class="hl-str">"primary"</span>
+        <span class="hl-key">data-ql-req</span>=<span class="hl-str">"hasTag:vip"</span>
+        <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"opengui:vip_shop"</span><span class="hl-punc">&gt;</span>VIP Shop<span class="hl-punc">&lt;/</span><span class="hl-kw">button</span><span class="hl-punc">&gt;</span></code></pre>
+    </div>
+
+    <h3>Actions in buttons, slots, and dropdown options</h3>
+    <p>
+      The <code>data-ql-actions</code> list accepts any Core action. This includes quest
+      actions (<code>questCompleted:</code>), economy actions (<code>economy:give:500</code>),
+      navigation (<code>opengui:otherId</code>), and everything else in the
+      <a href="actions.html">Actions reference</a>. Actions run on the world thread via
+      Core&rsquo;s <code>executeActions</code> API.
+    </p>
+
+    <h3>Text variables</h3>
+    <p>
+      Every text variable available in dialogue is also available in GUIs. The plugin walks
+      every text node and every non-<code>data-ql-*</code> attribute looking for
+      <code>{&hellip;}</code> substitutions, so you can drop variables into label text,
+      button labels, image <code>src</code>, item ids, hyvatar usernames, progress
+      <code>value</code>, tooltip fields, and anywhere else you&rsquo;d expect.
+    </p>
+    <p>
+      Since a GUI has no dialogue-page context, page-specific variables (like
+      <code>{response:*}</code>) resolve to empty strings. Player-scoped variables
+      (<code>{player}</code>, <code>{track:id}</code>, <code>{variable:name}</code>, etc.)
+      all work normally.
+    </p>
+    </div>
+
+    <!-- Commands -->
+    <div data-section-body="Commands">
+    <h2 data-section="Commands">Commands</h2>
+
+    <p>Root command: <code>/qlgui</code>. All subcommands require <code>questlines.admin</code>.</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/qlgui open &lt;guiId&gt; [player]</td>
+            <td>
+              Open a GUI for yourself or for a named online player. The optional
+              <code>player</code> argument defaults to self.
+            </td>
+          </tr>
+          <tr>
+            <td>/qlgui list</td>
+            <td>List all loaded GUI ids.</td>
+          </tr>
+          <tr>
+            <td>/qlgui reload</td>
+            <td>Reload all <code>.gui.html</code> files from disk. Unregisters and re-registers alias commands.</td>
+          </tr>
+          <tr>
+            <td>/qlgui editor</td>
+            <td>Sends a clickable link to the online GUI editor in chat.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Alias commands</h3>
+    <p>
+      If a GUI&rsquo;s root container has a <code>data-ql-command</code> attribute, the plugin
+      registers <code>/&lt;commandName&gt;</code> as a first-class server command on startup.
+      Running the command opens that specific GUI for the player. Alias commands are
+      unregistered on <code>/qlgui reload</code> and re-registered from the fresh config.
+    </p>
+    <p>
+      Each alias is gated by the permission <code>questlines.gui.&lt;commandName&gt;</code>,
+      default <code>true</code>. This check does not apply to <code>/qlgui open</code> or to
+      the <code>opengui:</code> action &mdash; both bypass it so admins and quest scripts can
+      open any GUI unconditionally.
+    </p>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Permission</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>questlines.admin</td>
+            <td>false</td>
+            <td>Required for every <code>/qlgui</code> subcommand.</td>
+          </tr>
+          <tr>
+            <td>questlines.gui.&lt;commandName&gt;</td>
+            <td>true</td>
+            <td>
+              Gates each dynamically registered alias command. Revoke it on specific
+              players or groups to restrict access without removing the GUI itself.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Data Directory -->
+    <div data-section-body="Data Directory">
+    <h2 data-section="Data Directory">Data Directory</h2>
+    <p>
+      GUI definitions live in <code>mods/QuestLinesGUI/guis/</code>. Each file is named
+      <code>&lt;guiId&gt;.gui.html</code> and contains raw HyUIML. The plugin scans the
+      directory at startup and on <code>/qlgui reload</code>.
+    </p>
+    <p>
+      Legacy <code>.gui.json</code> files from older versions are ignored with a one-time
+      warning &mdash; import them into the web editor to convert them to the HyUIML format,
+      then re-export as <code>.gui.html</code>.
+    </p>
+    </div>
+
+    <!-- Full Example -->
+    <div data-section-body="Full Example">
+    <h2 data-section="Full Example">Full Example</h2>
+    <p>A simple shop screen with a VIP-only section, a progress bar, and a VIP toggle:</p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">&lt;!-- mods/QuestLinesGUI/guis/blacksmith.gui.html --&gt;</span>
+<span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">class</span>=<span class="hl-str">"container"</span>
+     <span class="hl-key">data-hyui-title</span>=<span class="hl-str">"Aldric's Forge"</span>
+     <span class="hl-key">style</span>=<span class="hl-str">"anchor-width: 420; anchor-height: 420;"</span>
+     <span class="hl-key">data-ql-id</span>=<span class="hl-str">"blacksmith"</span>
+     <span class="hl-key">data-ql-command</span>=<span class="hl-str">"shop"</span>
+     <span class="hl-key">data-ql-close</span>=<span class="hl-str">"false"</span>
+     <span class="hl-key">data-ql-refresh</span>=<span class="hl-str">"true"</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">class</span>=<span class="hl-str">"container-contents"</span><span class="hl-punc">&gt;</span>
+    <span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">style</span>=<span class="hl-str">"layout-mode: TopScrolling; padding: 12;"</span><span class="hl-punc">&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">label</span> <span class="hl-key">style</span>=<span class="hl-str">"font-size: 18; color: #e8c97a; font-bold: true; horizontal-align: Center;"</span><span class="hl-punc">&gt;</span>
+        Welcome, {player}!
+      <span class="hl-punc">&lt;/</span><span class="hl-kw">label</span><span class="hl-punc">&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">style</span>=<span class="hl-str">"anchor-height: 1; background-color: #444444;"</span><span class="hl-punc">&gt;&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">label</span> <span class="hl-key">style</span>=<span class="hl-str">"font-size: 13; color: #aabbcc;"</span><span class="hl-punc">&gt;</span>
+        Smith reputation: {track:smith_rep} / 100
+      <span class="hl-punc">&lt;/</span><span class="hl-kw">label</span><span class="hl-punc">&gt;</span>
+      <span class="hl-punc">&lt;</span><span class="hl-kw">progress</span> <span class="hl-key">value</span>=<span class="hl-str">"{track:smith_rep}"</span> <span class="hl-key">max</span>=<span class="hl-str">"100"</span>
+                <span class="hl-key">style</span>=<span class="hl-str">"anchor-width: 380; anchor-height: 20;"</span>
+                <span class="hl-key">data-hyui-color</span>=<span class="hl-str">"#e08040"</span><span class="hl-punc">&gt;&lt;/</span><span class="hl-kw">progress</span><span class="hl-punc">&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">div</span> <span class="hl-key">style</span>=<span class="hl-str">"anchor-height: 8;"</span><span class="hl-punc">&gt;&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">button</span> <span class="hl-key">class</span>=<span class="hl-str">"primary"</span>
+              <span class="hl-key">data-ql-req</span>=<span class="hl-str">"economy:canafford:10"</span>
+              <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"economy:take:10|item:iron_sword:1|message:Bought an iron sword."</span><span class="hl-punc">&gt;</span>
+        Buy Iron Sword (10g)
+      <span class="hl-punc">&lt;/</span><span class="hl-kw">button</span><span class="hl-punc">&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">button</span> <span class="hl-key">class</span>=<span class="hl-str">"primary"</span>
+              <span class="hl-key">data-ql-req</span>=<span class="hl-str">"hasTag:vip|economy:canafford:500"</span>
+              <span class="hl-key">data-ql-actions</span>=<span class="hl-str">"economy:take:500|item:legendary_blade:1"</span><span class="hl-punc">&gt;</span>
+        Buy Legendary Blade (VIP -- 500g)
+      <span class="hl-punc">&lt;/</span><span class="hl-kw">button</span><span class="hl-punc">&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">input</span> <span class="hl-key">type</span>=<span class="hl-str">"checkbox"</span>
+             <span class="hl-key">data-ql-label</span>=<span class="hl-str">"Remind me of daily smith quests"</span>
+             <span class="hl-key">data-ql-check-req</span>=<span class="hl-str">"hasTag:smith_reminders"</span>
+             <span class="hl-key">data-ql-check-actions</span>=<span class="hl-str">"addTag:smith_reminders"</span>
+             <span class="hl-key">data-ql-uncheck-actions</span>=<span class="hl-str">"removeTag:smith_reminders"</span> <span class="hl-punc">/&gt;</span>
+
+      <span class="hl-punc">&lt;</span><span class="hl-kw">button</span> <span class="hl-key">class</span>=<span class="hl-str">"small-secondary-button"</span>
+              <span class="hl-key">data-ql-close</span>=<span class="hl-str">"true"</span>
+              <span class="hl-key">data-ql-actions</span>=<span class="hl-str">""</span><span class="hl-punc">&gt;</span>Close<span class="hl-punc">&lt;/</span><span class="hl-kw">button</span><span class="hl-punc">&gt;</span>
+
+    <span class="hl-punc">&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span>
+  <span class="hl-punc">&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span>
+<span class="hl-punc">&lt;/</span><span class="hl-kw">div</span><span class="hl-punc">&gt;</span></code></pre>
+    </div>
+    <p>
+      With <code>data-ql-command="shop"</code> on the container, players can open this
+      screen with <code>/shop</code> (or admins can call <code>/qlgui open blacksmith</code>,
+      or a quest response can fire <code>opengui:blacksmith</code>).
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

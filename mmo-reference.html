@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; Permissions &amp; Integrations</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">Permissions &amp; Integrations</h1>
+      <p class="page-subtitle">
+        The <code>questlinesmmo.*</code> permission tree and its defaults, plus
+        how the plugin integrates with QuestLines Claims and cron scheduling.
+      </p>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+    <p>
+      Permissions follow a flat <code>questlinesmmo.&lt;feature&gt;.&lt;action&gt;</code>
+      layout. The full set is given in the player and admin command tables on the
+      <a href="mmo-interface.html">UI &amp; Commands</a> page.
+      A few umbrella nodes are worth highlighting:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Permission</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>questlinesmmo.admin</code></td><td>false</td><td>Gatekeeper for the entire <code>/qlmmo admin</code> hierarchy.</td></tr>
+          <tr><td><code>questlinesmmo.qlmmo.reload</code></td><td>false</td><td>Required for <code>/qlmmo reload</code>.</td></tr>
+          <tr><td><code>questlinesmmo.qlmmo.poi.*</code></td><td>false</td><td>Authoring permissions for POI definitions.</td></tr>
+          <tr><td><code>questlinesmmo.guild</code></td><td>true</td><td>Open the <code>/guild</code> shortcuts UI.</td></tr>
+          <tr><td><code>questlinesmmo.guild.create</code></td><td>true</td><td>Required to create a new guild.</td></tr>
+          <tr><td><code>questlinesmmo.guild.home</code></td><td>true</td><td>Enter your guild hall.</td></tr>
+          <tr><td><code>questlinesmmo.dungeon.enter</code></td><td>true</td><td>Required to take a party into a dungeon.</td></tr>
+          <tr><td><code>questlinesmmo.discoveries</code></td><td>true</td><td>Open the player Discoveries panel.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Per-feature nodes (<code>questlinesmmo.party.*</code>,
+      <code>questlinesmmo.friend.*</code>, <code>questlinesmmo.lfg.*</code>,
+      <code>questlinesmmo.guild.perms.*</code>, etc.) all default to allowing
+      players to use the relevant command. Restrict them by denying explicitly
+      in your permission manager.
+    </p>
+    </div>
+
+    <!-- Integrations -->
+    <div data-section-body="Integrations">
+    <h2 data-section="Integrations">Integrations</h2>
+
+    <h3 data-section="QuestLines Claims">QuestLines Claims</h3>
+    <p>
+      When QuestLines Claims is installed, the bridge in
+      <code>net.evilcraft.questlinesmmo.bridge.ClaimsBridge</code> is loaded and
+      guild halls delegate chunk protection, plot management, and wilderness
+      rules to Claims. The bridge is fully isolated &mdash; with Claims absent,
+      no Claims classes are referenced and the plugin loads normally; per-mode
+      wilderness toggles in <code>config.guildHall</code> become no-ops.
+    </p>
+    <p>
+      Guild plots (<code>/guild hall plot rent|buy</code>) reuse the standard
+      <code>/claim wand</code> selection workflow. Guild plots are stored
+      separately from admin Claims regions and intentionally do not support
+      prefab saving &mdash; that workflow is reserved for admin regions.
+    </p>
+
+    <h3 data-section="Cron Scheduling">Cron Scheduling</h3>
+    <p>
+      World boss spawns are evaluated by an internal cron parser. Standard
+      five-field expressions are supported (minute, hour, day-of-month, month,
+      day-of-week). Spawn timestamps are persisted to
+      <code>bosses/schedule_state.json</code> so a missed window after a server
+      restart is detected and recovered to (the next valid time fires
+      immediately on startup if appropriate).
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

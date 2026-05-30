@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Rent &amp; Buy Regions</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">Rent &amp; Buy Regions</h1>
+      <p class="page-subtitle">
+        Economy-backed plots: one-time purchases and recurring leases with grace
+        periods, warnings, refunds, and prefab-restored resets.
+      </p>
+    </div>
+
+    <p>
+      Rent and buy regions require <a href="claims-integrations.html#vaultunlocked">VaultUnlocked</a>.
+      Players browse them via <code>/claim rentbuy</code>, which opens a filtered
+      list of available, owned, and locked plots. Both kinds are drawn the same way
+      as <a href="claims-regions.html">admin regions</a> &mdash; the region edit form
+      simply sets the type to Rent or Buy and adds a price (and, for rent, a duration).
+    </p>
+
+    <!-- Buying -->
+    <div data-section-body="Buying">
+    <h2 data-section="Buying">Buying</h2>
+    <p>
+      Buy regions are a one-time purchase. On confirmation the price is withdrawn
+      from the player and they become the region owner for as long as the region
+      exists. Buy regions have no expiry and no grace period.
+    </p>
+    </div>
+
+    <!-- Renting -->
+    <div data-section-body="Renting">
+    <h2 data-section="Renting">Renting</h2>
+    <p>
+      Rent regions have a <code>price</code> and a <code>durationSeconds</code>.
+      The rent cycle begins when the tenant rents the plot; the lease renewal
+      timer fires at <code>leaseStart + durationSeconds</code>.
+    </p>
+    <p>
+      The <strong>RentExpireTask</strong> runs on a scheduled executor
+      (<code>rent_check_interval</code> seconds, default <code>300</code>). On
+      each tick it:
+    </p>
+    <ol>
+      <li>Sends warning notifications at each configured
+          <code>expiry_warn_times</code> threshold that hasn&rsquo;t fired yet.</li>
+      <li>When the lease expires, attempts to withdraw another full cycle of
+          rent from the tenant. If that succeeds, <code>leaseEnd</code> advances
+          by <code>durationSeconds</code> and the lease continues.</li>
+      <li>If the renewal fails (insufficient funds), the region enters a
+          <strong>locked</strong> state: all members and the tenant lose access,
+          and a countdown to reset begins.</li>
+      <li>After <code>rent_grace_days</code> days in the locked state, the
+          region&rsquo;s tenancy is cleared and, if a schematic was saved,
+          the saved prefab is pasted back to restore the region to its original
+          state.</li>
+    </ol>
+    <p>
+      When <code>refund_on_reset=true</code>, the pro-rated remaining lease value
+      is refunded to the tenant whenever a tenancy ends early &mdash; admin
+      <code>/region settenant clear</code>, an admin region-edit reset, or the
+      tenant&rsquo;s own &ldquo;Abandon Lease&rdquo; button. The post-grace
+      reset above also routes through the same code path, but by then the
+      lease has already expired so the pro-rated amount works out to zero.
+      Default is <code>false</code>. See the
+      <a href="claims-api.html#ClaimsTransactionListener">ClaimsTransactionListener</a> refund
+      lifecycle in the Developer API for the event the ledger sees.
+    </p>
+    </div>
+
+    <!-- Notifications -->
+    <div data-section-body="Notifications">
+    <h2 data-section="Notifications">Notifications</h2>
+    <p>
+      Expiry warnings, lock notices, and reset notices are sent both as a
+      <code>NotificationUtil</code> toast (if the tenant is online) and as a chat
+      message. If the tenant is offline, the message is stored as a
+      <code>PendingNotification</code> and flushed to chat on their next connect.
+    </p>
+    </div>
+
+    <!-- Schematics -->
+    <div data-section-body="Schematics">
+    <h2 data-section="Schematics">Schematics</h2>
+    <p>
+      Rent/Buy regions can have an associated prefab captured from the region
+      volume. Saving is triggered from the admin region edit UI and runs on the
+      world executor via the Hytale <code>PrefabSaver</code>. Prefabs are stored
+      under <code>prefabs/questlinesclaims/&lt;regionId&gt;.prefab</code> and
+      are pasted back on rent reset (and can be manually restored from the admin
+      UI).
+    </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          Rent/buy regions are drawn the same way as
+          <a href="claims-regions.html">Admin Regions</a>; the economy hook is on
+          <a href="claims-integrations.html#vaultunlocked">Integrations</a>; the
+          transaction event surface for ledgers is on the
+          <a href="claims-api.html">Developer API</a> page.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

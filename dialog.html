@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Dialog — Overview</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="dialog" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Dialog Plugin</div>
+      <h1 class="page-title">QuestLines Dialog</h1>
+      <p class="page-subtitle">
+        A lightweight in-game builder for linear NPC conversations. Create multi-page
+        dialogs without writing JSON — the plugin exports them directly into the QuestLines
+        quest format and reloads Core automatically.
+      </p>
+    </div>
+
+    <!-- What it is -->
+    <div data-section-body="What It Is">
+    <h2 data-section="What It Is">What It Is</h2>
+    <p>
+      QuestLines Dialog (<em>QLD</em>) is a companion plugin for server admins who need to
+      author straightforward linear conversations quickly. Instead of hand-crafting quest
+      JSON, you open the <strong>dialog builder UI</strong> with <code>/qld</code>, write the
+      pages of dialogue in-game, and hit Export. The plugin writes a fully valid QuestLines
+      quest file and triggers a hot-reload so the dialog is immediately usable.
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Linear dialogs only</div>
+        <p>
+          QuestLines Dialog is designed for simple, linear conversations — one page flows to
+          the next via a Continue button. For branching dialogue, quest state tracking,
+          requirements, or complex actions, use the full <a href="core.html">QuestLines Core</a>
+          editor (<code>/ql quest</code>).
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Data Model -->
+    <div data-section-body="Data Model">
+    <h2 data-section="Data Model">Data Model</h2>
+    <p>A <strong>Dialog</strong> has a unique ID, a title, an NPC name, and an ordered list of <strong>Pages</strong>.</p>
+
+    <h3 data-section="Dialog">Dialog</h3>
+    <ul>
+      <li><strong>ID</strong> — unique identifier, used as the QuestLines quest ID and file name</li>
+      <li><strong>Title</strong> — display title shown in the Quest Journal</li>
+      <li><strong>NPC Name</strong> — the name displayed on every page of the dialog</li>
+      <li><strong>Dialog Width</strong> — layout width of the dialogue box (<code>Full</code> by default)</li>
+    </ul>
+
+    <h3 data-section="Page">Page</h3>
+    <ul>
+      <li><strong>Dialog Text</strong> — the NPC&rsquo;s spoken text for this page</li>
+      <li><strong>Continue Label</strong> — label on the auto-generated Continue button (default: <em>Continue</em>; last page uses <em>Close</em>)</li>
+      <li><strong>Optional Buttons</strong> — extra response buttons with custom labels and QuestLines actions</li>
+      <li><strong>Button Color</strong> — optional hex (e.g. <code>#2b3542</code>) for a response button background. Hover and pressed shades are derived automatically. Blank uses the default style.</li>
+      <li><strong>Text Color</strong> — optional hex (e.g. <code>#cccccc</code>) for the response button label text. Hover and pressed shades are derived automatically. Blank uses the default text color.</li>
+    </ul>
+
+    <h3 data-section="How Pages Are Wired Together">How Pages Are Wired Together</h3>
+    <p>When a dialog is exported, each page becomes a QuestLines <code>Page</code>:</p>
+    <ul>
+      <li>Non-last pages get a response with <code>page:&lt;nextPageId&gt;</code> as their only action.</li>
+      <li>The last page gets a &ldquo;Close&rdquo; response with no actions.</li>
+      <li>Any optional buttons defined on a page are appended after the Continue/Close button.</li>
+    </ul>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Exported quest structure (simplified)</span>
+<span class="hl-punc">{</span>
+  <span class="hl-key">"QuestLinesDialog"</span><span class="hl-punc">:</span> <span class="hl-kw">true</span><span class="hl-punc">,</span>   <span class="hl-cmt">// marks this quest as dialog-editable</span>
+  <span class="hl-key">"Title"</span><span class="hl-punc">:</span> <span class="hl-str">"The Innkeeper's Tale"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Pages"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"innkeeper_p1"</span><span class="hl-punc">,</span> <span class="hl-str">"innkeeper_p2"</span><span class="hl-punc">,</span> <span class="hl-str">"innkeeper_p3"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"PageData"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+    <span class="hl-key">"innkeeper_p1"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"Name"</span><span class="hl-punc">:</span>   <span class="hl-str">"Mira the Innkeeper"</span><span class="hl-punc">,</span>
+      <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Welcome, traveller! Come in out of the rain."</span><span class="hl-punc">,</span>
+      <span class="hl-key">"Responses"</span><span class="hl-punc">:</span> <span class="hl-punc">[{</span>
+        <span class="hl-key">"Text"</span><span class="hl-punc">:</span>    <span class="hl-str">"Continue"</span><span class="hl-punc">,</span>
+        <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"page:innkeeper_p2"</span><span class="hl-punc">]</span>
+      <span class="hl-punc">}]</span>
+    <span class="hl-punc">},</span>
+    <span class="hl-key">"innkeeper_p3"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+      <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span> <span class="hl-str">"Enjoy your stay!"</span><span class="hl-punc">,</span>
+      <span class="hl-key">"Responses"</span><span class="hl-punc">:</span> <span class="hl-punc">[{</span> <span class="hl-key">"Text"</span><span class="hl-punc">:</span> <span class="hl-str">"Close"</span><span class="hl-punc">,</span> <span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[]</span> <span class="hl-punc">}]</span>
+    <span class="hl-punc">}</span>
+  <span class="hl-punc">}</span>
+<span class="hl-punc">}</span></code></pre>
+    </div>
+    </div>
+
+    <!-- Commands -->
+    <div data-section-body="Commands">
+    <h2 data-section="Commands">Commands</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/qld</td>
+            <td>Open the Dialog Builder UI. Requires the <code>questlinesdialog.admin</code> permission.</td>
+          </tr>
+          <tr>
+            <td>/qldconvert</td>
+            <td>
+              Import dialogs from the Hyronix NPCDialog plugin. Reads
+              <code>mods/Hyronix_NPC Dialog/npcs/npcs.json</code>, converts each NPC entry into a
+              QuestLines quest file, and triggers a QuestLines reload. Requires <code>questlinesdialog.admin</code>.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Workflow -->
+    <div data-section-body="Workflow: Creating a Dialog">
+    <h2 data-section="Workflow: Creating a Dialog">Workflow: Creating a Dialog</h2>
+
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Open the builder</strong>
+          <p>Run <code>/qld</code>. The Dialog Builder UI opens.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Create a new dialog</strong>
+          <p>
+            Enter a unique ID, a title, and the NPC name that will appear on every page.
+            Click <strong>New Dialog</strong> to create it.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Add pages</strong>
+          <p>
+            Click <strong>Add Page</strong> to append a page. Type the NPC&rsquo;s dialogue text.
+            Optionally change the Continue button label or add extra optional buttons with
+            custom labels and QuestLines action strings.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Reorder or remove pages</strong>
+          <p>
+            Use the up/down arrows next to each page to reorder, or click the trash icon to
+            remove a page.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Export to QuestLines</strong>
+          <p>
+            Click <strong>Export</strong>. The plugin writes the quest file to
+            <code>mods/QuestLines/quests/&lt;dialogId&gt;.json</code> and automatically reloads
+            QuestLines so the dialog is live immediately. Then link the quest to an NPC via
+            <code>/ql wand &lt;dialogId&gt;</code> or the NPC Setup panel.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Re-opening a dialog for editing</div>
+        <p>
+          Exported dialogs are saved with a <code>"QuestLinesDialog": true</code> marker.
+          When you open <code>/qld</code>, any previously exported dialog appears in the
+          dropdown and can be selected, edited, and re-exported without losing your work.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Auto-reload behaviour -->
+    <div data-section-body="QuestLines Auto-Reload">
+    <h2 data-section="QuestLines Auto-Reload">QuestLines Auto-Reload</h2>
+    <p>
+      After export, QuestLines Dialog attempts to reload the QuestLines quest config via
+      reflection so the new dialog is immediately available in-game without a server restart
+      or a manual <code>/ql reload</code>. If QuestLines is not present or the reload fails for
+      any reason, the export is still written to disk and will take effect on the next
+      <code>/ql reload</code> or server restart.
+    </p>
+    </div>
+
+    <!-- NPCDialog import -->
+    <div data-section-body="Importing from Hyronix NPCDialog">
+    <h2 data-section="Importing from Hyronix NPCDialog">Importing from Hyronix NPCDialog</h2>
+    <p>
+      If your server previously used the Hyronix NPCDialog plugin, you can migrate all NPC
+      dialogs to QuestLines in one command:
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code>/qldconvert</code></pre>
+    </div>
+    <p>
+      This reads <code>mods/Hyronix_NPC Dialog/npcs/npcs.json</code>, converts each NPC entry
+      into a QuestLines quest file, and reports how many were converted and how many were
+      skipped (e.g. because a file already exists).
+    </p>
+    </div>
+
+    <!-- Permissions -->
+    <div data-section-body="Permissions">
+    <h2 data-section="Permissions">Permissions</h2>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>questlinesdialog.admin</td>
+            <td>false</td>
+            <td>Required for <code>/qld</code> and <code>/qldconvert</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Data directory -->
+    <div data-section-body="Data Directory">
+    <h2 data-section="Data Directory">Data Directory</h2>
+    <p>
+      QuestLines Dialog stores its own draft data in <code>mods/QuestLinesDialog/</code>.
+      Exported quests are written to <code>mods/QuestLines/quests/</code> and are indistinguishable
+      from hand-authored QuestLines quests (aside from the <code>"QuestLinesDialog": true</code>
+      marker). You can edit exported quest files directly in any text editor and re-import
+      them into the builder by simply re-opening <code>/qld</code>.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

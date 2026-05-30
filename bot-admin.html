@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Knowledge — Admin &amp; Setup</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="bot-admin" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">QuestLines Knowledge</div>
+      <h1 class="page-title">Admin &amp; Setup</h1>
+      <p class="page-subtitle">
+        How to add the QuestLines Knowledge bot to your own Discord server and configure it for
+        your community &mdash; which channels it works in, auto-translation, and how the AI
+        commands are powered. Plus operator notes for self-hosting the bot.
+      </p>
+    </div>
+
+    <!-- Inviting -->
+    <div data-section-body="Adding the Bot">
+    <h2 data-section="Adding the Bot">Adding the Bot</h2>
+    <p>
+      <a href="https://discord.com/oauth2/authorize?client_id=1487846848654741534&amp;permissions=52224&amp;integration_type=0&amp;scope=bot+applications.commands" target="_blank" rel="noopener"><strong>Add QuestLines Knowledge to your server &rarr;</strong></a>
+      &mdash; you&rsquo;ll need the <em>Manage Server</em> permission on the target server. During
+      the invite, Discord asks you to approve a few permissions:
+    </p>
+    <ul>
+      <li><strong>Read Messages / View Channels</strong> and <strong>Send Messages</strong> &mdash;
+        so it can receive commands and reply.</li>
+      <li><strong>Use Slash Commands</strong> &mdash; for the <code>/</code> commands (this is the
+        primary way members interact with it).</li>
+      <li><strong>Embed Links</strong> and <strong>Attach Files</strong> &mdash; answers are sent
+        as rich embeds, and <code>/newquest</code> returns a <code>.json</code> file.</li>
+    </ul>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Slash commands may take a moment to appear</div>
+        <p>
+          Right after inviting, Discord can take up to an hour to surface global slash commands.
+          If <code>/ask</code> doesn&rsquo;t show up immediately, give it a little time.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Home vs guest -->
+    <div data-section-body="Home vs. Guest Servers">
+    <h2 data-section="Home vs. Guest Servers">Home vs. Guest Servers</h2>
+    <p>
+      The bot recognises one <strong>home</strong> server (the official QuestLines community) and
+      treats every other server as a <strong>guest</strong>. Guests get the full documentation
+      experience with a few sensible limits so the bot stays cheap and safe to run publicly.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Home server</th>
+            <th>Your (guest) server</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Reference, search, <code>/review</code></td>
+            <td>Yes</td>
+            <td>Yes &mdash; works everywhere, no setup</td>
+          </tr>
+          <tr>
+            <td>AI commands (<code>/ask</code>, <code>/debug</code>, <code>/newquest</code>)</td>
+            <td>Shared key</td>
+            <td>Require each user&rsquo;s own free key via <code>/setkey</code></td>
+          </tr>
+          <tr>
+            <td>Auto-translation</td>
+            <td>On (owner-configured)</td>
+            <td>Off until you enable it in <code>/config</code></td>
+          </tr>
+          <tr>
+            <td>Community extras (e.g. <code>/qlname</code> banners)</td>
+            <td>Yes</td>
+            <td>Not available</td>
+          </tr>
+          <tr>
+            <td>Where <code>!</code> prefix commands work</td>
+            <td>A set channel</td>
+            <td>All channels until you restrict them</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- AI on your server -->
+    <div data-section-body="AI Commands on Your Server">
+    <h2 data-section="AI Commands on Your Server">AI Commands on Your Server</h2>
+    <p>
+      On guest servers, the AI commands run on each user&rsquo;s <strong>own</strong> free
+      <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a> key &mdash;
+      so they cost the bot owner nothing and have no cooldown. A member who hasn&rsquo;t set a key
+      is simply prompted to run <code>/setkey</code>.
+    </p>
+    <ol>
+      <li>The member gets a free key at <code>console.groq.com/keys</code>.</li>
+      <li>They run <code>/setkey</code> and paste it into the private popup.</li>
+      <li><code>/ask</code>, <code>/debug</code>, and <code>/newquest</code> now work for them.</li>
+    </ol>
+    <p>
+      The free reference commands (<code>/action</code>, <code>/req</code>, <code>/search</code>,
+      <code>/review</code>, and the rest) need no key and work for everyone immediately.
+    </p>
+    </div>
+
+    <!-- /config -->
+    <div data-section-body="Configuring with /config">
+    <h2 data-section="Configuring with /config">Configuring with <code>/config</code></h2>
+    <p>
+      <code>/config</code> is the admin control panel for your server. It is only visible to
+      members with the <strong>Manage Server</strong> permission, and every reply is private.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Subcommand</th>
+            <th>What it does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/config show</code></td>
+            <td>Show this server&rsquo;s current configuration (command channels, translation).</td>
+          </tr>
+          <tr>
+            <td><code>/config channels add &lt;channel&gt;</code></td>
+            <td>Restrict <code>!</code> prefix commands to this channel (adds to the allowlist).</td>
+          </tr>
+          <tr>
+            <td><code>/config channels remove &lt;channel&gt;</code></td>
+            <td>Remove a channel from the allowlist.</td>
+          </tr>
+          <tr>
+            <td><code>/config channels clear</code></td>
+            <td>Clear the allowlist &mdash; <code>!</code> commands work in all channels again.</td>
+          </tr>
+          <tr>
+            <td><code>/config translate enable</code> &middot; <code>disable</code></td>
+            <td>Turn auto-translation on or off for this server.</td>
+          </tr>
+          <tr>
+            <td><code>/config translate channeladd &lt;channel&gt;</code></td>
+            <td>Watch a channel for foreign-language messages to translate.</td>
+          </tr>
+          <tr>
+            <td><code>/config translate channelremove &lt;channel&gt;</code></td>
+            <td>Stop watching a channel.</td>
+          </tr>
+          <tr>
+            <td><code>/config translate lang &lt;code&gt;</code></td>
+            <td>Set the target language (messages <em>not</em> in this language get translated). ISO 639-1, e.g. <code>en</code>, <code>es</code>, <code>de</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Restricting channels -->
+    <div data-section-body="Restricting Where the Bot Responds">
+    <h2 data-section="Restricting Where the Bot Responds">Restricting Where the Bot Responds</h2>
+    <p>
+      By default the bot responds in every channel. To keep things tidy you can confine the
+      <code>!</code> prefix commands to one or more channels:
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Only allow !commands in #bot-commands</span>
+/config channels add #bot-commands
+
+<span class="hl-cmt">// Add a second allowed channel</span>
+/config channels add #questlines-help
+
+<span class="hl-cmt">// Go back to allowing every channel</span>
+/config channels clear</code></pre>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Restricting slash commands</div>
+        <p>
+          The channel allowlist above applies to <code>!</code> prefix commands. Slash commands
+          (<code>/ask</code> etc.) are best limited with Discord&rsquo;s built-in tool:
+          <strong>Server Settings &rarr; Integrations &rarr; QuestLines Knowledge</strong>, where you
+          can allow or block specific channels with no bot configuration at all.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Auto-translation -->
+    <div data-section-body="Auto-Translation">
+    <h2 data-section="Auto-Translation">Auto-Translation</h2>
+    <p>
+      The bot can watch chosen channels and post a translation whenever someone writes in another
+      language &mdash; handy for international communities. It is <strong>off by default</strong> on
+      your server; opt in and pick the channels:
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Turn it on, then choose where to watch</span>
+/config translate enable
+/config translate channeladd #general
+/config translate channeladd #support
+
+<span class="hl-cmt">// Translate anything that isn't English (the default)</span>
+/config translate lang en</code></pre>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Translation relies on the bot owner&rsquo;s service</div>
+        <p>
+          Translation is powered by the bot host. If the owner hasn&rsquo;t enabled the translation
+          service, the opt-in above will have no effect &mdash; check with whoever runs the bot.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Operator / self-host -->
+    <div data-section-body="Operator Setup (Self-Hosting)">
+    <h2 data-section="Operator Setup (Self-Hosting)">Operator Setup (Self-Hosting)</h2>
+    <p>
+      This section is for whoever <em>runs</em> the bot. The bot is a Node.js (discord.js)
+      application configured through a <code>.env</code> file; see <code>.env.example</code> for
+      the full list. The settings that matter for going public:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Setting</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>HOME_GUILD_ID</code></td>
+            <td>Your server&rsquo;s ID. Marks it as &ldquo;home&rdquo; (full features). Every other server is a guest. Home-only commands like <code>/qlname</code> are registered only here.</td>
+          </tr>
+          <tr>
+            <td><code>HOME_COMMAND_CHANNEL</code></td>
+            <td>Default channel for <code>!</code> commands on the home server (admins can still override per-guild with <code>/config</code>). Leave blank to allow all channels on home.</td>
+          </tr>
+          <tr>
+            <td><code>GROQ_API_KEY</code></td>
+            <td>The shared key used on the home server. Guests never use it &mdash; they bring their own via <code>/setkey</code>.</td>
+          </tr>
+          <tr>
+            <td><code>TRANSLATE_ENABLED</code></td>
+            <td>Master switch for the translation service. It must be <code>true</code> for guest <code>/config translate</code> opt-ins to do anything.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Going public">Going public</h3>
+    <ol>
+      <li>Set <code>HOME_GUILD_ID</code> in <code>.env</code> to your server&rsquo;s ID.</li>
+      <li>Run <code>node deploy.js</code> to register the slash commands. Global commands go to
+        every server; home-only commands (<code>/qlname</code>) register to the home guild only.</li>
+      <li>Restart the bot, then enable <strong>Public Bot</strong> in the Discord Developer Portal,
+        turn on the <strong>Message Content</strong> privileged intent, and share the
+        <a href="https://discord.com/oauth2/authorize?client_id=1487846848654741534&amp;permissions=52224&amp;integration_type=0&amp;scope=bot+applications.commands" target="_blank" rel="noopener">invite link</a>.</li>
+      <li>On the App&rsquo;s General Information page, set the <strong>Privacy Policy URL</strong> to
+        your hosted copy of the <a href="bot-privacy.html">Privacy Policy</a> &mdash; recommended
+        because the bot stores user-supplied API keys, and required if you later verify the app.</li>
+    </ol>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Per-server settings live with the bot</div>
+        <p>
+          Each guest server&rsquo;s <code>/config</code> choices are stored by the bot
+          (<code>data/guild_config.json</code>) and take effect immediately &mdash; no redeploy
+          needed. The home-only command tools (<code>!cfpost</code>, <code>!debugstats</code>) and
+          the supporter banner generator never appear on guest servers.
+        </p>
+      </div>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

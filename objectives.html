@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Objectives</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="objectives" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Reference</div>
+      <h1 class="page-title">Objectives</h1>
+      <p class="page-subtitle">
+        Every dialogue page can declare an <code>Objectives</code> list — the strings it
+        contains drive the live pass/fail goal display shown in the HUD and the Quest
+        Journal. Objectives are purely for <strong>display</strong>: they show players what
+        to do and how close they are to doing it, but they do not gate page navigation.
+      </p>
+    </div>
+
+    <!-- ======================== OVERVIEW ======================== -->
+    <div class="section-group" data-section-body="Overview">
+      <h2 data-section="Overview">Overview</h2>
+      <p>
+        <code>Objectives</code> is an optional JSON array on each <code>Page</code>. Each
+        entry is either a <strong>requirement string</strong> (same format as the
+        <code>Requirements</code> list) or a plain-text
+        <a href="#plain-text-objectives"><code>text:</code></a> entry. When the list is
+        non-empty, the <strong>Quest Goal HUD</strong> and <strong>Journal detail panel</strong>
+        render each entry as its own line with a live pass/fail icon and, where
+        applicable, a progress counter.
+      </p>
+
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Rendered HUD / journal output</span>
+<span class="hl-str">&#10003; Kill zombie: 5/5</span>
+<span class="hl-str">&middot; Break oak_log: 2/10</span>
+<span class="hl-str">&middot; Have iron_sword x1</span></code></pre>
+      </div>
+
+      <p>
+        The pass indicator is <code>&#10003;</code> (green checkmark) when the requirement
+        passes for the player and <code>&middot;</code> (grey dot) when it does not.
+        Requirements that carry a tracked progress count (kills, breaks, places, talk,
+        travel, fish, crafts, harvest, named trackers) show
+        <em>current/required</em> after the label. Requirements with no natural counter
+        (e.g. <code>item:</code>, <code>questCompleted:</code>) show only the label.
+      </p>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Objectives vs Requirements</div>
+          <p>
+            <code>Objectives</code> are display only &mdash; they do <strong>not</strong>
+            block page navigation or response selection. If you also want to gate the
+            page on the same conditions, copy the strings into the page's
+            <code>Requirements</code> list or the relevant response's
+            <code>Requirements</code>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== WHICH PAGE ======================== -->
+    <div class="section-group" data-section-body="Which Page Is Shown">
+      <h2 data-section="Which Page Is Shown">Which Page Is Shown</h2>
+      <p>
+        The HUD and journal always show objectives for the player's
+        <strong>current page</strong>, which is determined by the standard page
+        resolution rules: the engine walks the quest's <code>Pages</code> list in order
+        and picks the first page whose <code>Requirements</code> all pass for that
+        player. That page's <code>Objectives</code> are what appear on screen.
+      </p>
+      <p>
+        As the player completes work and their requirement state changes, page
+        resolution advances automatically and the displayed objectives switch to the
+        next page &mdash; no additional wiring is needed. Structuring a quest as a
+        chain of pages each with their own <code>Objectives</code> is the idiomatic way
+        to build a multi-step goal.
+      </p>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">Backwards Compatibility</div>
+          <p>
+            <code>Objectives</code> defaults to an empty list if the JSON field is
+            missing. Pages without objectives simply render nothing in the HUD goal
+            area for that entry.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== LABEL OVERRIDE ======================== -->
+    <div class="section-group" data-section-body="Label Override (::)">
+      <h2 data-section="Label Override (::)">Label Override (<code>::</code>)</h2>
+      <p>
+        Raw IDs are rarely player-friendly &mdash; <code>item:*Ore_Copper*:10</code>
+        would render as "Have *Ore_Copper* x10" by default. Append a
+        <code>::label</code> suffix to replace the target identifier with any text you
+        want, while keeping the surrounding wording and progress counter intact:
+      </p>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-key">"Objectives"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"item:*Ore_Copper*:10::Copper Ore"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:goblin_kills:10::Goblin (any type)"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"cooldown:daily_reward:86400::Daily stipend ready"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+      <p>
+        The <code>::</code> separator is parsed only on objective strings &mdash; not on
+        ordinary page or response requirements. The label text supports icon tags
+        (e.g. <code>{icon:Ore_Copper}</code>) and
+        <a href="core.html#text-variables">TextFormatter variables</a>, so you can mix
+        coloured text, icons, and dynamic values into the displayed label.
+      </p>
+    </div>
+
+    <!-- ======================== ICON OVERRIDE ======================== -->
+    <div class="section-group" data-section-body="Icon Override (::icon:)">
+      <h2 data-section="Icon Override (::icon:)">Icon Override (<code>::icon:</code>)</h2>
+      <p>
+        Every objective row leads with a 16&times;16 bullet icon. When you don't supply
+        one, the HUD and journal pick a sensible default based on the requirement type
+        &mdash; a sword for <code>kill</code>, a pickaxe for <code>break</code>, a
+        sickle for <code>harvest</code>, leather gloves for <code>place</code>, a
+        hammer for <code>craft</code>, the HyFishing rod for <code>catchfish*</code>,
+        the HyFishing fish bag for <code>releasefish</code>, and so on. For
+        <code>item:</code>/<code>questitem:</code> the concrete item ID is used directly
+        (wildcards fall back to a backpack). For <code>track:</code> the tracker's own
+        type drives the default.
+      </p>
+      <p>
+        Append <code>::icon:incompleteId</code> or <code>::icon:incompleteId|completeId</code>
+        to override the default:
+      </p>
+      <ul>
+        <li>
+          One value sets the icon shown while the objective is <em>not</em> yet
+          satisfied. The completed state falls back to the usual checkmark.
+        </li>
+        <li>
+          Two values (separated by <code>|</code>) swap both icons: the first is the
+          incomplete-state icon, the second replaces the checkmark when the objective
+          passes.
+        </li>
+      </ul>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-key">"Objectives"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"track:goblin_kills:10::icon:Weapon_Sword_Bone::Goblin hunt"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"item:Ore_Copper:20::icon:Ore_Copper|Ingredient_Bar_Copper::Smelting prep"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+      <p>
+        <code>::icon:</code> and <code>::label</code> segments may appear in any order
+        and are independent &mdash; either, both, or neither can be present.
+      </p>
+    </div>
+
+    <!-- ======================== PLAIN TEXT ======================== -->
+    <div class="section-group" data-section-body="Plain Text Objectives (text:)">
+      <h2 id="plain-text-objectives" data-section="Plain Text Objectives (text:)">Plain Text Objectives (<code>text:</code>)</h2>
+      <p>
+        An objective string that begins with <code>text:</code> is rendered as a plain
+        informational line &mdash; no pass/fail icon, no progress counter, no
+        evaluation. Everything after the <code>text:</code> prefix is passed through
+        the TextFormatter and drawn directly as the objective row. Use this to add
+        flavour, hints, countdown timers, or context that doesn't correspond to a
+        single requirement.
+      </p>
+
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-key">"Objectives"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"text:Meet the courier at the north gate before sundown."</span><span class="hl-punc">,</span>
+  <span class="hl-str">"text:Time remaining: {timeleft:courier_timer}::icon:Tool_Map"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:courier_deliveries:1::Deliver the package"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+
+      <h4>Supported features</h4>
+      <ul>
+        <li>
+          <strong>TextFormatter variables</strong> &mdash; anything documented in
+          <code>text-variables.md</code> works here, including player vars
+          (<code>{playerName}</code>), tracker counts (<code>{track:id}</code>),
+          timed values (<code>{timeleft:id}</code>, <code>{cooldown:id}</code>),
+          and colour/style tags.
+        </li>
+        <li>
+          <strong>Icon tags</strong> &mdash; <code>{icon:ItemId}</code> renders the
+          matching in-game item icon inline with the text.
+        </li>
+        <li>
+          <strong>Multi-line text</strong> &mdash; in the HUD, a single
+          <code>text:</code> entry can span multiple lines by embedding
+          <code>\n</code> or a real newline. Each line is rendered as its own row.
+        </li>
+        <li>
+          <strong>Leading icon</strong> &mdash; append <code>::icon:ItemId</code> to
+          draw a 16&times;16 ItemIcon bullet in front of the text. <code>text:</code>
+          entries never "complete", so any second ID after <code>|</code> is ignored
+          and there is no default &mdash; without <code>::icon:</code> the line renders
+          flush-left with no bullet, unchanged from the pre-existing layout.
+        </li>
+        <li>
+          <strong>Timer tick</strong> &mdash; when a <code>text:</code> objective
+          contains <code>{timeleft:}</code> or <code>{cooldown:}</code>, the HUD
+          automatically re-renders on every second so the displayed time updates
+          live.
+        </li>
+      </ul>
+
+      <div class="callout tip">
+        <span class="callout-icon">&#128161;</span>
+        <div class="callout-body">
+          <div class="callout-title">Mixing text: with real objectives</div>
+          <p>
+            Freely mix <code>text:</code> entries with requirement-based objectives
+            in the same list. A common pattern is to put a one-line description at
+            the top followed by the tracked requirements beneath it &mdash; the text
+            line provides narrative context and the requirement lines show progress.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout note">
+        <span class="callout-icon">&#8505;</span>
+        <div class="callout-body">
+          <div class="callout-title">No evaluation, no gating</div>
+          <p>
+            Because <code>text:</code> entries are not requirements, they are never
+            evaluated for pass/fail and they are ignored by the quest engine when
+            deciding which page is active. They are a pure display device.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== CONTEXTUAL SKIP ======================== -->
+    <div class="section-group" data-section-body="Contextual Requirements">
+      <h2 data-section="Contextual Requirements">Contextual Requirements</h2>
+      <p>
+        A small number of requirements only make sense during an active NPC
+        interaction &mdash; for example <code>npcname:</code>, which tests which NPC
+        opened the dialogue. The HUD and journal do not have an active NPC context, so
+        <strong>contextual requirements are skipped</strong> when used as objectives
+        and always render as unchecked.
+      </p>
+      <p>
+        This keeps them from misbehaving in the goal display, but it also means
+        contextual requirements are effectively useless as objectives. Use them only
+        on <code>Requirements</code> and <code>Responses</code>.
+      </p>
+    </div>
+
+    <!-- ======================== JSON EXAMPLE ======================== -->
+    <div class="section-group" data-section-body="Full JSON Example">
+      <h2 data-section="Full JSON Example">Full JSON Example</h2>
+      <p>
+        A single page that combines a narrative <code>text:</code> hint, a labelled
+        tracker objective, and an item check &mdash; plus the matching page
+        <code>Requirements</code> that actually gate the page:
+      </p>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-punc">{</span>
+  <span class="hl-key">"Id"</span><span class="hl-punc">:</span>           <span class="hl-str">"lumber_run_active"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+    <span class="hl-str">"questStarted:lumber_run"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"!hastag:lumber_run_complete"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Objectives"</span><span class="hl-punc">:</span>   <span class="hl-punc">[</span>
+    <span class="hl-str">"text:The foreman wants oak logs and a sturdy axe."</span><span class="hl-punc">,</span>
+    <span class="hl-str">"track:oak_broken:10::Oak logs chopped"</span><span class="hl-punc">,</span>
+    <span class="hl-str">"item:iron_axe:1::Iron Axe in inventory"</span>
+  <span class="hl-punc">],</span>
+  <span class="hl-key">"Dialog"</span><span class="hl-punc">:</span>      <span class="hl-str">"Come back when you have the wood and the axe."</span>
+<span class="hl-punc">}</span></code></pre>
+      </div>
+      <p>
+        See <a href="progression.html">Quest Patterns</a> for more complete examples
+        combining <code>Objectives</code> with trackers, timed quests, daily
+        cooldowns, and multi-step ritual flows.
+      </p>
+    </div>
+
+  </div><!-- /.content -->
+</div><!-- /.main-wrapper -->
+
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; Parties &amp; Friends</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">Parties &amp; Friends</h1>
+      <p class="page-subtitle">
+        Short-lived parties for running content together, and a persistent
+        bidirectional friends list with online status.
+      </p>
+    </div>
+
+    <!-- Parties -->
+    <div data-section-body="Parties">
+    <h2 data-section="Parties">Parties</h2>
+    <p>
+      Parties are short-lived groups used for dungeons, LFG, and ad-hoc content.
+      A party is created automatically the first time a player sends an invite,
+      and is destroyed as soon as it would have zero members. Parties have a
+      single leader and a maximum size set in <code>config.party.maxSize</code>
+      (default <code>5</code>).
+    </p>
+    <p>
+      Running <code>/party</code> with no arguments opens the party panel UI;
+      <code>/party help</code> prints the full subcommand listing in chat.
+    </p>
+    <p>
+      Invites use <code>/party invite &lt;player&gt;</code> and the recipient
+      accepts with <code>/party accept</code> or rejects with
+      <code>/party decline</code>. Invites expire after
+      <code>config.party.inviteExpirySeconds</code> seconds (default
+      <code>60</code>).
+    </p>
+    <p>
+      Only the leader can <code>/party kick</code> members,
+      <code>/party transfer</code> leadership, or <code>/party disband</code>.
+      A leader who runs <code>/party leave</code> must transfer leadership first
+      (or use <code>disband</code>).
+    </p>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Parties are not persisted</div>
+        <p>
+          Party state is held in memory only. A server restart dissolves every
+          active party. Party-aware features (LFG, dungeon entry) re-form their
+          group on demand from the still-online members.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Friends -->
+    <div data-section-body="Friends">
+    <h2 data-section="Friends">Friends</h2>
+    <p>
+      Each player has a friend list of other player UUIDs. Friendships are
+      bidirectional: <code>/friend add &lt;player&gt;</code> adds an entry on
+      both sides. <code>/friend remove &lt;player&gt;</code> removes it from
+      both. <code>/friend list</code> prints your friends with online or offline
+      status. The list persists in
+      <code>mods/QuestLinesMMO/friends/&lt;playerUuid&gt;.json</code>.
+    </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Commands</div>
+        <p>
+          Full party and friend command tables (with permission nodes) live on the
+          <a href="mmo-interface.html">UI &amp; Commands</a> page.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

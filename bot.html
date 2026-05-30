@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Knowledge — Discord Bot</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="bot" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">QuestLines Knowledge</div>
+      <h1 class="page-title">The QuestLines Discord Bot</h1>
+      <p class="page-subtitle">
+        QuestLines Knowledge is a Discord bot that puts the entire QuestLines wiki at your
+        fingertips. Look up any action, requirement, or text variable, search the docs, get
+        AI-grounded answers to &ldquo;how do I&hellip;&rdquo; questions, and even generate or
+        debug quest JSON &mdash; all without leaving Discord.
+      </p>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128172;</span>
+      <div class="callout-body">
+        <div class="callout-title">Add QuestLines Knowledge to your server</div>
+        <p>
+          Want the bot in your own Discord?
+          <a href="https://discord.com/oauth2/authorize?client_id=1487846848654741534&amp;permissions=52224&amp;integration_type=0&amp;scope=bot+applications.commands" target="_blank" rel="noopener"><strong>Add the bot &rarr;</strong></a>
+          Then see <a href="bot-admin.html">Admin &amp; Setup</a> to configure it. By using the bot
+          you agree to its <a href="bot-privacy.html">Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+
+    <!-- What it does -->
+    <div data-section-body="What It Does">
+    <h2 data-section="What It Does">What It Does</h2>
+    <p>
+      Every command works as a Discord <strong>slash command</strong> (type <code>/</code> and
+      pick it from the menu) and most also work with the legacy <code>!</code> message prefix.
+      Slash commands reply privately to you (only you see the answer), so you can use them
+      anywhere without cluttering chat.
+    </p>
+    <ul>
+      <li><strong>Reference lookups</strong> &mdash; actions, requirements, text variables,
+        formatting tags, NPC setup, quest patterns, and full doc search.</li>
+      <li><strong>Ask anything</strong> &mdash; <code>/ask</code> answers plain-English
+        questions using the real documentation.</li>
+      <li><strong>Quest tooling</strong> &mdash; <code>/newquest</code> writes a quest from a
+        description, <code>/debug</code> explains why a quest isn&rsquo;t working, and
+        <code>/review</code> validates a file for errors.</li>
+    </ul>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Slash vs. <code>!</code> prefix</div>
+        <p>
+          Slash commands (<code>/ask</code>) are recommended &mdash; they autocomplete and answer
+          privately. The <code>!</code> prefix (<code>!ask</code>) does the same thing but posts
+          in-channel. A server admin may limit where <code>!</code> commands work; if
+          <code>!</code> seems ignored, try the slash version or ask an admin (see the
+          <a href="bot-admin.html">Admin &amp; Setup</a> page).
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Commands -->
+    <div data-section-body="Commands">
+    <h2 data-section="Commands">Commands</h2>
+    <p>Everything available to regular members. Arguments in <code>&lt;angle brackets&gt;</code>
+      are required; <code>[square brackets]</code> are optional.</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>What it does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/ask &lt;question&gt;</code></td>
+            <td>Ask anything about QuestLines. An AI answers using the docs (e.g. &ldquo;how do I build a kill quest&rdquo;).</td>
+          </tr>
+          <tr>
+            <td><code>/search &lt;query&gt;</code></td>
+            <td>Full-text search across the entire wiki.</td>
+          </tr>
+          <tr>
+            <td><code>/action [name]</code></td>
+            <td>Look up an action string (<code>questStarted</code>, <code>addTag</code>, <code>track</code>&hellip;). Use <code>all</code> to list every action.</td>
+          </tr>
+          <tr>
+            <td><code>/req [name]</code></td>
+            <td>Look up a requirement string (<code>kill</code>, <code>hasTag</code>, <code>cooldown</code>&hellip;). Use <code>all</code> to list every requirement.</td>
+          </tr>
+          <tr>
+            <td><code>/npc [topic]</code></td>
+            <td>NPC setup, wand mode, random quest pools, and linking quests to NPCs.</td>
+          </tr>
+          <tr>
+            <td><code>/variable</code></td>
+            <td>All <code>{text variables}</code> usable in dialogue and response text.</td>
+          </tr>
+          <tr>
+            <td><code>/formatting</code></td>
+            <td>Inline text formatting tags (<code>{b}</code>, <code>{i}</code>, <code>{#RRGGBB}</code>&hellip;).</td>
+          </tr>
+          <tr>
+            <td><code>/portrait</code></td>
+            <td>The NPC portrait image system.</td>
+          </tr>
+          <tr>
+            <td><code>/anim</code></td>
+            <td>QuestLines Icons animation types (bob, rotate, orbit, ping&hellip;).</td>
+          </tr>
+          <tr>
+            <td><code>/pattern [name]</code></td>
+            <td>A full worked quest example with JSON (kill, daily, timed, branching, multi-npc, item-turnin), or <code>all</code>.</td>
+          </tr>
+          <tr>
+            <td><code>/plugin [name]</code></td>
+            <td>A plugin overview (core, icons, dialog&hellip;).</td>
+          </tr>
+          <tr>
+            <td><code>/newquest &lt;description&gt;</code></td>
+            <td>AI quest generator. Describe a quest and receive a ready-to-use <code>.json</code> file.</td>
+          </tr>
+          <tr>
+            <td><code>/debug &lt;file&gt; [question]</code></td>
+            <td>AI quest debugger. Attach your quest <code>.json</code> and ask why something isn&rsquo;t working.</td>
+          </tr>
+          <tr>
+            <td><code>/review &lt;file&gt;</code></td>
+            <td>Validate an attached quest <code>.json</code> for errors and logic issues (no AI &mdash; fast and free).</td>
+          </tr>
+          <tr>
+            <td><code>/setkey</code> &middot; <code>/forgetkey</code></td>
+            <td>Use your own free Groq API key for the AI commands (no cooldown). See <a href="#your-own-api-key">Use Your Own API Key</a>.</td>
+          </tr>
+          <tr>
+            <td><code>/help</code></td>
+            <td>Show all available commands.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Some commands are server-specific</div>
+        <p>
+          A few extras (such as the <code>/qlname</code> supporter banner generator) only exist on
+          the official QuestLines community server and won&rsquo;t appear when the bot is added to
+          other servers.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Asking questions -->
+    <div data-section-body="Asking Questions">
+    <h2 data-section="Asking Questions">Asking Questions</h2>
+    <p>
+      <code>/ask</code> is the fastest way to get an answer. It pulls the most relevant wiki
+      entries and has an AI write a focused, grounded reply &mdash; with a &ldquo;Related
+      docs&rdquo; footer linking the sources. It only answers from the real documentation, so it
+      won&rsquo;t invent syntax.
+    </p>
+
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Walk through a whole workflow</span>
+/ask how do I build a daily repeatable quest
+
+<span class="hl-cmt">// Clarify one concept</span>
+/ask what does AutoTrigger do
+
+<span class="hl-cmt">// Compare two things</span>
+/ask difference between hasTag and global:hastag</code></pre>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Need exact syntax instead?</div>
+        <p>
+          For a specific string, <code>/action &lt;name&gt;</code> or <code>/req &lt;name&gt;</code>
+          gives the precise format instantly with no AI. <code>/search</code> casts the widest net.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Generating & debugging -->
+    <div data-section-body="Generating &amp; Debugging Quests">
+    <h2 data-section="Generating &amp; Debugging Quests">Generating &amp; Debugging Quests</h2>
+    <p>Three commands take you from idea to working quest:</p>
+    <ul>
+      <li><code>/newquest &lt;description&gt;</code> &mdash; describe the quest in plain English and
+        the bot returns a complete, downloadable quest <code>.json</code> you can drop into
+        <code>QuestLines/quests/</code> and <code>/ql reload</code>.</li>
+      <li><code>/debug &lt;file&gt; [question]</code> &mdash; attach a quest file and ask what&rsquo;s
+        wrong. The bot runs the same validator the plugin uses, then has the AI explain the result
+        and answer your question.</li>
+      <li><code>/review &lt;file&gt;</code> &mdash; a pure validation pass (no AI). Lists structural
+        errors and logic warnings. Great as a final check before shipping.</li>
+    </ul>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Always sanity-check generated quests</div>
+        <p>
+          AI output is a strong starting point, not a guarantee. Run <code>/review</code> on a
+          generated file and test it in-game before relying on it.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Own API key -->
+    <div data-section-body="Use Your Own API Key">
+    <h2 id="your-own-api-key" data-section="Use Your Own API Key">Use Your Own API Key</h2>
+    <p>
+      The AI commands (<code>/ask</code>, <code>/debug</code>, <code>/newquest</code>) share a
+      per-user cooldown so the bot stays affordable to run. You can lift that cooldown entirely by
+      supplying your own free <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a>
+      API key &mdash; the AI then runs on your key, billed to you, with no waiting.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Do this</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Get a free key at <code>console.groq.com/keys</code> (it starts with <code>gsk_</code>).</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Run <code>/setkey</code>. A private popup appears &mdash; paste your key there. It never shows in any channel.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>The bot checks the key works, saves it, and confirms. AI commands now run on your key with no cooldown.</td>
+          </tr>
+          <tr>
+            <td>&mdash;</td>
+            <td>Run <code>/forgetkey</code> at any time to remove your stored key.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">&#128161;</span>
+      <div class="callout-body">
+        <div class="callout-title">Always enter your key through the popup</div>
+        <p>
+          Never paste an API key directly into a chat message &mdash; anyone (and other bots) could
+          read it. The <code>/setkey</code> popup keeps it private. Your key is stored on the bot
+          host only for your own commands and can be removed with <code>/forgetkey</code>.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">On servers other than the official one</div>
+        <p>
+          When the bot is added to another community&rsquo;s server, the AI commands require your
+          own key &mdash; run <code>/setkey</code> first. The free reference and search commands
+          work everywhere with no setup.
+        </p>
+      </div>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

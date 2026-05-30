@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; Guilds &amp; Halls</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">Guilds &amp; Halls</h1>
+      <p class="page-subtitle">
+        Long-lived player organisations with four ranks, a permission matrix, a
+        shared treasury and tabbed chest &mdash; plus per-guild instanced halls in
+        PREFAB or BUILD mode.
+      </p>
+    </div>
+
+    <!-- Guilds -->
+    <div data-section-body="Guilds">
+    <h2 data-section="Guilds">Guilds</h2>
+    <p>
+      Guilds are persistent player organisations with a name, a short tag (the
+      abbreviation shown in chat), a message-of-the-day, a member roster, a
+      shared treasury, a shared chest, and a guild hall.
+    </p>
+
+    <h3 data-section="Ranks">Ranks</h3>
+    <p>
+      Every guild has four hard-coded ranks, in strict order from highest to
+      lowest:
+    </p>
+    <ul>
+      <li><strong>OWNER</strong> &mdash; one per guild. Has every permission unconditionally.</li>
+      <li><strong>OFFICER</strong> &mdash; configurable trusted rank.</li>
+      <li><strong>MEMBER</strong> &mdash; default rank for new joiners.</li>
+      <li><strong>RECRUIT</strong> &mdash; lowest rank for probation/trial members.</li>
+    </ul>
+    <p>
+      <code>/guild promote</code> and <code>/guild demote</code> shift a member
+      one step at a time and can only be run by the owner.
+      <code>/guild transfer &lt;player&gt;</code> hands the OWNER rank to another
+      member; the previous owner is demoted to OFFICER.
+    </p>
+
+    <h3 data-section="Permissions">Permissions</h3>
+    <p>
+      Each rank has a default permission set, and individual players can have
+      <em>overrides</em> that grant or revoke specific permissions on top of
+      their rank&rsquo;s defaults. The owner always has every permission
+      regardless of overrides.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Grants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>BUILD</code></td><td>Place and break blocks inside the guild hall (BUILD-mode halls only; permission-gated).</td></tr>
+          <tr><td><code>CHEST_VIEW</code></td><td>Open the guild chest UI.</td></tr>
+          <tr><td><code>CHEST_DEPOSIT</code></td><td>Move items into a guild chest section.</td></tr>
+          <tr><td><code>CHEST_WITHDRAW</code></td><td>Move items out of a guild chest section.</td></tr>
+          <tr><td><code>INVITE</code></td><td>Invite outsiders to the guild.</td></tr>
+          <tr><td><code>KICK</code></td><td>Remove members from the guild (cannot kick equal or higher rank).</td></tr>
+          <tr><td><code>PROMOTE</code></td><td>Raise another member by one rank (owner-only by default).</td></tr>
+          <tr><td><code>DEMOTE</code></td><td>Lower another member by one rank (owner-only by default).</td></tr>
+          <tr><td><code>SET_MOTD</code></td><td>Change the guild&rsquo;s message of the day.</td></tr>
+          <tr><td><code>MANAGE_HALL</code></td><td>Set the guild hall spawn, run upgrades, and toggle hall settings.</td></tr>
+          <tr><td><code>MANAGE_PLOTS</code></td><td>Define and delete rent/sale plots inside the guild hall.</td></tr>
+          <tr><td><code>MANAGE_CLAIMS</code></td><td>Add and remove guild chunk claims (requires QuestLines Claims).</td></tr>
+          <tr><td><code>VISIT_OPEN</code></td><td>Allow non-members to visit the guild hall via <code>/guild hall visit</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The owner edits the permission matrix from the <strong>Guild Permissions</strong>
+      UI (opened from <code>/guild ui</code> or via <code>/guild perms set</code>).
+      Per-player overrides can also be set with
+      <code>/guild perms player &lt;player&gt; &lt;perm&gt; --value=true|false</code>.
+    </p>
+
+    <h3 data-section="Treasury">Treasury</h3>
+    <p>
+      Each guild has a single shared currency balance. Members can deposit with
+      <code>/guild bank &lt;amount&gt;</code> (gated on the
+      <code>questlinesmmo.guild.bank.deposit</code> permission and a
+      <code>guild_bank</code> feature flag in the guild hall&rsquo;s upgrade level).
+      Withdrawals are done via the Treasury tab in the guild UI. Admins adjust
+      treasury balances directly with <code>/qlmmo admin guild currency</code>.
+    </p>
+
+    <h3 data-section="Chest">Guild Chest</h3>
+    <p>
+      The guild chest is a multi-section shared inventory. Each section is a
+      grid of slots (default 54 slots per section, matching a Hytale double
+      chest). The maximum number of sections is set per upgrade tier by
+      <code>maxChestSections</code> in <code>config.guildHall.upgradeLevels</code>
+      (BUILD mode) or by the active template tier (PREFAB mode). Members open
+      the chest with <code>/guild chest</code> if they have <code>CHEST_VIEW</code>
+      and move items in or out subject to <code>CHEST_DEPOSIT</code> and
+      <code>CHEST_WITHDRAW</code>.
+    </p>
+    </div>
+
+    <!-- Guild Halls -->
+    <div data-section-body="Guild Halls">
+    <h2 data-section="Guild Halls">Guild Halls</h2>
+    <p>
+      Every guild has its own instanced world named
+      <code>guildhall_&lt;guildId&gt;</code>. The hall is loaded on demand when a
+      member runs <code>/guild home</code>, stays alive while at least one player
+      is inside, and unloads after a configurable idle grace period
+      (<code>config.guildHall.unloadGraceMinutes</code>, default <code>5</code>).
+    </p>
+    <p>
+      A new guild&rsquo;s first <code>/guild home</code> opens a two-step
+      creation carousel: the owner picks a <strong>biome</strong> (the world
+      seed and generator type) and then a <strong>template</strong> (the
+      structure that gets pasted at the biome&rsquo;s configured spawn point).
+      Both are immutable after creation.
+    </p>
+
+    <h3 data-section="PREFAB vs BUILD">PREFAB vs BUILD</h3>
+    <p>
+      Guild halls run in one of two server-wide modes set in
+      <code>config.guildHall.mode</code>. The mode applies to every hall on the
+      server and is decided once when the plugin is configured.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Mode</th>
+            <th>Block editing</th>
+            <th>Upgrade ladder</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>PREFAB</code></td>
+            <td>
+              No manual block editing ever. The hall listener cancels every
+              player block place and break in the hall world.
+            </td>
+            <td>
+              Per-template <strong>upgrade tiers</strong>. Each tier names a
+              structure prefab to paste over the world; running
+              <code>/guild hall upgrade confirm</code> deducts the tier&rsquo;s
+              cost from the guild treasury and re-pastes the structure.
+            </td>
+          </tr>
+          <tr>
+            <td><code>BUILD</code></td>
+            <td>
+              Free building inside guild-claimed chunks (or, with QuestLines
+              Claims installed, inside the guild&rsquo;s claim region).
+              Wilderness inside the hall world can be locked down via
+              <code>config.guildHall.wildernessProtectedInBuild</code>.
+            </td>
+            <td>
+              Global <strong>upgrade levels</strong> defined in
+              <code>config.guildHall.upgradeLevels</code>. Levels unlock
+              mechanical perks (chest sections, slots per section, member
+              cap, plots, feature flags). They never paste blocks.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Spawn Point">Spawn Point</h3>
+    <p>
+      The spawn point is where <code>/guild home</code> drops players. It
+      defaults to the template&rsquo;s <code>spawnOffset</code> applied to the
+      biome&rsquo;s <code>buildingSpawn</code>. Members with the
+      <code>MANAGE_HALL</code> permission can run
+      <code>/guild hall setspawn</code> while standing where they want the new
+      spawn.
+    </p>
+
+    <h3 data-section="Visiting Other Halls">Visiting Other Halls</h3>
+    <p>
+      <code>/guild hall visit &lt;guildName&gt;</code> teleports the player into
+      another guild&rsquo;s hall, but only if that guild has granted the
+      <code>VISIT_OPEN</code> permission to the appropriate rank (typically
+      <code>RECRUIT</code> or below). Visitors are gated by the same listener
+      rules as members: PREFAB halls block all editing, BUILD halls follow the
+      hall&rsquo;s claim and plot rules.
+    </p>
+
+    <h3 data-section="Plots">Plots (Guild Halls)</h3>
+    <p>
+      Players with the <code>MANAGE_PLOTS</code> permission can carve up the
+      guild hall into rent or sale plots. Plot definition uses the standard
+      <code>/claim wand</code> selection workflow (requires QuestLines Claims):
+    </p>
+    <ol>
+      <li>Run <code>/claim wand</code> to receive the Claim Staff.</li>
+      <li>Click two corners to define the plot volume.</li>
+      <li>Run <code>/guild hall plot rent &lt;name&gt; &lt;price&gt; &lt;days&gt;</code> for a leased plot, or <code>/guild hall plot buy &lt;name&gt; &lt;price&gt;</code> for a one-time-purchase plot.</li>
+    </ol>
+    <p>
+      <code>/guild hall plot list</code> prints the guild&rsquo;s defined plots
+      and <code>/guild hall plot delete &lt;plotId&gt;</code> removes one. Plots
+      are stored separately from admin Claims rent/buy regions and never appear
+      in the global <code>/claim rentbuy</code> browser unless explicitly
+      configured to. Guild plots also intentionally do not support prefab
+      saving &mdash; that workflow is reserved for admin regions.
+    </p>
+
+    <h3 data-section="Claims Integration">Claims Integration</h3>
+    <p>
+      When QuestLines Claims is installed, the bridge in
+      <code>net.evilcraft.questlinesmmo.bridge.ClaimsBridge</code> hooks the hall
+      world into the Claims protection chain. Members of the guild are treated
+      as members of the hall&rsquo;s region; the
+      <code>config.guildHall.maxClaimsPerGuild</code> setting caps how many
+      chunks a single guild can hold inside the hall. Without Claims installed
+      the bridge is a no-op and <code>GuildHallListener</code> falls back to a
+      simple build-permission gate.
+    </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          Full guild command tables live on
+          <a href="mmo-interface.html">UI &amp; Commands</a>; guild hall config
+          keys and registry files (biomes, templates, upgrade tiers) live on
+          <a href="mmo-config.html">Configuration</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

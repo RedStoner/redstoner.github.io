@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Claims — Player Claims</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="claims" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Claims Plugin</div>
+      <h1 class="page-title">Player Claims</h1>
+      <p class="page-subtitle">
+        Chunk-based land players protect themselves &mdash; the claim map, contiguity
+        rules, chunk budgets, separation, colours, and trusted members.
+      </p>
+    </div>
+
+    <p>
+      Players use <code>/claim map</code> to open a grid of chunk cells centred on
+      their current position. Green cells are unclaimed and can be clicked to claim;
+      cells in the player&rsquo;s own claims are shown in that claim&rsquo;s colour
+      and can be managed; cells owned by others or under admin regions are read-only.
+    </p>
+
+    <!-- Contiguity -->
+    <div data-section-body="Contiguity">
+    <h2 data-section="Contiguity">Contiguity</h2>
+    <p>
+      Claims must be a single contiguous chunk group (4-way adjacency). Adding a
+      chunk requires it to be adjacent to an existing chunk in that claim. Removing
+      a chunk that would split the claim into disconnected pieces is refused
+      (a breadth-first search verifies remaining chunks stay connected).
+    </p>
+    </div>
+
+    <!-- Chunk Limits -->
+    <div data-section-body="Chunk Limits">
+    <h2 data-section="Chunk Limits">Chunk Limits</h2>
+    <p>
+      Every player has a total-chunk budget across all their claims. The budget is:
+    </p>
+    <ul>
+      <li><code>default_max_chunks</code> (default <code>25</code>) &mdash; base from config.</li>
+      <li><strong>+ N</strong> for every <code>questlinesclaims.claim.chunks.N</code> permission the player holds. Multiple matching permissions stack (N = 1&ndash;500).</li>
+      <li><strong>+ bonus</strong> &mdash; admin-granted chunks via <code>/claim addchunks</code>.</li>
+    </ul>
+    </div>
+
+    <!-- Claim Separation -->
+    <div data-section-body="Claim Separation">
+    <h2 data-section="Claim Separation">Claim Separation</h2>
+    <p>
+      The <code>distance_between_claims</code> config value (default <code>1</code>
+      chunk) sets a minimum buffer between claims of different players. Set to
+      <code>0</code> to allow claims to touch.
+    </p>
+    </div>
+
+    <!-- Claim Colours -->
+    <div data-section-body="Claim Colours">
+    <h2 data-section="Claim Colours">Claim Colours</h2>
+    <p>
+      Each claim is assigned a random vivid HSV colour on creation. Owners can
+      pick a specific colour or re-roll at random through the claim map UI. The
+      colour appears as an overlay on the world map so players can see claim
+      boundaries at a glance.
+    </p>
+    </div>
+
+    <!-- Members and Flags -->
+    <div data-section-body="Members and Flags">
+    <h2 data-section="Members and Flags">Members and Flags</h2>
+    <p>
+      Claim owners open <code>/claim members</code> (inside their claim) or use
+      the Members button in the claim map to add trusted players. Each member has
+      their own allowed-flag set; unlisted players fall back to the
+      <em>member default flags</em> set for the claim.
+    </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          Flag meanings are on the <a href="claims.html#permission-flags">Overview</a>;
+          per-player chunk-budget permissions are on
+          <a href="claims-config.html">Config &amp; Permissions</a>; the full command
+          list is on <a href="claims-commands.html">Commands</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

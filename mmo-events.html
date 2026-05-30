@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines MMO &mdash; Events &amp; Discoveries</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="mmo" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">MMO Plugin</div>
+      <h1 class="page-title">Events &amp; Discoveries</h1>
+      <p class="page-subtitle">
+        World-driven dynamic events and bosses that fire on player density, and
+        proximity-detected points of interest players unlock as they explore.
+      </p>
+    </div>
+
+    <!-- Events -->
+    <div data-section-body="Dynamic Events">
+    <h2 data-section="Dynamic Events">Dynamic Events</h2>
+    <p>
+      Dynamic events are time-bounded encounters that fire inside specific world
+      regions when player density is high enough. They are configured in two
+      pieces:
+    </p>
+    <ul>
+      <li>
+        <strong>Event definitions</strong> in
+        <code>mods/QuestLinesMMO/events/definitions/</code> &mdash; the
+        encounter itself: display name, min/max duration, success reward.
+      </li>
+      <li>
+        <strong>Region triggers</strong> in
+        <code>mods/QuestLinesMMO/events/regions/</code> &mdash; the world box
+        and the list of event IDs eligible to spawn there, plus a per-region
+        minimum player count.
+      </li>
+    </ul>
+    <p>
+      Every <code>config.events.dynamicEventCheckIntervalMinutes</code> minutes
+      (default <code>10</code>) the manager picks an eligible region (one with
+      at least its <code>minPlayers</code> inside it and not on cooldown), then
+      rolls one of the region&rsquo;s eligible events with a random duration
+      in <code>[minDurationSeconds, maxDurationSeconds]</code>. Success rewards
+      are distributed to every player in the region at the time of completion.
+    </p>
+
+    <h3 data-section="Spawn Modifiers">Spawn Modifiers</h3>
+    <p>
+      Each entry in a <code>"defeat"</code> event&rsquo;s <code>spawns</code>
+      list can carry an optional <code>"modifiers"</code> block that scales
+      the mob&rsquo;s combat numbers at spawn time. Both multipliers default
+      to <code>1.0</code> (no change); omit the block entirely for vanilla
+      stats.
+    </p>
+    <ul>
+      <li><code>healthMultiplier</code> &mdash; multiplies the mob&rsquo;s
+        <code>Health</code> stat ceiling. The mob is then maximised so it
+        starts at the new cap.</li>
+      <li><code>damageMultiplier</code> &mdash; every outgoing damage event
+        sourced from this mob has its amount multiplied by this value
+        before the engine applies it.</li>
+    </ul>
+    <p>Example from <code>goblin_raid.json</code>:</p>
+    <pre>"spawns": [
+  { "entityType": "Goblin",        "count": 6, "spreadRadius": 12.0 },
+  { "entityType": "Goblin_Lobber", "count": 2, "spreadRadius": 16.0,
+    "modifiers": { "damageMultiplier": 1.25 } },
+  { "entityType": "Goblin_Duke",   "count": 1, "pos": { "x": 0, "y": 120, "z": 0 },
+    "modifiers": { "healthMultiplier": 2.5, "damageMultiplier": 1.5 } }
+]</pre>
+
+    <h3 data-section="Event Bosses">Event Bosses</h3>
+    <p>
+      Event bosses are large encounters that can be spawned during a dynamic
+      event or by an admin command. Each boss is a JSON file under
+      <code>mods/QuestLinesMMO/events/bosses/</code> that names a Hytale
+      <code>entityType</code>, a max-health override, a despawn timer, and a
+      reward table. Damage dealt is tracked by the
+      <code>ParticipationTracker</code>; on boss death, every contributor whose
+      damage cleared <code>config.events.eventBossMinDamageThreshold</code> gets
+      a share of the reward.
+    </p>
+
+    <h3 data-section="World Bosses">World Bosses</h3>
+    <p>
+      World bosses are scheduled spawns rather than dynamic ones. Definitions
+      in <code>mods/QuestLinesMMO/bosses/</code> include a cron-style
+      <code>schedule</code>, a fixed spawn coordinate, and an optional override
+      for the announcement windows (default
+      <code>config.worldBosses.announcementTimes</code> =
+      <code>["15m","5m","1m"]</code>). At each scheduled time the scheduler
+      announces a countdown, then spawns the boss at the configured location.
+      An admin can force a spawn outside the schedule with
+      <code>/qlmmo admin forceboss &lt;worldBossId&gt;</code>.
+    </p>
+    </div>
+
+    <!-- Discoveries -->
+    <div data-section-body="Discoveries">
+    <h2 data-section="Discoveries (POIs)">Discoveries (POIs)</h2>
+    <p>
+      A POI is a sphere centred on a coordinate in a specific world. While the
+      <code>PoiManager</code> ticks (every
+      <code>config.poi.proximityCheckIntervalSeconds</code> seconds, default
+      <code>2</code>) it scans every online player against every POI; the first
+      time a player enters the radius, the POI is recorded as discovered for
+      them, a notification fires, and any rewards on the POI are granted.
+    </p>
+    <p>
+      Players open <code>/discoveries</code> (alias <code>/poi</code>) to see
+      every POI they&rsquo;ve discovered with its world, coordinates, and
+      description. POIs marked <code>"hidden": true</code> stay invisible until
+      discovered; non-hidden ones can be listed with their location even before
+      discovery so that admins can flag landmarks on the world map.
+    </p>
+    <p>
+      Admin authoring is done with <code>/qlmmo poi here &lt;id&gt;</code> while
+      standing at the desired centre &mdash; this writes the JSON file directly.
+      Other authoring commands let admins teleport to a POI, list every
+      registered POI, and grant or revoke discoveries on a player&rsquo;s
+      behalf.
+    </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">See also</div>
+        <p>
+          Event, boss, and POI registry fields plus their config keys live on
+          <a href="mmo-config.html">Configuration</a>; admin commands for
+          spawning bosses and authoring POIs are on
+          <a href="mmo-interface.html">UI &amp; Commands</a>.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

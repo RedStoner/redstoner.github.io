@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines — Portraits</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="portraits" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Reference</div>
+      <h1 class="page-title">Portraits</h1>
+      <p class="page-subtitle">
+        QuestLines can display an NPC portrait image above the dialogue box whenever a player
+        opens a conversation. Portraits are opt-in and highly configurable — you can use
+        convention-named files, explicit resource-pack paths, or let the plugin fetch a
+        headshot automatically from the HyCitizens skin data.
+      </p>
+    </div>
+
+    <!-- ======================== OVERVIEW ======================== -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      When a dialogue opens, QuestLines resolves a portrait for the NPC using the following
+      priority chain (first match wins):
+    </p>
+    <ol>
+      <li><strong>Page-level override</strong> — a <code>Portrait</code> field set directly on the dialogue page.</li>
+      <li><strong>NPC override</strong> — an explicit texture path stored per-NPC in <code>npcs.json</code>.</li>
+      <li><strong>Convention file</strong> — a PNG placed at <code>QuestLines/portraits/{npcId}.png</code>
+          (or <code>{citizenName}.png</code> for HyCitizens NPCs).</li>
+      <li><strong>Skin API fallback</strong> — a headshot fetched asynchronously from
+          <code>api.hytl.skin</code> using the citizen's skin recipe (HyCitizens only).</li>
+    </ol>
+    <p>
+      The resolved image is sent to the player as a <code>DynamicImageAsset</code> (for local PNG files
+      and API fetches) or referenced directly as a resource-pack texture path (for override strings
+      that don't match a local file).
+    </p>
+    <p>
+      The portrait is rendered as a <strong>320&times;320 px</strong> panel anchored above the dialogue
+      box, on whichever side is configured. It is automatically released when the dialogue closes.
+    </p>
+    </div>
+
+    <!-- ======================== GLOBAL CONFIG ======================== -->
+    <div data-section-body="Global Configuration">
+    <h2 data-section="Global Configuration">Global Configuration</h2>
+    <p>
+      Three keys in <code>QuestLines/QuestLines.conf</code> control portrait behaviour globally:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>portrait_enabled</code></td>
+          <td><code>false</code></td>
+          <td>Master toggle. Portraits are not shown unless this is <code>true</code>.</td>
+        </tr>
+        <tr>
+          <td><code>portrait_side</code></td>
+          <td><code>left</code></td>
+          <td>Which side of the dialogue the portrait appears above. Accepts <code>left</code> or <code>right</code>.</td>
+        </tr>
+        <tr>
+          <td><code>portrait_skin_fallback</code></td>
+          <td><code>true</code></td>
+          <td>
+            When <code>true</code> and no portrait file is found, QuestLines fetches a headshot
+            from the skin API for HyCitizens NPCs. Set to <code>false</code> to disable all
+            outbound API calls.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Example <code>QuestLines.conf</code> section:</p>
+    <div class="example-block">
+      <pre><code>portrait_enabled=true
+portrait_side=left
+portrait_skin_fallback=true</code></pre>
+    </div>
+    <p>
+      Changes take effect after <code>/ql reload</code>.
+    </p>
+    </div>
+
+    <!-- ======================== CONVENTION FILES ======================== -->
+    <div data-section-body="Convention Files">
+    <h2 data-section="Convention Files">Convention Files</h2>
+    <p>
+      The simplest way to add a portrait is to drop a PNG into the plugin's portraits directory.
+      No further configuration is needed.
+    </p>
+    <ul>
+      <li>Directory: <code>QuestLines/portraits/</code></li>
+      <li>File name: <code>{npcId}.png</code> where <code>npcId</code> is the NPC's key in
+          <code>npcs.json</code> (citizen UUID or entity UUID).</li>
+      <li>Spaces in the ID are replaced with underscores — e.g. an NPC with display name
+          <code>Bandit Captain</code> maps to <code>Bandit_Captain.png</code>.</li>
+    </ul>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">HyCitizens Name Fallback</div>
+        <p>
+          For HyCitizens NPCs, if no file is found for the citizen's ID, QuestLines also checks
+          for a file named after the citizen's <strong>display name</strong>
+          (e.g. <code>Guard.png</code>). This makes it easy to share one portrait across
+          multiple citizens that share the same name.
+        </p>
+      </div>
+    </div>
+
+    <p>
+      Portrait files are loaded once and cached in memory. Run <code>/ql reload</code> to
+      clear the cache and pick up new or replaced files.
+    </p>
+    <p>
+      There is no enforced resolution requirement, but portraits are displayed at
+      <strong>256&times;256 px</strong> by the skin API and rendered at 320&times;320 px in
+      the UI. Square images at 256&times;256 or larger look best.
+    </p>
+    </div>
+
+    <!-- ======================== NPC OVERRIDE ======================== -->
+    <div data-section-body="NPC Portrait Override">
+    <h2 data-section="NPC Portrait Override">NPC Portrait Override</h2>
+    <p>
+      You can pin a specific texture path to an NPC in <code>npcs.json</code>
+      using the <code>NpcPortraits</code> map. The value can be either:
+    </p>
+    <ul>
+      <li>
+        <strong>A local file name</strong> — QuestLines looks for
+        <code>QuestLines/portraits/{value}.png</code> (spaces replaced with underscores).
+        If found, it is delivered as a <code>DynamicImageAsset</code>, the same as a
+        convention file.
+      </li>
+      <li>
+        <strong>A resource-pack texture path</strong> — if no matching local file exists,
+        the value is passed directly as a <code>TexturePath</code> in the UI command.
+        Use this to reference textures already bundled in your resource pack.
+      </li>
+    </ul>
+    <div class="example-block">
+      <pre><code>{
+  "NpcPortraits": {
+    "f48f7eaa-512e-415d-bfdb-f53d2ea0b991": "elder_mage",
+    "b2c3d4e5-...": "textures/npcs/blacksmith"
+  }
+}</code></pre>
+    </div>
+    <p>
+      This override takes priority over convention files and the skin API, but is still
+      overridden by a page-level <code>Portrait</code> field.
+    </p>
+    </div>
+
+    <!-- ======================== PER-NPC TOGGLE ======================== -->
+    <div data-section-body="Per-NPC Portrait Toggle">
+    <h2 data-section="Per-NPC Portrait Toggle">Per-NPC Portrait Toggle</h2>
+    <p>
+      You can disable portraits for a specific NPC even when they are globally enabled.
+      Set <code>NpcPortraitEnabled</code> to <code>false</code> for that NPC's ID in
+      <code>npcs.json</code>:
+    </p>
+    <div class="example-block">
+      <pre><code>{
+  "NpcPortraitEnabled": {
+    "f48f7eaa-512e-415d-bfdb-f53d2ea0b991": false
+  }
+}</code></pre>
+    </div>
+    <p>
+      Only <code>false</code> values are stored. An absent entry means portraits are
+      enabled for that NPC (the default). This flag is ignored if the global
+      <code>portrait_enabled</code> setting is <code>false</code>.
+    </p>
+    </div>
+
+    <!-- ======================== PAGE-LEVEL OVERRIDE ======================== -->
+    <div data-section-body="Page-Level Portrait Override">
+    <h2 data-section="Page-Level Portrait Override">Page-Level Portrait Override</h2>
+    <p>
+      Individual dialogue pages can override the portrait via the <code>Portrait</code> field
+      in the page's JSON. This is the highest-priority portrait source and bypasses all
+      NPC-level configuration.
+    </p>
+    <div class="example-block">
+      <pre><code>{
+  "PageId": "p1",
+  "Npc": "Welcome, traveller!",
+  "Portrait": "elder_mage_angry",
+  ...
+}</code></pre>
+    </div>
+    <p>
+      The value follows the same local-file-first logic as the NPC override: QuestLines checks
+      for <code>QuestLines/portraits/{value}.png</code> first, and if not found, passes the
+      value through as a resource-pack texture path.
+    </p>
+    <p>
+      Use page-level overrides to change the portrait mid-conversation — for example, to show
+      a different expression on a key emotional beat.
+    </p>
+    </div>
+
+    <!-- ======================== SECONDARY PORTRAIT ======================== -->
+    <div data-section-body="Secondary Portrait">
+    <h2 data-section="Secondary Portrait">Secondary Portrait</h2>
+    <p>
+      A dialogue page can display <strong>two portraits simultaneously</strong> — one on each
+      side of the dialogue box. Set the <code>SecondaryPortrait</code> field on a page to add a
+      second image on the opposite side from the primary.
+    </p>
+    <div class="example-block">
+      <pre><code>{
+  "Id": "negotiation_scene",
+  "Portrait": "aldric_smith",
+  "PortraitSide": "Left",
+  "SecondaryPortrait": "bandit_captain",
+  "Dialog": "I have what you want, smith. The price is steep.",
+  ...
+}</code></pre>
+    </div>
+    <p>
+      The secondary portrait is resolved with the same local-file-first logic as the primary:
+      QuestLines checks <code>QuestLines/portraits/{value}.png</code> first, and if not found,
+      uses the value as a resource-pack texture path.
+    </p>
+    <p>
+      The secondary portrait always appears on the side <em>opposite</em> to the primary.
+      If the primary is on the left (the global default or per-page <code>PortraitSide</code>),
+      the secondary appears on the right, and vice versa.
+    </p>
+    </div>
+
+    <!-- ======================== SKIN API FALLBACK ======================== -->
+    <div data-section-body="Skin API Fallback">
+    <h2 data-section="Skin API Fallback">Skin API Fallback</h2>
+    <p>
+      When <code>portrait_skin_fallback=true</code> and HyCitizens is active, QuestLines will
+      automatically fetch a headshot for any citizen that has no portrait file configured.
+      The headshot is a 256&times;256 px PNG generated from the citizen's skin data.
+    </p>
+    <p>Two fetch paths are used depending on the citizen's skin configuration:</p>
+    <ul>
+      <li>
+        <strong>Live-skin player-model citizens</strong> — a simple GET request to
+        <code>api.hytl.skin/headshot/{username}</code>.
+      </li>
+      <li>
+        <strong>Character-builder citizens and custom-skin player-models</strong> — a GET
+        request to <code>api.hytl.skin/headshot</code> with the citizen's full skin recipe
+        base64-url-encoded as the <code>token</code> query parameter.
+      </li>
+    </ul>
+    <p>
+      Fetches are <strong>asynchronous</strong>. On first open the portrait slot will be empty;
+      once the fetch completes the dialogue is automatically refreshed to display the image.
+      Subsequent opens for the same NPC use the cached result instantly.
+    </p>
+
+    <div class="callout warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Network Dependency</div>
+        <p>
+          The skin API fallback makes outbound HTTP requests to <code>api.hytl.skin</code>.
+          If your server has no internet access or you want to avoid the dependency, set
+          <code>portrait_skin_fallback=false</code> in <code>QuestLines.conf</code>.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- ======================== CACHE ======================== -->
+    <div data-section-body="Cache &amp; Reload">
+    <h2 data-section="Cache &amp; Reload">Cache &amp; Reload</h2>
+    <p>
+      Portrait data (both file bytes and API responses) is held in memory after the first
+      load. This means disk reads and API calls happen at most once per NPC per server session.
+    </p>
+    <p>
+      To force a cache clear — for example after replacing a portrait PNG on disk — run:
+    </p>
+    <div class="example-block">
+      <pre><code>/ql reload</code></pre>
+    </div>
+    <p>
+      The reload also re-reads <code>QuestLines.conf</code>, so you can change
+      <code>portrait_enabled</code>, <code>portrait_side</code>, or
+      <code>portrait_skin_fallback</code> and have the changes take effect without restarting
+      the server.
+    </p>
+    </div>
+
+    <!-- ======================== QUICK REFERENCE ======================== -->
+    <div data-section-body="Quick Reference">
+    <h2 data-section="Quick Reference">Quick Reference</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Where</th>
+          <th>What to set</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>QuestLines.conf</code></td>
+          <td><code>portrait_enabled=true</code></td>
+          <td>Master toggle (lowest)</td>
+        </tr>
+        <tr>
+          <td><code>QuestLines/portraits/</code></td>
+          <td>Drop <code>{npcId}.png</code> or <code>{citizenName}.png</code></td>
+          <td>Convention file (3rd)</td>
+        </tr>
+        <tr>
+          <td><code>npcs.json</code> <code>NpcPortraits</code></td>
+          <td>Map NPC ID &rarr; file name or texture path</td>
+          <td>NPC override (2nd)</td>
+        </tr>
+        <tr>
+          <td>Page JSON <code>Portrait</code> field</td>
+          <td>File name or texture path</td>
+          <td>Page override (highest)</td>
+        </tr>
+        <tr>
+          <td>Page JSON <code>SecondaryPortrait</code> field</td>
+          <td>File name or texture path — shown on opposite side from primary</td>
+          <td>Per-page second portrait</td>
+        </tr>
+        <tr>
+          <td>Automatic</td>
+          <td>Skin API headshot (HyCitizens only, async)</td>
+          <td>Fallback (4th)</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+  </div><!-- /.content -->
+</div><!-- /.main-wrapper -->
+
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>
