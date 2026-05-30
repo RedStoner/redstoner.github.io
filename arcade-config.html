@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Arcade &mdash; Configuration</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="arcade" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Arcade Plugin</div>
+      <h1 class="page-title">Configuration</h1>
+      <p class="page-subtitle">
+        Engine-wide tunables live in <code>config.json</code>; per-game
+        tunables live in <code>configs/&lt;gameId&gt;.json</code>. Files are
+        created on first start with default values and merged with defaults
+        on load &mdash; missing keys are silently filled in, so old configs
+        keep working after an upgrade.
+      </p>
+    </div>
+
+    <!-- Engine Config -->
+    <div data-section-body="Engine Config">
+    <h2 data-section="Engine Config" id="engine-config">Engine Config (<code>config.json</code>)</h2>
+    <p>
+      Lives at <code>mods/QuestLinesArcade/config.json</code>. Created on
+      first start; keys missing from disk fall back to the defaults below.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>maxConcurrentMatches</code></td><td>int</td><td><code>64</code></td><td>Engine-wide cap. New <code>createMatch</code> calls past this cap return null and the lobby reports the cap is full.</td></tr>
+          <tr><td><code>startingTokens</code></td>      <td>int</td><td><code>10</code></td><td>Tokens credited the first time a player engages with Arcade.</td></tr>
+          <tr><td><code>dailyTokens</code></td>         <td>int</td><td><code>5</code></td>  <td>Tokens granted by <code>/arcade-wallet daily</code>.</td></tr>
+          <tr><td><code>dailyCooldownHours</code></td>  <td>int</td><td><code>24</code></td> <td>Hours between successful daily claims.</td></tr>
+          <tr><td><code>tokensPerArcadeGame</code></td> <td>int</td><td><code>1</code></td>  <td>One-shot entry fee charged when an <code>ARCADE</code>-mode match starts.</td></tr>
+          <tr><td><code>exchangeEnabled</code></td>     <td>bool</td><td><code>true</code></td><td>Gate on <code>tokens-to-chips</code> / <code>chips-to-tokens</code>.</td></tr>
+          <tr><td><code>chipsPerToken</code></td>       <td>int</td><td><code>10</code></td> <td>Chips received per token spent in <code>tokens-to-chips</code>.</td></tr>
+          <tr><td><code>chipsPerOneToken</code></td>    <td>int</td><td><code>15</code></td> <td>Chips spent per token bought back in <code>chips-to-tokens</code>. Setting this higher than <code>chipsPerToken</code> creates the spread.</td></tr>
+          <tr><td><code>vaultEnabled</code></td>        <td>bool</td><td><code>false</code></td><td>Gate on the four Vault wallet subcommands. Both this <em>and</em> a registered Vault provider are needed.</td></tr>
+          <tr><td><code>vaultCurrency</code></td>       <td>string</td><td><code>null</code></td><td>Provider currency name. <code>null</code> = whatever the provider considers default.</td></tr>
+          <tr><td><code>vaultCostPerToken</code></td>   <td>double</td><td><code>100.0</code></td><td>Server money charged per token via <code>buy-tokens</code>.</td></tr>
+          <tr><td><code>vaultPayoutPerToken</code></td> <td>double</td><td><code>50.0</code></td><td>Server money credited per token sold via <code>sell-tokens</code>.</td></tr>
+          <tr><td><code>vaultCostPerChip</code></td>    <td>double</td><td><code>15.0</code></td><td>Server money charged per chip via <code>buy-chips</code>.</td></tr>
+          <tr><td><code>vaultPayoutPerChip</code></td>  <td>double</td><td><code>7.0</code></td><td>Server money credited per chip sold via <code>sell-chips</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Per-game configs -->
+    <div data-section-body="Per-Game Configs">
+    <h2 data-section="Per-Game Configs">Per-Game Configs (<code>configs/&lt;gameId&gt;.json</code>)</h2>
+    <p>
+      Each pack registers its own configs at startup. Files are written on
+      first plugin start; missing keys are filled with the registered
+      defaults on every reload, so adding new fields in an upgrade does not
+      reset your settings.
+    </p>
+
+    <h3 data-section="Core configs">Core configs</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Field</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="4"><code>codebreaker.json</code></td>
+              <td><code>codeLength</code></td><td><code>4</code> (clamped to 3..5)</td></tr>
+          <tr><td><code>numColors</code></td><td><code>6</code> (clamped between <code>codeLength</code> and 8)</td></tr>
+          <tr><td><code>maxGuesses</code></td><td><code>10</code> (clamped to 4..10)</td></tr>
+          <tr><td><code>allowDuplicates</code></td><td><code>true</code></td></tr>
+
+          <tr><td rowspan="3"><code>minesweeper.json</code></td>
+              <td><code>easyMines</code></td><td><code>10</code></td></tr>
+          <tr><td><code>mediumMines</code></td><td><code>25</code></td></tr>
+          <tr><td><code>hardMines</code></td><td><code>40</code></td></tr>
+
+          <tr><td rowspan="2"><code>2048.json</code></td>
+              <td><code>winTile</code></td><td><code>2048</code></td></tr>
+          <tr><td><code>spawnHighChance</code></td><td><code>0.1</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Board dimensions for Minesweeper are fixed in code (9&times;9, 12&times;12,
+      16&times;16); only the mine counts are tunable.
+    </p>
+
+    <h3 data-section="Board Pack configs">Board Pack configs</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>File</th><th>Field</th><th>Default</th></tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="3"><code>pachisi.json</code></td>
+              <td><code>captureBonus</code></td><td><code>20</code></td></tr>
+          <tr><td><code>goalBonus</code></td><td><code>10</code></td></tr>
+          <tr><td><code>requireFiveToLeaveNest</code></td><td><code>true</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Casino Pack configs">Casino Pack configs</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>File</th><th>Field</th><th>Default</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="7"><code>blackjack.json</code></td>
+              <td><code>betPerHand</code></td><td><code>100</code></td></tr>
+          <tr><td><code>deckCount</code></td><td><code>6</code></td></tr>
+          <tr><td><code>reshuffleThreshold</code></td><td><code>20</code></td></tr>
+          <tr><td><code>dealerStandAt</code></td><td><code>17</code></td></tr>
+          <tr><td><code>blackjackPayoutNum</code></td><td><code>3</code></td></tr>
+          <tr><td><code>blackjackPayoutDen</code></td><td><code>2</code></td></tr>
+          <tr><td><code>logCapacity</code></td><td><code>12</code></td></tr>
+
+          <tr><td rowspan="7"><code>blackjackmp.json</code></td>
+              <td><code>betPerHand</code></td><td><code>100</code></td></tr>
+          <tr><td><code>deckCount</code></td><td><code>6</code></td></tr>
+          <tr><td><code>reshuffleThreshold</code></td><td><code>30</code></td></tr>
+          <tr><td><code>dealerStandAt</code></td><td><code>17</code></td></tr>
+          <tr><td><code>blackjackPayoutNum</code></td><td><code>3</code></td></tr>
+          <tr><td><code>blackjackPayoutDen</code></td><td><code>2</code></td></tr>
+          <tr><td><code>logCapacity</code></td><td><code>16</code></td></tr>
+
+          <tr><td rowspan="4"><code>holdem.json</code></td>
+              <td><code>smallBlind</code></td><td><code>10</code></td></tr>
+          <tr><td><code>bigBlind</code></td><td><code>20</code></td></tr>
+          <tr><td><code>maxBetsPerStreet</code></td><td><code>4</code></td></tr>
+          <tr><td><code>logCapacity</code></td><td><code>20</code></td></tr>
+
+          <tr><td rowspan="4"><code>videopoker.json</code></td>
+              <td><code>betPerHand</code></td><td><code>100</code></td></tr>
+          <tr><td><code>deckCount</code></td><td><code>1</code></td></tr>
+          <tr><td><code>reshuffleThreshold</code></td><td><code>15</code></td></tr>
+          <tr><td><code>logCapacity</code></td><td><code>12</code></td></tr>
+
+          <tr><td rowspan="5"><code>roulette.json</code></td>
+              <td><code>chipValue</code></td><td><code>25</code></td></tr>
+          <tr><td><code>straightPayout</code></td><td><code>35</code></td></tr>
+          <tr><td><code>dozenColumnPayout</code></td><td><code>2</code></td></tr>
+          <tr><td><code>evenMoneyPayout</code></td><td><code>1</code></td></tr>
+          <tr><td><code>logCapacity</code></td><td><code>12</code></td></tr>
+
+          <tr><td rowspan="3"><code>slotmachine.json</code></td>
+              <td><code>betPerSpin</code></td><td><code>25</code></td></tr>
+          <tr><td><code>payoutAnyTwoCherries</code></td><td><code>1</code></td></tr>
+          <tr><td><code>logCapacity</code></td><td><code>12</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <code>craps.json</code> exposes a deeper set of payouts &mdash; field
+      doubles/triples, any craps, any seven, hardway 4/8 and 6/10,
+      place 4/10/5/9/6/8, hop 2/12 and 3/11, log capacity. Defaults follow
+      standard casino rules (chipValue 25, straight hop 30:1, etc.).
+    </p>
+    <div class="callout tip">
+      <span class="callout-icon">&#9733;</span>
+      <div class="callout-body">
+        <div class="callout-title">Slot multipliers are not in the config</div>
+        <p>
+          Three-of-a-kind multipliers for the slot machine are baked into the
+          <code>Symbol</code> enum and cannot be tuned without recompiling
+          &mdash; cherry 5&times;, silver 10&times;, gold 20&times;,
+          ruby 50&times;, emerald 100&times;, diamond 500&times;. The config
+          only controls the bet size and the consolation
+          &ldquo;any two cherries&rdquo; payout.
+        </p>
+      </div>
+    </div>
+
+    <h3 data-section="Solo Pack configs">Solo Pack configs</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>File</th><th>Field</th><th>Default</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="9"><code>yachtdice.json</code></td>
+              <td><code>maxRolls</code></td><td><code>3</code></td></tr>
+          <tr><td><code>upperBonusThreshold</code></td><td><code>63</code></td></tr>
+          <tr><td><code>upperBonusAmount</code></td><td><code>35</code></td></tr>
+          <tr><td><code>yachtScore</code></td><td><code>50</code></td></tr>
+          <tr><td><code>yachtBonusAmount</code></td><td><code>100</code></td></tr>
+          <tr><td><code>fullHouseScore</code></td><td><code>25</code></td></tr>
+          <tr><td><code>smallStraightScore</code></td><td><code>30</code></td></tr>
+          <tr><td><code>largeStraightScore</code></td><td><code>40</code></td></tr>
+          <tr><td><code>logCapacity</code></td><td><code>12</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The other six Solo Pack games (Solitaire, FreeCell, Sudoku, Stacker,
+      both Crystal Drop modes) ship with no JSON config &mdash; their
+      tunables are either hardcoded or driven from bundled puzzle banks.
+    </p>
+
+    <h3 data-section="Puzzle Pack configs">Puzzle Pack configs</h3>
+    <p>
+      The Puzzle Pack registers <em>no</em> per-game JSON configs. Word
+      Search, Crosswords, Lights Out, Nonograms, and Kakuro all draw from
+      bundled puzzle banks under each game&rsquo;s resources directory.
+      Adding configurable difficulty would mean writing a new
+      <code>*Config</code> record and registering it in
+      <code>PuzzlePackPlugin.setup()</code>.
+    </p>
+
+    <h3 data-section="Super Secret Pack configs">Super Secret Pack configs</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>File</th><th>Field</th><th>Default</th></tr></thead>
+        <tbody>
+          <tr><td><code>carcassonne.json</code></td><td><code>meeplesPerPlayer</code></td><td><code>7</code></td></tr>
+          <tr><td rowspan="3"><code>cah.json</code></td>
+              <td><code>handSize</code></td><td><code>10</code></td></tr>
+          <tr><td><code>winningScore</code></td><td><code>7</code></td></tr>
+          <tr><td><code>deckFile</code></td><td><code>"cah_deck.json"</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Catan and Uno currently ship with no separate config file.
+    </p>
+    </div>
+
+    <!-- Migration & file safety -->
+    <div data-section-body="Reloading and Safety">
+    <h2 data-section="Reloading and Safety">Reloading and Safety</h2>
+    <ul>
+      <li>
+        <strong>How to reload:</strong> there is no live reload command.
+        Restart the plugin (or the server) to pick up edits.
+      </li>
+      <li>
+        <strong>Merging:</strong> every config is decoded by walking the
+        record components and pulling each field from JSON, falling back to
+        the registered default. Adding a new field in a plugin upgrade is
+        safe &mdash; old files just inherit the new default on next load.
+      </li>
+      <li>
+        <strong>Parse errors:</strong> a malformed JSON file is left in
+        place and the registered defaults are used at runtime. Fix the file
+        and restart.
+      </li>
+      <li>
+        <strong>Writes:</strong> profile and archive writes go through an
+        atomic temp-file-then-rename. Config writes are simpler &mdash; they
+        happen only once at startup if the file is missing.
+      </li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

@@ -69,16 +69,16 @@
   --accent-light:   var(--gold-soft);
   --accent-dim:     var(--gold-deep);
 
-  /* Per-plugin accents */
-  --plugin-core:    #d8a84a;   /* gold */
-  --plugin-icons:   #e59b5f;   /* amber */
-  --plugin-dialog:  #6aa8e0;   /* sky blue */
-  --plugin-titles:  #b890e8;   /* lavender */
-  --plugin-gui:     #4fc3bd;   /* teal */
-  --plugin-claims:  #82c168;   /* moss */
-  --plugin-mmo:     #d96b6b;   /* ruby */
-  --plugin-nations: #9678d4;   /* violet */
-  --plugin-denizens:#4cbf8a;   /* emerald */
+  /* Per-plugin accents — match each plugin's logo / banner-generator color */
+  --plugin-core:    #1ecc60;   /* emerald */
+  --plugin-icons:   #f7c520;   /* gold */
+  --plugin-dialog:  #d0dde8;   /* silver */
+  --plugin-titles:  #9955ee;   /* violet */
+  --plugin-gui:     #3dd8ef;   /* cyan */
+  --plugin-claims:  #e02040;   /* crimson */
+  --plugin-mmo:     #8ad000;   /* lime */
+  --plugin-nations: #ff8c1a;   /* amber */
+  --plugin-denizens:#2050e0;   /* sapphire */
   --plugin-bot:     #7c8cf5;   /* blurple */
 
   /* Syntax (slight warmer shift) */

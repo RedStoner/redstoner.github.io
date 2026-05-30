@@ -97,6 +97,15 @@
     { type: 'link', href: 'denizens-integration.html',icon: SVG.book,  label: 'Migration & API',     plugin: 'denizens' },
     { type: 'link', href: 'denizens-license.html',   icon: SVG.diamond,label: 'Licensing',           plugin: 'denizens' },
 
+    { type: 'section', label: 'Arcade',          plugin: 'arcade' },
+    { type: 'link', href: 'arcade.html',             icon: SVG.play,    label: 'Overview',           plugin: 'arcade' },
+    { type: 'link', href: 'arcade-games.html',       icon: SVG.sparkle, label: 'Game Catalog',       plugin: 'arcade' },
+    { type: 'link', href: 'arcade-blocks.html',      icon: SVG.square,  label: 'Cabinets & Tables',  plugin: 'arcade' },
+    { type: 'link', href: 'arcade-commands.html',    icon: SVG.sheet,   label: 'Commands',           plugin: 'arcade' },
+    { type: 'link', href: 'arcade-wallet.html',      icon: SVG.diamond, label: 'Wallet & Economy',   plugin: 'arcade' },
+    { type: 'link', href: 'arcade-config.html',      icon: SVG.gear,    label: 'Configuration',      plugin: 'arcade' },
+    { type: 'link', href: 'arcade-api.html',         icon: SVG.book,    label: 'Developer API',      plugin: 'arcade' },
+
     { type: 'section', label: 'QuestLines Knowledge', plugin: 'bot' },
     { type: 'link', href: 'bot.html',           icon: SVG.chat,    label: 'Discord Bot',    plugin: 'bot' },
     { type: 'link', href: 'bot-admin.html',     icon: SVG.gear,    label: 'Admin & Setup',  plugin: 'bot' },

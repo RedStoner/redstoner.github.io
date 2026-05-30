@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Arcade &mdash; Wallet &amp; Economy</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="arcade" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Arcade Plugin</div>
+      <h1 class="page-title">Wallet &amp; Economy</h1>
+      <p class="page-subtitle">
+        Arcade keeps two per-player currencies &mdash; tokens (most strategy
+        games) and chips (every casino game) &mdash; and optionally lets
+        players exchange them, claim a daily token grant, and (with
+        VaultUnlocked installed) buy or sell either currency against the
+        server economy.
+      </p>
+    </div>
+
+    <!-- Two currencies -->
+    <div data-section-body="Two Currencies">
+    <h2 data-section="Two Currencies">Two Currencies</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Currency</th>
+            <th>Charged for</th>
+            <th>Earned from</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Tokens</strong></td>
+            <td>One-off entry fee at match start for every <code>ARCADE</code>-mode game (default 1 token per match).</td>
+            <td>Starting grant on first <code>/arcade</code> use, the daily claim, exchange from chips, or buying with Vault money.</td>
+          </tr>
+          <tr>
+            <td><strong>Chips</strong></td>
+            <td>Per-round / per-hand bets in every <code>CASINO</code>-mode game. The controller manages chip flow during the session; the engine just verifies the player can cover one bet at start.</td>
+            <td>Casino game wins, exchange from tokens, or buying with Vault money.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Free games charge neither. Tokens and chips never decrease silently &mdash;
+      <code>setChips()</code> and <code>setTokens()</code> floor at zero.
+    </p>
+    </div>
+
+    <!-- Player flow -->
+    <div data-section-body="Player Flow">
+    <h2 data-section="Player Flow">Player Flow</h2>
+    <ol>
+      <li>
+        First run of <code>/arcade</code> (or first cabinet click) seeds the
+        wallet with <code>startingTokens</code> (default 10) and 0 chips.
+        Profiles are created lazily &mdash; nothing is written until a player
+        actually engages.
+      </li>
+      <li>
+        <code>/arcade-wallet daily</code> grants <code>dailyTokens</code>
+        (default 5). Cooldown is <code>dailyCooldownHours</code> (default 24)
+        from the last successful claim, reported in seconds remaining if
+        not yet ready.
+      </li>
+      <li>
+        <code>/arcade-wallet tokens-to-chips &lt;tokens&gt;</code> swaps tokens
+        for chips at <code>chipsPerToken</code> (default 10 chips per token).
+      </li>
+      <li>
+        <code>/arcade-wallet chips-to-tokens &lt;tokens&gt;</code> swaps chips
+        back. <strong>The argument is the number of tokens you want</strong>;
+        the chip cost is <code>tokens &times; chipsPerOneToken</code>
+        (default 15 chips per token &mdash; so there&rsquo;s a built-in
+        spread between buying and selling).
+      </li>
+      <li>
+        Both exchange subcommands require <code>exchangeEnabled = true</code>
+        (default). Set it to false to lock exchanges off entirely.
+      </li>
+    </ol>
+    <div class="callout tip">
+      <span class="callout-icon">&#9733;</span>
+      <div class="callout-body">
+        <div class="callout-title">The chips-to-tokens argument</div>
+        <p>
+          The argument is the number of <em>tokens</em> the player wants to
+          receive, not the number of chips they want to spend. So
+          <code>/arcade-wallet chips-to-tokens 3</code> at the default rate
+          deducts 45 chips and credits 3 tokens. This is opposite to how
+          most exchanges read &mdash; worth highlighting in your
+          server&rsquo;s rules text.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Vault -->
+    <div data-section-body="VaultUnlocked Integration">
+    <h2 data-section="VaultUnlocked Integration">VaultUnlocked Integration</h2>
+    <p>
+      VaultUnlocked is Arcade&rsquo;s only optional dependency. When
+      installed and registered, it unlocks four extra wallet subcommands
+      that bridge between server money and Arcade currency:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Subcommand</th>
+            <th>Direction</th>
+            <th>Rate field</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>buy-tokens &lt;count&gt;</code></td>  <td>Server money &rarr; tokens</td><td><code>vaultCostPerToken</code></td>   <td>100.0 per token</td></tr>
+          <tr><td><code>sell-tokens &lt;count&gt;</code></td> <td>Tokens &rarr; server money</td><td><code>vaultPayoutPerToken</code></td><td>50.0 per token</td></tr>
+          <tr><td><code>buy-chips &lt;count&gt;</code></td>   <td>Server money &rarr; chips</td><td><code>vaultCostPerChip</code></td>   <td>15.0 per chip</td></tr>
+          <tr><td><code>sell-chips &lt;count&gt;</code></td>  <td>Chips &rarr; server money</td><td><code>vaultPayoutPerChip</code></td><td>7.0 per chip</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Both <code>vaultEnabled = true</code> and a successfully-detected
+      Vault provider are required &mdash; otherwise the four subcommands
+      respond &ldquo;Vault is not available&rdquo; and do nothing. The default
+      currency is whichever currency the Vault provider considers default;
+      override with <code>vaultCurrency</code> in <code>config.json</code> if
+      your provider supports multiple.
+    </p>
+    <p>
+      Sell paths are <strong>refund-safe</strong>: tokens or chips are
+      deducted first, then deposited as money; if the deposit call fails,
+      the deducted currency is returned to the player and an error is
+      reported. Buy paths fail forward &mdash; money is withdrawn first, and
+      only then is the Arcade currency credited.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Vault detection is one-shot at startup</div>
+        <p>
+          Arcade resolves Vault&rsquo;s economy provider once at plugin start
+          and caches the reflective method handles. Installing or replacing
+          Vault while the server is running will not make the new provider
+          visible &mdash; a server restart is required.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Tuning -->
+    <div data-section-body="Tuning Rates">
+    <h2 data-section="Tuning Rates">Tuning Rates</h2>
+    <p>
+      All wallet-related rates live in <code>config.json</code> under
+      <code>mods/QuestLinesArcade/</code>. Tweaking is hot &mdash; reload
+      changes by restarting the plugin or the server. See
+      <a href="arcade-config.html#engine-config">Engine Config</a> for the
+      full list of fields and their defaults.
+    </p>
+    <ul>
+      <li><strong>To raise the casino floor</strong>: increase <code>chipsPerToken</code> (make chips harder to get via exchange) or raise <code>vaultCostPerChip</code> (make Vault-bought chips cost more).</li>
+      <li><strong>To make the daily grant matter</strong>: raise <code>dailyTokens</code> relative to <code>tokensPerArcadeGame</code>. At default rates (5 tokens daily, 1 per match) a player gets 5 free strategy matches per day.</li>
+      <li><strong>To turn off Vault entirely without uninstalling it</strong>: set <code>vaultEnabled = false</code>. The bridge stays loaded but the four subcommands respond &ldquo;Vault is not available.&rdquo;</li>
+      <li><strong>To remove all exchange</strong>: set <code>exchangeEnabled = false</code>. <code>tokens-to-chips</code> and <code>chips-to-tokens</code> both refuse; <code>buy-*</code> and <code>sell-*</code> are unaffected.</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

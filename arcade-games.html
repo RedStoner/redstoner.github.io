@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Arcade &mdash; Game Catalog</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="arcade" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Arcade Plugin</div>
+      <h1 class="page-title">Game Catalog</h1>
+      <p class="page-subtitle">
+        Every game shipped by Arcade, organized by pack. <strong>38 games
+        total</strong> &mdash; the core JAR registers 10, and each of the five
+        DLC packs adds its own roster. Currency, category, and player-count
+        columns reflect what each <code>GameDefinition</code> actually
+        declares in code.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Reading the table</div>
+        <p>
+          <strong>Mode</strong>: <code>ARCADE</code> = tokens entry fee,
+          <code>CASINO</code> = chips per round, <code>FREE</code> = no
+          wallet check. <strong>Players</strong>: the
+          <code>(minPlayers, maxPlayers)</code> capability declared by the
+          game. <strong>Categories</strong>: every category the game appears
+          in (a single game can show up in multiple lobby categories).
+        </p>
+      </div>
+    </div>
+
+    <!-- Core roster -->
+    <div data-section-body="Core (10 games)">
+    <h2 data-section="Core (10 games)">Core (10 games)</h2>
+    <p>
+      Bundled with the base <code>QuestLinesArcade</code> plugin. The six
+      strategy games use the <code>ARCADE</code> token economy; the four
+      arcade/puzzle games are free.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Display name</th>
+            <th>Players</th>
+            <th>Mode</th>
+            <th>Categories</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>tictactoe</code></td>  <td>Tic-Tac-Toe</td>  <td>2</td> <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>fourup</code></td>     <td>Four Up</td>      <td>2</td> <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>salvo</code></td>      <td>Salvo</td>        <td>2</td> <td><code>ARCADE</code></td> <td>STRATEGY, MULTIPLAYER</td></tr>
+          <tr><td><code>chess</code></td>      <td>Chess</td>        <td>2</td> <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>go</code></td>         <td>Go</td>           <td>2</td> <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>dominoes</code></td>   <td>Dominoes</td>     <td>2</td> <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>minesweeper</code></td><td>Minesweeper</td>  <td>1</td> <td><code>FREE</code></td>   <td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>2048</code></td>       <td>2048</td>         <td>1</td> <td><code>FREE</code></td>   <td>PUZZLE, ARCADE, SOLO</td></tr>
+          <tr><td><code>codebreaker</code></td><td>Code Breaker</td> <td>1</td> <td><code>FREE</code></td>   <td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>worm</code></td>       <td>Worm</td>         <td>1</td> <td><code>FREE</code></td>   <td>ARCADE, SOLO</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Board Pack -->
+    <div data-section-body="Board Pack (5 games)">
+    <h2 data-section="Board Pack (5 games)">Board Pack (5 games)</h2>
+    <p>
+      Classic tabletop games. Four use the tokens economy; Liar&rsquo;s Dice
+      is free. The pack also ships five themed table blocks &mdash; one per
+      game &mdash; that open the BOARD category directly. See
+      <a href="arcade-blocks.html">Cabinets &amp; Tables</a>.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Display name</th>
+            <th>Players</th>
+            <th>Mode</th>
+            <th>Categories</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>reversi</code></td>    <td>Reversi</td>      <td>2</td>  <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>checkers</code></td>   <td>Checkers</td>     <td>2</td>  <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>pachisi</code></td>    <td>Pachisi</td>      <td>2&ndash;4</td><td><code>ARCADE</code></td> <td>BOARD, DICE, MULTIPLAYER</td></tr>
+          <tr><td><code>liarsdice</code></td>  <td>Liar&rsquo;s Dice</td><td>2&ndash;6</td><td><code>FREE</code></td>   <td>DICE, MULTIPLAYER</td></tr>
+          <tr><td><code>backgammon</code></td> <td>Backgammon</td>   <td>2</td>  <td><code>ARCADE</code></td> <td>STRATEGY, BOARD, DICE, MULTIPLAYER</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Casino Pack -->
+    <div data-section-body="Casino Pack (7 games)">
+    <h2 data-section="Casino Pack (7 games)">Casino Pack (7 games)</h2>
+    <p>
+      <strong>The only pack that charges chips.</strong> Every Casino Pack
+      game runs in <code>CASINO</code> mode; the controller manages chip flow
+      hand-by-hand. Some tables expose dedicated blocks
+      (<code>Poker_Table_Holdem</code>, <code>Poker_Table_Blackjack</code>,
+      <code>Roulette_Table</code>) that deep-link to the game rather than to
+      the CASINO category.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Display name</th>
+            <th>Players</th>
+            <th>Mode</th>
+            <th>Categories</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>blackjack</code></td>  <td>Blackjack</td>          <td>1</td>      <td><code>CASINO</code></td> <td>CARD, CASINO, SOLO</td></tr>
+          <tr><td><code>blackjackmp</code></td><td>Casino Blackjack</td>   <td>1&ndash;5</td><td><code>CASINO</code></td> <td>CARD, CASINO, MULTIPLAYER</td></tr>
+          <tr><td><code>holdem</code></td>     <td>Texas Hold&rsquo;em</td><td>2&ndash;6</td><td><code>CASINO</code></td> <td>CARD, CASINO, MULTIPLAYER</td></tr>
+          <tr><td><code>videopoker</code></td> <td>Video Poker</td>        <td>1</td>      <td><code>CASINO</code></td> <td>CARD, CASINO, SOLO</td></tr>
+          <tr><td><code>roulette</code></td>   <td>Roulette</td>           <td>1</td>      <td><code>CASINO</code></td> <td>CASINO, SOLO</td></tr>
+          <tr><td><code>craps</code></td>      <td>Craps</td>              <td>1</td>      <td><code>CASINO</code></td> <td>CASINO, DICE, SOLO</td></tr>
+          <tr><td><code>slotmachine</code></td><td>Slot Machine</td>       <td>1</td>      <td><code>CASINO</code></td> <td>CASINO, SOLO</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout tip">
+      <span class="callout-icon">&#9733;</span>
+      <div class="callout-body">
+        <div class="callout-title">Slot machine payouts</div>
+        <p>
+          Slot Machine multipliers are baked into the <code>Symbol</code>
+          enum, not the per-game config: cherry 5&times;, silver 10&times;,
+          gold 20&times;, ruby 50&times;, emerald 100&times;, diamond
+          500&times;. The config only controls the bet size and the
+          any-two-cherries consolation payout.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Solo Pack -->
+    <div data-section-body="Solo Pack (7 games)">
+    <h2 data-section="Solo Pack (7 games)">Solo Pack (7 games)</h2>
+    <p>
+      Single-player time-killers and skill games. All free. The pack also
+      ships pinball, trackball, and crane cabinet variants that all open the
+      ARCADE category &mdash; they are themed entry points, not standalone
+      games.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Display name</th>
+            <th>Players</th>
+            <th>Mode</th>
+            <th>Categories</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>solitaire</code></td>         <td>Solitaire</td>           <td>1</td>      <td><code>FREE</code></td> <td>CARD, SOLO</td></tr>
+          <tr><td><code>freecell</code></td>          <td>FreeCell</td>            <td>1</td>      <td><code>FREE</code></td> <td>CARD, SOLO</td></tr>
+          <tr><td><code>sudoku</code></td>            <td>Sudoku</td>              <td>1</td>      <td><code>FREE</code></td> <td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>stacker</code></td>           <td>Stacker</td>             <td>1</td>      <td><code>FREE</code></td> <td>ARCADE, SOLO</td></tr>
+          <tr><td><code>yachtdice</code></td>         <td>Yacht Dice</td>          <td>1&ndash;4</td><td><code>FREE</code></td> <td>DICE, SOLO, MULTIPLAYER</td></tr>
+          <tr><td><code>crystaldropendless</code></td><td>Crystal Drop &mdash; Endless</td><td>1</td><td><code>FREE</code></td> <td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>crystaldropmoves</code></td>  <td>Crystal Drop &mdash; Moves</td>  <td>1</td><td><code>FREE</code></td> <td>PUZZLE, SOLO</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Puzzle Pack -->
+    <div data-section-body="Puzzle Pack (5 games)">
+    <h2 data-section="Puzzle Pack (5 games)">Puzzle Pack (5 games)</h2>
+    <p>
+      Pure paper-and-pencil puzzles. All five are solo and free, and use
+      bundled puzzle banks rather than per-game JSON configs &mdash; the
+      pack&rsquo;s startup just loads a shared word dictionary library.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Display name</th>
+            <th>Players</th>
+            <th>Mode</th>
+            <th>Categories</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>wordsearch</code></td><td>Word Search</td><td>1</td><td><code>FREE</code></td><td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>crosswords</code></td><td>Crosswords</td> <td>1</td><td><code>FREE</code></td><td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>lightsout</code></td> <td>Lights Out</td> <td>1</td><td><code>FREE</code></td><td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>nonograms</code></td> <td>Nonograms</td>  <td>1</td><td><code>FREE</code></td><td>PUZZLE, SOLO</td></tr>
+          <tr><td><code>kakuro</code></td>    <td>Kakuro</td>     <td>1</td><td><code>FREE</code></td><td>PUZZLE, SOLO</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Super Secret -->
+    <div data-section-body="Super Secret Pack (4 games)">
+    <h2 data-section="Super Secret Pack (4 games)">Super Secret Pack (4 games)</h2>
+    <p>
+      The grab-bag pack. Carcassonne and Catan use tokens; Cards Against
+      Humanity and Uno are free.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Display name</th>
+            <th>Players</th>
+            <th>Mode</th>
+            <th>Categories</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>carcassonne</code></td><td>Carcassonne</td>             <td>2&ndash;5</td><td><code>ARCADE</code></td><td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>cah</code></td>        <td>Cards Against Humanity</td> <td>3&ndash;10</td><td><code>FREE</code></td>  <td>CARD, MULTIPLAYER</td></tr>
+          <tr><td><code>catan</code></td>      <td>Catan</td>                  <td>3&ndash;4</td><td><code>ARCADE</code></td><td>STRATEGY, BOARD, MULTIPLAYER</td></tr>
+          <tr><td><code>uno</code></td>        <td>Uno</td>                    <td>2&ndash;10</td><td><code>FREE</code></td>  <td>CARD, MULTIPLAYER</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">The Super Secret cabinet is unwired</div>
+        <p>
+          The pack ships an <code>Arcade_Machine_SuperSecret</code> block
+          with the standard <code>Arcade_Open</code> use interaction, but
+          that block id is not in the listener&rsquo;s
+          <code>CATEGORY_BY_BLOCK</code> or <code>GAME_ID_BY_BLOCK</code>
+          maps, and <code>Category</code> has no SUPERSECRET entry. Today
+          the Super Secret games are reachable only through the overlapping
+          STRATEGY, BOARD, CARD, and MULTIPLAYER category portals (or via
+          <code>/arcade</code>). The block is harmless &mdash; right-clicking
+          it just does nothing.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Totals -->
+    <div data-section-body="Totals at a Glance">
+    <h2 data-section="Totals at a Glance">Totals at a Glance</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Currency</th>
+            <th>Game count</th>
+            <th>Source packs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tokens (<code>ARCADE</code>)</td>
+            <td>12</td>
+            <td>Core 6 (Tic-Tac-Toe, Four Up, Salvo, Chess, Go, Dominoes), Board 4 (Reversi, Checkers, Pachisi, Backgammon), Super Secret 2 (Carcassonne, Catan).</td>
+          </tr>
+          <tr>
+            <td>Chips (<code>CASINO</code>)</td>
+            <td>7</td>
+            <td>Every Casino Pack game. No other pack uses chips.</td>
+          </tr>
+          <tr>
+            <td>Free (<code>FREE</code>)</td>
+            <td>19</td>
+            <td>Core 4 (Minesweeper, 2048, Code Breaker, Worm), Board 1 (Liar&rsquo;s Dice), Solo 7, Puzzle 5, Super Secret 2 (CAH, Uno).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Stats -->
+    <div data-section-body="What Gets Recorded">
+    <h2 data-section="What Gets Recorded">What Gets Recorded</h2>
+    <p>
+      After a match reaches a non-cancelled terminal state, the engine
+      updates each participant&rsquo;s
+      <code>profiles/&lt;uuid&gt;.json</code>:
+    </p>
+    <ul>
+      <li><strong>Top-level totals:</strong> <code>totalMatches</code>, <code>wins</code>, <code>losses</code>, <code>draws</code>.</li>
+      <li><strong>Per-game stats</strong> keyed by game id: <code>elo</code> (2-player matches only, K=32, starting 1200), <code>wins</code>, <code>losses</code>, <code>draws</code>, <code>lastPlayed</code>.</li>
+    </ul>
+    <p>
+      A separate archive file under
+      <code>archive/&lt;yyyy-MM&gt;/&lt;matchId&gt;.json</code> records the
+      participants, outcome, winners, start/end timestamps, and any closing
+      note from the result. Cancelled matches are not archived and do not
+      affect any stats.
+    </p>
+    <p>
+      Per-game leaderboards are computed on demand by scanning every
+      <code>profiles/*.json</code> for a stats entry for the requested game
+      and sorting by Elo. The lobby caches the top 3 per game; admins can
+      pull a longer list with
+      <code>/arcade-debug leaderboard &lt;gameId&gt;</code>.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

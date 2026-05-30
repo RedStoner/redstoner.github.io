@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Arcade &mdash; Cabinets &amp; Tables</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="arcade" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Arcade Plugin</div>
+      <h1 class="page-title">Cabinets &amp; Tables</h1>
+      <p class="page-subtitle">
+        Every Arcade block players can right-click to enter the lobby. The
+        engine routes a F/Use on any block whose
+        <code>Interactions.Use</code> is <code>Arcade_Open</code> through a
+        single listener that looks up the block ID in two maps &mdash; one
+        that opens a specific game, and one that opens a category.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Lookup order</div>
+        <p>
+          The listener checks <strong>game</strong> first
+          (<code>GAME_ID_BY_BLOCK</code>) and falls back to
+          <strong>category</strong> (<code>CATEGORY_BY_BLOCK</code>). If a
+          game-deep-link block matches but the corresponding pack is not
+          installed, the listener falls through to the category map. Blocks
+          not in either map (notably the Super Secret machine) silently
+          do nothing.
+        </p>
+      </div>
+    </div>
+
+    <!-- Game deep-links -->
+    <div data-section-body="Game Deep-Links">
+    <h2 data-section="Game Deep-Links">Game Deep-Links</h2>
+    <p>
+      These three Casino Pack tables jump directly to a game&rsquo;s detail
+      page in the lobby, skipping the category browser. Useful when a
+      casino corner has dedicated tables for one game.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Block ID</th>
+            <th>Opens game</th>
+            <th>Pack</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Poker_Table_Holdem</code></td>    <td>Texas Hold&rsquo;em (<code>holdem</code>)</td>          <td>Casino Pack</td></tr>
+          <tr><td><code>Poker_Table_Blackjack</code></td> <td>Casino Blackjack (<code>blackjackmp</code>)</td>        <td>Casino Pack</td></tr>
+          <tr><td><code>Roulette_Table</code></td>        <td>Roulette (<code>roulette</code>)</td>                  <td>Casino Pack</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Category cabinets -->
+    <div data-section-body="Category Cabinets">
+    <h2 data-section="Category Cabinets">Category Cabinets</h2>
+    <p>
+      Every other recognized block jumps to a lobby category. The
+      <code>Arcade_Machine_*</code> blocks are the &ldquo;hub&rdquo; cabinets
+      for each pack; the rest are themed cabinets and slot machines.
+    </p>
+
+    <h3 data-section="Core Cabinets">Core Cabinets</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Block ID</th>
+            <th>Opens category</th>
+            <th>Model</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Arcade_Machine_Arcade</code></td>         <td>ARCADE</td><td>(base Hytale)</td></tr>
+          <tr><td><code>Arcade_Cabinet_Bartop</code></td>         <td>ARCADE</td><td><code>BartopCabinet</code></td></tr>
+          <tr><td><code>Arcade_Cabinet_Versus</code></td>         <td>ARCADE</td><td><code>VersusCabinet</code></td></tr>
+          <tr><td><code>Arcade_Cabinet_Cocktail</code></td>       <td>ARCADE</td><td><code>CocktailCabinet</code> (classic)</td></tr>
+          <tr><td><code>Arcade_Cabinet_Cocktail_Lounge</code></td><td>ARCADE</td><td><code>CocktailCabinet</code> (lounge skin)</td></tr>
+          <tr><td><code>Arcade_Cabinet_Cocktail_Neon</code></td>  <td>ARCADE</td><td><code>CocktailCabinet</code> (neon skin)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Board Pack">Board Pack</h3>
+    <p>
+      Five themed tables &mdash; one per game &mdash; plus a generic board
+      cabinet. The themed tables open the BOARD category, not their
+      individual game; players still pick the game from the category list.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Block ID</th>
+            <th>Opens category</th>
+            <th>Model</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Arcade_Machine_Board</code></td>   <td>BOARD</td><td>(base Hytale)</td></tr>
+          <tr><td><code>Board_Table_Checkers</code></td>   <td>BOARD</td><td><code>BoardTable_Checkers</code></td></tr>
+          <tr><td><code>Board_Table_Reversi</code></td>    <td>BOARD</td><td><code>BoardTable_Reversi</code></td></tr>
+          <tr><td><code>Board_Table_Pachisi</code></td>    <td>BOARD</td><td><code>BoardTable_Pachisi</code></td></tr>
+          <tr><td><code>Board_Table_LiarsDice</code></td>  <td>BOARD</td><td><code>BoardTable_LiarsDice</code></td></tr>
+          <tr><td><code>Board_Table_Backgammon</code></td> <td>BOARD</td><td><code>BoardTable_Backgammon</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Casino Pack">Casino Pack</h3>
+    <p>
+      The casino hub plus four slot machine variants. The three named
+      Hold&rsquo;em / Blackjack / Roulette tables are in the
+      <a href="#game-deep-links">Game Deep-Links</a> table above &mdash; they
+      jump straight to the game, not the category.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Block ID</th>
+            <th>Opens category</th>
+            <th>Model</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Arcade_Machine_Casino</code></td>         <td>CASINO</td><td>(base Hytale)</td></tr>
+          <tr><td><code>Slot_Machine_Standing</code></td>         <td>CASINO</td><td><code>SlotMachineStanding</code></td></tr>
+          <tr><td><code>Slot_Machine_Standing_Lucky7</code></td>  <td>CASINO</td><td><code>SlotMachineStanding</code> (Lucky7 skin)</td></tr>
+          <tr><td><code>Slot_Machine_Tabletop</code></td>         <td>CASINO</td><td><code>SlotMachineTabletop</code></td></tr>
+          <tr><td><code>Slot_Machine_Tabletop_Casino</code></td>  <td>CASINO</td><td><code>SlotMachineTabletop</code> (Casino skin)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Solo Pack">Solo Pack</h3>
+    <p>
+      The solo hub plus four kiosk-style cabinets. The pinball, trackball,
+      and crane cabinets are <em>themed entry points into ARCADE</em> &mdash;
+      they don&rsquo;t map to a pinball game (there isn&rsquo;t one), they
+      just look the part.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Block ID</th>
+            <th>Opens category</th>
+            <th>Model</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Arcade_Machine_Solo</code></td>             <td>SOLO</td>  <td>(base Hytale)</td></tr>
+          <tr><td><code>Arcade_Pinball_Machine</code></td>          <td>ARCADE</td><td><code>PinballMachine</code></td></tr>
+          <tr><td><code>Arcade_Pinball_Machine_Western</code></td>  <td>ARCADE</td><td><code>PinballMachine</code> (Western skin)</td></tr>
+          <tr><td><code>Arcade_Cabinet_Trackball</code></td>        <td>ARCADE</td><td><code>TrackballKiosk</code></td></tr>
+          <tr><td><code>Arcade_Cabinet_Crane</code></td>            <td>ARCADE</td><td><code>CraneCabinet</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Puzzle Pack">Puzzle Pack</h3>
+    <p>
+      The puzzle hub plus four themed cabinets. As with the Solo Pack
+      cabinets, the themed ones open the ARCADE category by design.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Block ID</th>
+            <th>Opens category</th>
+            <th>Model</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Arcade_Machine_Puzzle</code></td>       <td>PUZZLE</td><td>(base Hytale)</td></tr>
+          <tr><td><code>Arcade_Cabinet_Deluxe</code></td>       <td>ARCADE</td><td><code>DeluxeCabinet</code></td></tr>
+          <tr><td><code>Arcade_Cabinet_Deluxe_Cyber</code></td> <td>ARCADE</td><td><code>DeluxeCabinet</code> (cyber skin)</td></tr>
+          <tr><td><code>Arcade_Cabinet_Candy</code></td>        <td>ARCADE</td><td><code>CandyCabinet</code></td></tr>
+          <tr><td><code>Arcade_Cabinet_Racer</code></td>        <td>ARCADE</td><td><code>RacerCabinet</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 data-section="Super Secret Pack">Super Secret Pack</h3>
+    <p>
+      Ships one block &mdash; <code>Arcade_Machine_SuperSecret</code> &mdash;
+      that is <strong>not currently wired</strong> to either lookup map.
+      Right-clicking it is a no-op. The pack&rsquo;s four games are reachable
+      via the STRATEGY, BOARD, CARD, and MULTIPLAYER categories they overlap
+      with.
+    </p>
+    </div>
+
+    <!-- How interaction works -->
+    <div data-section-body="How the Right-Click Routes">
+    <h2 data-section="How the Right-Click Routes">How the Right-Click Routes</h2>
+    <p>
+      Every Arcade block JSON declares the same use interaction:
+    </p>
+    <pre><code>"Interactions": {
+  "Use": "Arcade_Open"
+}</code></pre>
+    <p>
+      The engine&rsquo;s <code>ArcadeMachineUseListener</code> is registered
+      as an entity-store system on plugin setup and intercepts every
+      <code>UseBlockEvent.Pre</code> from a Player entity. When the use string
+      matches, the listener:
+    </p>
+    <ol>
+      <li>Cancels the underlying event so nothing else handles it.</li>
+      <li>Seeds the player&rsquo;s wallet from <code>startingTokens</code> if they have no profile yet, and records their current display name.</li>
+      <li>If the player is in a live (non-terminal) match, re-opens that match&rsquo;s UI &mdash; whatever block they clicked.</li>
+      <li>Otherwise looks up the block ID in <code>GAME_ID_BY_BLOCK</code>; if matched, opens the lobby at that game&rsquo;s detail page.</li>
+      <li>Otherwise looks up the block ID in <code>CATEGORY_BY_BLOCK</code>; if matched, opens the lobby at that category.</li>
+      <li>Otherwise does nothing.</li>
+    </ol>
+    </div>
+
+    <!-- Building your own cabinet -->
+    <div data-section-body="Where the Blocks Are Defined">
+    <h2 data-section="Where the Blocks Are Defined">Where the Blocks Are Defined</h2>
+    <p>
+      The shipped cabinets are item JSONs (under each pack&rsquo;s
+      <code>resources/Server/Item/Items/</code>) paired with
+      <code>.blockymodel</code> files (under
+      <code>resources/Common/Blocks/QuestLinesArcade/</code>). Block IDs are
+      hardcoded in the listener&rsquo;s two maps &mdash; a custom block with
+      the same <code>Arcade_Open</code> use string will <strong>not</strong>
+      open the lobby unless its ID is added to one of those maps. The use
+      string by itself is not enough; the listener only acts on block IDs
+      it knows about.
+    </p>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>

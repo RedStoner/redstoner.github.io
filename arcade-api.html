@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Arcade &mdash; Developer API</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="arcade" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Arcade Plugin</div>
+      <h1 class="page-title">Developer API</h1>
+      <p class="page-subtitle">
+        <code>ArcadeAPI</code> is the public facade for other plugins. Use it
+        to enumerate games, snapshot live matches, route a player into a
+        game, and listen for match start/end events. Stable signatures &mdash;
+        breaking changes track the engine&rsquo;s major version.
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Optional manifest dependency</div>
+        <p>
+          Add Arcade to your plugin&rsquo;s manifest as an optional
+          dependency to compile against
+          <code>net.evilcraft.questlinesarcade.api</code>. Guard every API
+          access with a presence check &mdash; <code>ArcadeAPI.get()</code>
+          returns <code>null</code> before Arcade has finished setup and
+          after it shuts down.
+        </p>
+      </div>
+    </div>
+
+    <!-- Getting the API -->
+    <div data-section-body="Getting the API">
+    <h2 data-section="Getting the API">Getting the API</h2>
+    <pre><code>import net.evilcraft.questlinesarcade.api.ArcadeAPI;
+
+ArcadeAPI api = ArcadeAPI.get();
+if (api == null) {
+    // Arcade not installed / not started / shut down
+    return;
+}</code></pre>
+    <p>
+      The singleton is installed during Arcade&rsquo;s <code>setup()</code>
+      and cleared during its <code>shutdown()</code>. Cache the reference
+      only for the duration of a single operation; for long-lived hooks,
+      re-resolve through <code>get()</code> each time.
+    </p>
+    </div>
+
+    <!-- Discovery -->
+    <div data-section-body="Discovery">
+    <h2 data-section="Discovery">Discovery</h2>
+    <p>
+      Enumerate the games every installed pack has registered, optionally
+      filtered by category.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Method</th><th>Returns</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>listGames()</code></td>                     <td><code>List&lt;GameInfo&gt;</code></td>      <td>Every registered game, registration order.</td></tr>
+          <tr><td><code>findGame(gameId)</code></td>                <td><code>Optional&lt;GameInfo&gt;</code></td>  <td>Lookup by id.</td></tr>
+          <tr><td><code>gamesByCategory(category)</code></td>       <td><code>List&lt;GameInfo&gt;</code></td>      <td>Games tagged with that <code>Category</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <code>GameInfo</code> exposes <code>id</code>, <code>displayName</code>,
+      <code>description</code>, <code>howToPlay</code>, <code>categories</code>,
+      <code>capabilities</code> (min/max players, turn-based, spectators
+      allowed, supports rejoin), <code>gameMode</code>, and
+      <code>casinoBetAmount</code>.
+    </p>
+    </div>
+
+    <!-- Introspection -->
+    <div data-section-body="Introspection">
+    <h2 data-section="Introspection">Match Introspection</h2>
+    <p>
+      Snapshot any live match. All <code>MatchInfo</code> values are
+      immutable point-in-time captures &mdash; safe to share across threads.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Method</th><th>Returns</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>activeMatches()</code></td>              <td><code>List&lt;MatchInfo&gt;</code></td>    <td>Every live match.</td></tr>
+          <tr><td><code>activeMatchesOfGame(gameId)</code></td>  <td><code>List&lt;MatchInfo&gt;</code></td>    <td>Live matches for one game.</td></tr>
+          <tr><td><code>findMatch(matchId)</code></td>           <td><code>Optional&lt;MatchInfo&gt;</code></td><td>By UUID.</td></tr>
+          <tr><td><code>findMatchByCode(code)</code></td>        <td><code>Optional&lt;MatchInfo&gt;</code></td><td>By short code.</td></tr>
+          <tr><td><code>matchOfPlayer(uuid)</code></td>          <td><code>Optional&lt;MatchInfo&gt;</code></td><td>Match the player is currently in.</td></tr>
+          <tr><td><code>isInMatch(uuid)</code></td>              <td><code>boolean</code></td>                 <td>Cheap check.</td></tr>
+          <tr><td><code>activeMatchCount()</code></td>           <td><code>int</code></td>                     <td>Live match count.</td></tr>
+          <tr><td><code>matchCapacity()</code></td>              <td><code>int</code></td>                     <td>Engine-wide cap from <code>maxConcurrentMatches</code>.</td></tr>
+          <tr><td><code>queueSize(gameId)</code></td>            <td><code>int</code></td>                     <td>How many are waiting in that game&rsquo;s queue.</td></tr>
+          <tr><td><code>queueSnapshot(gameId)</code></td>        <td><code>List&lt;UUID&gt;</code></td>         <td>Queue contents oldest-first.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Routing -->
+    <div data-section-body="Routing Players">
+    <h2 data-section="Routing Players">Routing Players</h2>
+    <p>
+      All routing calls return a <code>JoinResult</code> whose
+      <code>status</code> is one of
+      <code>SUCCESS</code>, <code>QUEUED</code>, <code>GAME_NOT_FOUND</code>,
+      <code>MATCH_NOT_FOUND</code>, <code>MATCH_FULL</code>,
+      <code>MATCH_NOT_JOINABLE</code>, <code>ALREADY_IN_MATCH</code>,
+      <code>INSUFFICIENT_FUNDS</code>, <code>PLAYER_OFFLINE</code>,
+      <code>AT_CAPACITY</code>, or <code>INTERNAL_ERROR</code>. On success
+      the result carries the <code>matchId</code> and <code>matchCode</code>.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Method</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td><code>queuePlayer(uuid, gameId)</code></td><td>Drop the player into a queue. If the queue then fills, the engine creates the match and seats every player automatically.</td></tr>
+          <tr><td><code>joinMatch(uuid, matchId)</code></td><td>Seat the player into an existing LOBBY match.</td></tr>
+          <tr><td><code>joinMatchByCode(uuid, code)</code></td><td>Same, but lookup is by the short code.</td></tr>
+          <tr><td><code>openMatch(uuid, gameId)</code></td><td>Create a fresh match for the game and seat the caller. Force-starts immediately if the game&rsquo;s <code>maxPlayers</code> is 1 &mdash; great for solo quest rewards.</td></tr>
+          <tr><td><code>removePlayer(uuid)</code></td><td>Yank the player out of whatever queue + match they&rsquo;re in. Forfeits if the match is RUNNING.</td></tr>
+          <tr><td><code>openLobby(uuid)</code></td><td>Pop open the standard <code>/arcade</code> lobby for that player.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- Events -->
+    <div data-section-body="Match Events">
+    <h2 data-section="Match Events">Match Events</h2>
+    <p>
+      Subscribe with <code>addMatchStartListener</code> /
+      <code>addMatchEndListener</code> and unsubscribe with their
+      <code>remove</code> twins. Both fire from the engine thread that
+      drives the match; keep callbacks fast or post their work to your own
+      executor.
+    </p>
+    <pre><code>api.addMatchEndListener(event -&gt; {
+    if (!event.outcome().equals(MatchEndEvent.Outcome.WIN)) return;
+    for (UUID winner : event.winners()) {
+        myQuestPlugin.awardXp(winner, 100);
+    }
+});</code></pre>
+    <p>
+      <code>MatchEndEvent</code> exposes <code>matchId</code>,
+      <code>matchCode</code>, <code>gameId</code>, <code>gameDisplayName</code>,
+      <code>terminalState</code>, <code>outcome</code>, <code>winners</code>,
+      <code>participants</code>, <code>note</code>, <code>startedAt</code>,
+      and <code>endedAt</code> (plus a <code>duration()</code> helper).
+    </p>
+    </div>
+
+    <!-- Recipes -->
+    <div data-section-body="Recipes">
+    <h2 data-section="Recipes">Recipes</h2>
+
+    <h3 data-section="Send a player into a quest-driven solo game">Send a player into a quest-driven solo game</h3>
+    <pre><code>ArcadeAPI api = ArcadeAPI.get();
+if (api == null) return;
+JoinResult r = api.openMatch(playerUuid, "minesweeper");
+if (r.status() != JoinResult.Status.SUCCESS) {
+    chat(playerUuid, "Couldn't start Minesweeper: " + r.message());
+}</code></pre>
+
+    <h3 data-section="Award XP only for wins">Award XP only for wins</h3>
+    <pre><code>api.addMatchEndListener(event -&gt; {
+    if (event.outcome() != MatchEndEvent.Outcome.WIN) return;
+    if (event.winners().isEmpty()) return;
+    for (UUID winner : event.winners()) {
+        myXpService.grant(winner, 50);
+    }
+});</code></pre>
+
+    <h3 data-section="Quick-queue from a chat command">Quick-queue from a chat command</h3>
+    <pre><code>// "/quickchess" -&gt; instant queue for Chess
+JoinResult r = api.queuePlayer(playerUuid, "chess");
+switch (r.status()) {
+    case SUCCESS, QUEUED -&gt; chat(playerUuid, "Queued for Chess.");
+    case INSUFFICIENT_FUNDS -&gt; chat(playerUuid, "You need 1 token.");
+    case ALREADY_IN_MATCH -&gt; chat(playerUuid, "Finish your current match first.");
+    case PLAYER_OFFLINE, AT_CAPACITY, INTERNAL_ERROR -&gt; chat(playerUuid, "Try again later.");
+    default -&gt; chat(playerUuid, r.message());
+}</code></pre>
+
+    <h3 data-section="List in-progress matches">List in-progress matches</h3>
+    <pre><code>for (MatchInfo m : api.activeMatches()) {
+    System.out.printf("%s [%s] %d/%d players%n",
+        m.gameDisplayName(), m.state(),
+        m.players().size(), m.connectedPlayers().size());
+}</code></pre>
+    </div>
+
+    <!-- Threading -->
+    <div data-section-body="Threading and Stability">
+    <h2 data-section="Threading and Stability">Threading and Stability</h2>
+    <ul>
+      <li>
+        <strong>Listeners fire on engine threads.</strong> Avoid blocking
+        them; route side-effects (database writes, network calls) to your
+        own executor.
+      </li>
+      <li>
+        <strong>Routing calls are thread-safe.</strong> <code>queuePlayer</code>,
+        <code>openMatch</code>, <code>joinMatch*</code>, and
+        <code>removePlayer</code> may be called from any thread.
+      </li>
+      <li>
+        <strong>Player-facing UI opens on the world thread.</strong>
+        Routing methods take care of the world-thread hop internally; you
+        do not need to schedule it yourself.
+      </li>
+      <li>
+        <strong>API stability:</strong> the contract documented in
+        <code>net.evilcraft.questlinesarcade.api.package-info</code> ties
+        signature-breaking changes to a major-version bump. New
+        <code>JoinResult</code> statuses or <code>MatchEndEvent</code>
+        fields can appear in minor releases; handle unknown enum values
+        defensively.
+      </li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>
