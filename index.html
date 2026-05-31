@@ -20,13 +20,14 @@
       <img class="suite-banner-logo" src="images/questlineslogolarge.png" alt="QuestLines" />
       <div class="suite-banner-title">A Quest System Worth Exploring</div>
       <p class="suite-banner-subtitle">
-        Nine Hytale plugins that turn your server into a story. Branching NPC
+        Ten Hytale plugins that turn your server into a story. Branching NPC
         dialogue, native NPC management, floating quest icons, linear story dialogs,
-        player titles, custom GUIs, land protection, city-and-nation governance, and a
-        full MMO suite &mdash; each stands alone, together they sing.
+        player titles, custom GUIs, land protection, city-and-nation governance, a
+        full MMO suite, and a multiplayer arcade &mdash; each stands alone, together
+        they sing.
       </p>
       <div class="suite-banner-stats">
-        <span><strong>9</strong> plugins</span>
+        <span><strong>10</strong> plugins</span>
         <span><strong>1</strong> suite</span>
         <span><strong>0</strong> JSON files you have to hand-write</span>
       </div>
@@ -176,6 +177,19 @@
         </p>
         <div class="plugin-card-cta">Read the docs</div>
       </a>
+
+      <a class="plugin-card" data-plugin="arcade" href="arcade.html">
+        <img class="plugin-card-logo" src="images/QLArcadeLogo.png" alt="QuestLines Arcade" />
+        <div class="plugin-card-tag">Standalone Plugin</div>
+        <div class="plugin-card-title">QuestLines Arcade</div>
+        <p class="plugin-card-desc">
+          A multiplayer arcade engine &mdash; lobby, matchmaking, two-currency
+          wallet, and on-disk persistence. Core JAR plus five DLC packs ship 38
+          games: chess, poker, blackjack, slots, solitaire, sudoku, Uno,
+          Carcassonne, and more.
+        </p>
+        <div class="plugin-card-cta">Read the docs</div>
+      </a>
     </div>
 
     <!-- How They Fit Together -->
@@ -230,6 +244,11 @@
         <div class="fit-card-dot"></div>
         <div class="fit-card-title">MMO</div>
         <p>Standalone MMO suite &mdash; parties &amp; friends, guilds &amp; halls, instanced dungeons with LFG, and dynamic world events &amp; discoveries. Shares no APIs with Core; runs entirely on its own.</p>
+      </div>
+      <div class="fit-card" data-plugin="arcade">
+        <div class="fit-card-dot"></div>
+        <div class="fit-card-title">Arcade</div>
+        <p>Standalone multiplayer arcade engine. Ships a core JAR plus five DLC packs (board, casino, solo, puzzle, super secret) for a total of 38 games. Optional VaultUnlocked integration backs the in-game wallet.</p>
       </div>
     </div>
 
@@ -315,6 +334,11 @@
             <td>QuestLines MMO</td>
             <td><code>questlines-mmo-{version}.jar</code></td>
             <td><code>mods/QuestLinesMMO/</code></td>
+          </tr>
+          <tr>
+            <td>QuestLines Arcade</td>
+            <td><code>questlines-arcade-{version}.jar</code> + DLCs <code>questlines-arcade-{board|casino|solo|puzzle|supersecret}-pack-{version}.jar</code></td>
+            <td><code>mods/QuestLinesArcade/</code></td>
           </tr>
         </tbody>
       </table>

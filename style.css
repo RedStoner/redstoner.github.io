@@ -79,6 +79,7 @@
   --plugin-mmo:     #8ad000;   /* lime */
   --plugin-nations: #ff8c1a;   /* amber */
   --plugin-denizens:#2050e0;   /* sapphire */
+  --plugin-arcade:  #f06aa8;   /* neon pink */
   --plugin-bot:     #7c8cf5;   /* blurple */
 
   /* Syntax (slight warmer shift) */
@@ -423,6 +424,7 @@ body::after {
 .sidebar-section-label[data-plugin="mmo"]::before     { background: var(--plugin-mmo);    opacity: 1; box-shadow: 0 0 8px var(--plugin-mmo); }
 .sidebar-section-label[data-plugin="nations"]::before { background: var(--plugin-nations);opacity: 1; box-shadow: 0 0 8px var(--plugin-nations); }
 .sidebar-section-label[data-plugin="denizens"]::before{ background: var(--plugin-denizens);opacity: 1; box-shadow: 0 0 8px var(--plugin-denizens); }
+.sidebar-section-label[data-plugin="arcade"]::before  { background: var(--plugin-arcade); opacity: 1; box-shadow: 0 0 8px var(--plugin-arcade); }
 .sidebar-section-label[data-plugin="bot"]::before     { background: var(--plugin-bot);    opacity: 1; box-shadow: 0 0 8px var(--plugin-bot); }
 
 .sidebar-section-label[data-plugin]          { color: var(--ink-soft); }
@@ -1336,6 +1338,7 @@ hr.divider::after {
 .plugin-card[data-plugin="mmo"]    { --plugin-color: var(--plugin-mmo); }
 .plugin-card[data-plugin="nations"]{ --plugin-color: var(--plugin-nations); }
 .plugin-card[data-plugin="denizens"]{ --plugin-color: var(--plugin-denizens); }
+.plugin-card[data-plugin="arcade"] { --plugin-color: var(--plugin-arcade); }
 
 .plugin-card::before {
   content: '';
@@ -1604,6 +1607,7 @@ hr.divider::after {
 .fit-card[data-plugin="mmo"]    { --plugin-color: var(--plugin-mmo); }
 .fit-card[data-plugin="nations"]{ --plugin-color: var(--plugin-nations); }
 .fit-card[data-plugin="denizens"]{ --plugin-color: var(--plugin-denizens); }
+.fit-card[data-plugin="arcade"] { --plugin-color: var(--plugin-arcade); }
 
 .fit-card-dot {
   position: absolute;
