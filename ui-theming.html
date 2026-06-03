@@ -46,8 +46,10 @@
         <code>$C = "../Common.ui";</code>, which resolves to <em>Hytale's own</em> Common.ui &mdash;
         not a QuestLines file. Window frames (<code>$C.@DecoratedContainer</code>), titles
         (<code>$C.@Title</code>), scrollbars, separators and default buttons all inherit Hytale's
-        base theme from here. Re-theming these means overriding stock Hytale UI, which is outside
-        QuestLines' scope.
+        base theme from here. You <em>can</em> re-theme these by shipping an asset pack that
+        overrides stock Common.ui &mdash; see
+        <a href="#">Overriding Stock Common.ui</a> below &mdash; but note that change is
+        <strong>global</strong>: it restyles every UI in the game, not just QuestLines.
       </li>
       <li>
         <strong>Hardcoded values in QuestLines' own <code>.ui</code> files.</strong> Anything
@@ -151,25 +153,35 @@ default_hud_offset_y=150</code></pre>
       <code>questlines/Dialogue.ui</code>, Hytale resolves it from that pack.
     </p>
     <p>
-      Hytale tracks each pack with a <strong>source</strong> that determines precedence when two
-      packs share the same identifier. From highest to lowest priority:
+      When several packs ship a file at the <em>same</em> client path (e.g. two packs both
+      containing <code>Common/UI/Custom/Common.ui</code>), Hytale resolves the collision with a
+      simple rule: <strong>last loaded wins</strong>. Each path maps to a list of contributing
+      packs, and the client is sent only the last entry. This means a pack <em>can</em> override
+      files that another pack &mdash; including stock Hytale &mdash; already ships.
     </p>
-    <table>
-      <thead><tr><th>Source</th><th>Where it comes from</th><th>Priority</th></tr></thead>
-      <tbody>
-        <tr><td><code>CLI</code></td><td>Pack passed explicitly on the server command line</td><td>Highest</td></tr>
-        <tr><td><code>CLASSPATH</code></td><td>Built-in / bundled packs</td><td>&#8593;</td></tr>
-        <tr><td><code>MODS</code></td><td>Jars in the server's <code>mods/</code> folder (this is QuestLines)</td><td>&#8595;</td></tr>
-        <tr><td><code>RUNTIME</code></td><td>Packs registered live (e.g. the in-game asset editor)</td><td>Lowest</td></tr>
-      </tbody>
-    </table>
     <p>
-      A higher-priority pack with the <em>same identifier</em> as QuestLines
-      (<code>net.evilcraft:QuestLines</code>) replaces the lower one entirely. Two
-      <em>different</em> packs that both ship the same identifier are rejected as a duplicate.
-      In practice this means the dependable way to re-theme is to change the files
-      <strong>inside the QuestLines pack itself</strong>, covered next.
+      "Last" is decided by <strong>load order</strong>, which is computed from manifest
+      dependencies, not by where the pack came from. Stock Hytale is a core pack and loads first,
+      so any pack in the server's <code>mods/</code> folder loads <em>after</em> it and will win a
+      collision against a stock file. (The <code>CLI</code> / <code>CLASSPATH</code> /
+      <code>MODS</code> / <code>RUNTIME</code> "source" you may see referenced only decides which
+      copy is kept when two packs declare the <em>same identifier</em> &mdash; it does not govern
+      file-level shadowing.)
     </p>
+    <p>This gives you two distinct override strategies:</p>
+    <ul>
+      <li>
+        <strong>Edit QuestLines' own files</strong> &mdash; change the <code>.ui</code> files
+        inside the QuestLines pack. Best for QuestLines-specific tweaks. Covered next.
+      </li>
+      <li>
+        <strong>Ship a separate override pack</strong> &mdash; a small asset pack that contains
+        only the files you want to replace at their stock paths. Loads after the pack it targets
+        and shadows those files without touching the original jar. This is the route for
+        overriding stock <code>Common.ui</code> &mdash; see
+        <a href="#">Overriding Stock Common.ui</a>.
+      </li>
+    </ul>
     </div>
 
     <!-- ======================== RESKINNING THE .UI FILES ======================== -->
@@ -201,6 +213,21 @@ default_hud_offset_y=150</code></pre>
           Edits made inside the jar are lost when you install a new QuestLines build. Keep your
           theme changes as a small patch/diff so you can re-apply them after each upgrade, and
           re-check the layout files in case they changed.
+        </p>
+      </div>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Prefer a separate override pack to survive updates</div>
+        <p>
+          Because QuestLines' own <code>.ui</code> files resolve last-loaded-wins just like stock
+          files, you can put your edited copies in a <em>separate</em> asset pack at the same
+          <code>Common/UI/Custom/questlines/</code> paths (see
+          <a href="#">Overriding Stock Common.ui</a> for the pack layout). Load it after QuestLines
+          and it shadows the shipped files &mdash; no jar surgery, and it survives QuestLines
+          upgrades. The trade-off: if a new build changes a layout's structure, your override can
+          go stale, so re-check it after upgrades either way.
         </p>
       </div>
     </div>
@@ -266,6 +293,72 @@ default_hud_offset_y=150</code></pre>
       <code>_BottomRight</code>, <code>_TopLeft</code>) for the different anchor positions &mdash;
       edit each one you want to match.
     </p>
+    </div>
+
+    <!-- ======================== OVERRIDE COMMON.UI ======================== -->
+    <div data-section-body="Overriding Stock Common.ui">
+    <h2 data-section="Overriding Stock Common.ui">Overriding Stock Common.ui</h2>
+    <p>
+      The window frames, titles, scrollbars and default buttons that QuestLines (and every other
+      plugin) pull in via <code>$C = "../Common.ui";</code> are defined in <em>Hytale's</em>
+      <code>Common/UI/Custom/Common.ui</code>. Because raw asset files resolve
+      <strong>last-loaded-wins</strong> (see <a href="#">How Hytale Loads UI Files</a>), you can
+      override that file by shipping your own asset pack that places a replacement at the exact
+      same path.
+    </p>
+    <div class="callout warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">This is a global, server-wide change</div>
+        <p>
+          Overriding <code>Common.ui</code> restyles <strong>every</strong> UI that imports it
+          &mdash; QuestLines, all other plugins, and vanilla Hytale screens alike. It is the right
+          tool for a cohesive server-wide theme, and the wrong tool if you only want to restyle
+          QuestLines (edit the QuestLines <code>.ui</code> files for that). Test broadly before
+          shipping it to players.
+        </p>
+      </div>
+    </div>
+    <p>To build an override pack:</p>
+    <ol>
+      <li>
+        Create a folder, e.g. <code>MyTheme/</code>, with a <code>manifest.json</code> declaring a
+        <strong>unique</strong> identifier (Group + Name different from any installed pack) and
+        <code>"IncludesAssetPack": true</code>.
+      </li>
+      <li>
+        Copy the stock <code>Common.ui</code> into it at the identical path
+        <code>Common/UI/Custom/Common.ui</code>, then edit the styles you want (button colors,
+        title colors, scrollbar look, etc.). Keep every <code>@</code>-style name that other files
+        reference &mdash; removing one breaks every layout that imports it.
+      </li>
+      <li>
+        Drop the pack (folder or zipped jar) into the server's <code>mods/</code> folder. As a
+        mod-source pack it loads after stock Hytale, so its <code>Common.ui</code> wins the
+        collision. Restart the server.
+      </li>
+    </ol>
+    <div class="example-block">
+      <pre><code>MyTheme/
+  manifest.json
+  Common/
+    UI/
+      Custom/
+        Common.ui        &lt;-- your edited copy of the stock file</code></pre>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Override only what you change</div>
+        <p>
+          The pack only needs to contain the files you are replacing &mdash; you do not have to
+          mirror the whole stock asset tree. You can use the same technique to override any single
+          stock or plugin UI file (or texture) by matching its path. If two override packs target
+          the same file, the one that loads last wins; declare a manifest dependency to force the
+          order.
+        </p>
+      </div>
+    </div>
     </div>
 
     <!-- ======================== STYLE SYNTAX ======================== -->
