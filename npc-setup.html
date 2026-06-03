@@ -333,6 +333,10 @@
             <td>Remaining time on a countdown timer as a human-readable string. Renders as "expired" when time is up.</td>
           </tr>
           <tr>
+            <td>{timedexact:key:[days:]hour:minute}</td>
+            <td>Time remaining until the next wall-clock reset boundary, or "ready" when the matching <code>timedExact</code> requirement would currently pass. Mirrors the requirement's format and cycle (e.g. <code>{timedexact:daily:8:0}</code>, <code>{timedexact:weekly:7:8:0}</code>).</td>
+          </tr>
+          <tr>
             <td>{variable:name}</td>
             <td>The current value of a named numeric variable. Whole numbers are shown without a decimal point (e.g. <code>3</code> not <code>3.0</code>). Defaults to <code>0</code> if never set.</td>
           </tr>

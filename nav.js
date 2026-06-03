@@ -41,6 +41,7 @@
     { type: 'link', href: 'objectives.html',    icon: SVG.target,  label: 'Objectives',    plugin: 'core' },
     { type: 'link', href: 'cheatsheet.html',    icon: SVG.sheet,   label: 'Cheat Sheet',   plugin: 'core' },
     { type: 'link', href: 'portraits.html',     icon: SVG.smile,   label: 'Portraits',     plugin: 'core' },
+    { type: 'link', href: 'ui-theming.html',    icon: SVG.layout,  label: 'UI Theming',    plugin: 'core' },
     { type: 'link', href: 'progression.html',   icon: SVG.route,   label: 'Quest Patterns',plugin: 'core' },
     { type: 'link', href: 'developer-api.html', icon: SVG.gear,    label: 'Plugin API',    plugin: 'core' },
     { type: 'link', href: 'ai-generation.html', icon: SVG.sparkle, label: 'AI Generation', plugin: 'core' },

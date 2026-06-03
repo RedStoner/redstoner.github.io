@@ -256,8 +256,8 @@
           </thead>
           <tbody>
             <tr>
-              <td>timedExact:key:hour:minute</td>
-              <td>True if the <em>key</em> timestamp is unset, OR was set before the most recent past occurrence of HH:MM server local time.</td>
+              <td>timedExact:key:[days:]hour:minute</td>
+              <td>True if the <em>key</em> timestamp is unset, OR was set before the most recent past reset boundary at HH:MM server local time. Optional leading <em>days</em> (default 1) resets every N days instead of daily (e.g. <code>weekly_boss:7:8:0</code> for weekly); boundaries are epoch-anchored so the cycle is shared across all players. The legacy <code>hour:minute</code> form is unchanged.</td>
             </tr>
           </tbody>
         </table>
@@ -1916,7 +1916,7 @@
           <tr><td>cooldown:key:seconds</td><td>Cooldown</td><td>Elapsed since setTimestamp (true if never set)</td></tr>
           <tr><td>timedActive:key:seconds</td><td>Timer</td><td>Timer running and not yet expired</td></tr>
           <tr><td>timedExpired:key:seconds</td><td>Timer</td><td>Timer started and expired</td></tr>
-          <tr><td>timedExact:key:hour:minute</td><td>Timer</td><td>Daily reset gate; true if timestamp unset or before last HH:MM</td></tr>
+          <tr><td>timedExact:key:[days:]hour:minute</td><td>Timer</td><td>Periodic reset gate; true if timestamp unset or before last HH:MM. Optional leading days resets every N days (epoch-anchored)</td></tr>
           <tr><td>nearPosition:x:y:z:r</td><td>Position</td><td>Within radius blocks (sphere)</td></tr>
           <tr><td>inArea:x1:y1:z1:x2:y2:z2</td><td>Position</td><td>Inside axis-aligned box defined by two corners</td></tr>
           <tr><td>areaCheck:[entityA,entityB]:x:y:z:r</td><td>Position</td><td>Any listed entity exists within radius of point (* wildcards; <code>Player</code> = any player)</td></tr>

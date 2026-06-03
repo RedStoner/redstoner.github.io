@@ -362,8 +362,8 @@
 
               <tr class="table-group-header"><td colspan="3">Timer (daily reset)</td></tr>
               <tr>
-                <td>timedExact:key:hour:minute</td>
-                <td>Daily reset gate; true if timestamp unset or before last HH:MM</td>
+                <td>timedExact:key:[days:]hour:minute</td>
+                <td>Periodic reset gate; true if timestamp unset or before last HH:MM. Optional leading days = reset every N days</td>
                 <td></td>
               </tr>
 
@@ -991,6 +991,11 @@
           <tr>
             <td>{timeleft:key:totalSeconds}</td>
             <td>Remaining timer time, or "expired"</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{timedexact:key:[days:]hour:minute}</td>
+            <td>Time until next wall-clock reset (e.g. <code>{timedexact:daily:8:0}</code>), or "ready". Pairs with the <code>timedExact</code> requirement.</td>
             <td></td>
           </tr>
           <tr>

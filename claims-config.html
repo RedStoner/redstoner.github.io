@@ -93,9 +93,38 @@
             <td><em>empty</em></td>
             <td>Comma-separated list of server-wide permission-group IDs (e.g. <code>admin,moderator</code>). Each entry creates a <code>questlinesclaims.group.&lt;id&gt;</code> permission node and is auto-seeded as a <em>Permission Group</em> on every region and claim. See <a href="#permission-groups">Permission Groups</a> for details. Reserved IDs (<code>owner</code>, <code>trusted</code>, <code>untrusted</code>) are ignored.</td>
           </tr>
+          <tr>
+            <td><code>block_whitelist</code></td>
+            <td><em>empty</em></td>
+            <td>Comma-separated list of block IDs that bypass <em>all</em> block protections (break, place, use, damage) <strong>everywhere</strong> &mdash; admin regions, player claims, and wilderness alike. See <a href="#block-whitelist">Block Whitelist</a>.</td>
+          </tr>
         </tbody>
       </table>
     </div>
+
+    <h3 id="block-whitelist" data-section="Block Whitelist">Block Whitelist</h3>
+    <p>
+      The block whitelist is a server-wide allowlist of block IDs that are always
+      interactable, regardless of who owns the land. It exists for special-purpose
+      blocks created by <em>other</em> plugins that players must be able to touch even
+      inside someone else&rsquo;s claim &mdash; the classic case being <strong>gravestone
+      blocks</strong> that store a dead player&rsquo;s inventory: the player has to be able
+      to break and recover their grave wherever they died.
+    </p>
+    <p>
+      Listed IDs bypass every block protection flag (<code>BREAK</code>, <code>BUILD</code>,
+      <code>INTERACT</code>, <code>CONTAINER</code>, etc.) in admin regions, player claims,
+      and wilderness. Because the whitelist only ever applies to block-targeting actions,
+      it never affects PvP, flight, or other non-block protections.
+    </p>
+    <p>
+      IDs are matched against <code>BlockType.getId()</code>, case-insensitively, with
+      <code>*</code> wildcards supported &mdash; e.g. <code>Gravestone*</code>,
+      <code>*_Grave</code>, <code>*tombstone*</code>. The list is empty by default. Edit it
+      in <code>questlinesclaims.conf</code> and apply changes live with
+      <code>/claim reload</code> (no restart required):
+    </p>
+    <pre><code>block_whitelist=Gravestone,YourGravePlugin_Tombstone*</code></pre>
 
     <h3 data-section="Database">Database</h3>
     <p>

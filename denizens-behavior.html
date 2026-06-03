@@ -92,8 +92,8 @@
     <div class="callout note">
       <span class="callout-icon">&#8505;</span>
       <div class="callout-body">
-        <div class="callout-title">Patrol wins over Wander</div>
-        <p>When both Patrol and Wander are enabled, the patrol takes precedence.</p>
+        <div class="callout-title">Behavior precedence</div>
+        <p>Full precedence: <strong>Schedule &rsaquo; Guard &rsaquo; Patrol &rsaquo; Wander &rsaquo; Idle</strong>. Guard preempts everything else when a hostile is in range (even a scheduled activity), so a patrolling Guard breaks off to fight then resumes patrol.</p>
       </div>
     </div>
     </div>
@@ -148,6 +148,153 @@
       <a href="denizens-interaction.html#actions"><code>freezePatrol:</code></a> and
       <code>resumePatrol:</code> actions.
     </p>
+    </div>
+
+    <!-- Guard -->
+    <div data-section-body="Guard">
+    <h2 id="guard" data-section="Guard">Guard</h2>
+    <p>
+      <code>Behavior.Guard</code> turns a Denizen into an active protector: it engages hostile
+      targets inside <code>ProtectRadius</code> and returns to a configurable standby point when
+      no threat is in sight. Guard sits between Schedule and Patrol in the precedence ladder, so
+      a patrolling Guard breaks off to fight and then resumes patrol once the area clears.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Attitude-driven combat</div>
+        <p>
+          Targeting is translated into per-target attitude overrides at runtime
+          (<code>role.getWorldSupport().overrideAttitude(targetRef, &hellip;)</code>), and the
+          role's native <code>Component_Sensor_Sight_By_Attitude</code> handles target
+          acquisition + lock from there. The base <code>Attitude</code> in this tab stays in
+          effect for non-matching entities &mdash; Guards never aggro anyone the runtime hasn't
+          whitelisted.
+        </p>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Guard key</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Enabled</code></td><td><code>false</code></td><td>Master toggle. Without it the block is inert; with it, the runtime adds <code>Effective.GUARD</code> to the precedence ladder.</td></tr>
+          <tr><td><code>ProtectRadius</code></td><td><code>16.0</code></td><td>Blocks. Acquisition radius for the periodic scan (~2/sec). An engaged target stays "in range" until they leave roughly <code>radius &times; 1.25</code> &mdash; hysteresis prevents flicker at the edge.</td></tr>
+          <tr><td><code>HostileTo[]</code></td><td><code>[]</code></td><td>Patterns the Guard attacks on sight. See the token table below.</td></tr>
+          <tr><td><code>FriendlyTo[]</code></td><td><code>[]</code></td><td>Patterns the Guard always considers allies. Carve exceptions out of a broad Hostile pattern (e.g. <code>HostileTo: [Player]</code> + <code>FriendlyTo: [RedStoner]</code>).</td></tr>
+          <tr><td><code>NeutralTo[]</code></td><td><code>[]</code></td><td>Patterns ignored even if they hit the Guard (no retaliation). Lowest priority of the three lists.</td></tr>
+          <tr><td><code>LeashMode</code></td><td><code>ANCHOR</code></td><td>Where the Guard holds station between fights &mdash; <code>ANCHOR</code> / <code>PLAYER</code> / <code>NPC</code>. See the leash modes below.</td></tr>
+          <tr><td><code>LeashTarget</code></td><td><em>null</em></td><td>Username for <code>PLAYER</code>, Denizen name / <code>#shortId</code> / UUID for <code>NPC</code>. Ignored for <code>ANCHOR</code>. Offline / wrong-world targets silently fall back to the anchor.</td></tr>
+          <tr><td><code>FollowDistance</code></td><td><code>3.0</code></td><td>Side offset from the leash subject, in blocks. Positive = right shoulder, negative = left. Ignored for <code>ANCHOR</code>.</td></tr>
+          <tr><td><code>LeadDistance</code></td><td><code>0.0</code></td><td>Forward offset along the leash subject's facing yaw, in blocks (signed). Positive = walks ahead, zero = beside, negative = trails behind. Ignored for <code>ANCHOR</code>.</td></tr>
+          <tr><td><code>PackTag</code></td><td><em>null</em></td><td>Group identifier for formation behavior. <strong>Formation runtime is not yet shipped</strong> &mdash; the field round-trips for forward compatibility but Guards currently act solo.</td></tr>
+          <tr><td><code>Allegiance</code></td><td><em>null</em></td><td>Reference point for relationship tokens (see below). Format <code>city:&lt;name&gt;</code> or <code>nation:&lt;name&gt;</code>. Without an allegiance, relationship tokens silently never match; literal city/nation membership tokens still work.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="guard-leash-modes" data-section="Guard">Leash modes</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Mode</th><th>Standby behavior</th></tr></thead>
+        <tbody>
+          <tr><td><code>ANCHOR</code></td><td>Return to the Denizen's spawn anchor. <code>FollowDistance</code> / <code>LeadDistance</code> ignored &mdash; the anchor <em>is</em> the post.</td></tr>
+          <tr><td><code>PLAYER</code></td><td>Stand near the named player. With <code>LeadDistance=0, FollowDistance=3</code> the Guard rides the player's right shoulder; <code>LeadDistance=3</code> walks them three blocks ahead; <code>LeadDistance=-3</code> trails. Bodyguard / escort mode.</td></tr>
+          <tr><td><code>NPC</code></td><td>Stand near another Denizen (referenced by name, <code>#shortId</code>, or UUID). Same facing-based math as <code>PLAYER</code>. Useful for follower chains and (eventually) pack leaders.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="guard-tokens" data-section="Guard">Target token grammar</h3>
+    <p>
+      Each entry in <code>HostileTo</code> / <code>FriendlyTo</code> / <code>NeutralTo</code> can
+      be any of the following. The classifier evaluates them in priority order
+      <strong>Friendly &rsaquo; Hostile &rsaquo; Neutral</strong> &mdash; the first list to match a player wins,
+      so an explicit Friendly entry beats a broad Hostile pattern. When <code>LeashMode=PLAYER</code> the
+      <code>LeashTarget</code> player is implicitly Friendly even without an explicit
+      <code>FriendlyTo</code> entry &mdash; a bodyguard never auto-attacks its charge.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Token</th><th>Matches</th></tr></thead>
+        <tbody>
+          <tr><td><code>Steve</code></td><td>Player whose username is exactly <code>Steve</code> (case-insensitive).</td></tr>
+          <tr><td><code>Hostile_*</code></td><td>Wildcard glob against the username. <code>*</code> = any chars, <code>?</code> = one char.</td></tr>
+          <tr><td><code>Player</code></td><td>Special token &mdash; matches every player.</td></tr>
+          <tr><td><code>[Steve,Alex,Bot_*]</code></td><td>Bracket list. Matches if any inner pattern matches.</td></tr>
+          <tr><td><code>city:Ardonia</code></td><td>Player is a member of the named city. <strong>Needs QuestLinesNations.</strong></td></tr>
+          <tr><td><code>nation:Ardonia_League</code></td><td>Player's city belongs to the named nation. <strong>Needs QuestLinesNations.</strong></td></tr>
+          <tr><td><code>city:HOSTILE</code></td><td>Player's city has an active <code>CityWar</code> with the Guard's <code>Allegiance</code> city. Needs Nations <em>and</em> an Allegiance.</td></tr>
+          <tr><td><code>city:ALLY</code></td><td>Player's city has an active <code>CityAlliance</code> with the Allegiance city.</td></tr>
+          <tr><td><code>nation:HOSTILE</code></td><td>Player's nation has an active <code>NationWar</code> with the Allegiance nation (Allegiance may be city-form &mdash; the bridge follows the city's owning nation).</td></tr>
+          <tr><td><code>nation:ALLY</code></td><td>Player's nation has an active <code>NationAlliance</code> with the Allegiance nation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Optional dependency: QuestLinesNations</div>
+        <p>
+          Without QLN installed the <code>NationsBridge</code> stays inert and every
+          <code>city:</code> / <code>nation:</code> token silently returns no-match. The
+          literal / wildcard / <code>Player</code> patterns still work, so a Guard configured
+          with only those entries behaves identically on a server with or without Nations.
+        </p>
+      </div>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">NPC vs NPC targeting</div>
+        <p>
+          NPC patterns like <code>Bunny</code>, <code>Goblin*</code>, <code>*Boss</code> match
+          against an entity's <code>NPCEntity.getNPCTypeId()</code> (the role id). The scan
+          runs per-Guard every ~500ms; same {@code Friendly &gt; Hostile &gt; Neutral} priority
+          as players. Player-only tokens (<code>Player</code>, <code>city:</code>,
+          <code>nation:</code>) silently skip when matched against NPCs.
+        </p>
+      </div>
+    </div>
+
+<pre class="code-block"><span class="code-comment">// Tavern bouncer — stationary, attacks anything player except Steve, ignores barkeep NPC.</span>
+<span class="hl-key">"Guard"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-bool">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"ProtectRadius"</span><span class="hl-punc">:</span> <span class="hl-num">12.0</span><span class="hl-punc">,</span>
+  <span class="hl-key">"HostileTo"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"Player"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"FriendlyTo"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"Steve"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"LeashMode"</span><span class="hl-punc">:</span> <span class="hl-str">"ANCHOR"</span>
+<span class="hl-punc">}</span>
+
+<span class="code-comment">// Personal bodyguard — walks 2 blocks ahead of "Aldric", attacks his nation's enemies.</span>
+<span class="hl-key">"Guard"</span><span class="hl-punc">:</span> <span class="hl-punc">{</span>
+  <span class="hl-key">"Enabled"</span><span class="hl-punc">:</span> <span class="hl-bool">true</span><span class="hl-punc">,</span>
+  <span class="hl-key">"ProtectRadius"</span><span class="hl-punc">:</span> <span class="hl-num">18.0</span><span class="hl-punc">,</span>
+  <span class="hl-key">"HostileTo"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"nation:HOSTILE"</span><span class="hl-punc">,</span> <span class="hl-str">"city:HOSTILE"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"FriendlyTo"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"nation:ALLY"</span><span class="hl-punc">,</span> <span class="hl-str">"Aldric"</span><span class="hl-punc">],</span>
+  <span class="hl-key">"LeashMode"</span><span class="hl-punc">:</span> <span class="hl-str">"PLAYER"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"LeashTarget"</span><span class="hl-punc">:</span> <span class="hl-str">"Aldric"</span><span class="hl-punc">,</span>
+  <span class="hl-key">"FollowDistance"</span><span class="hl-punc">:</span> <span class="hl-num">2.5</span><span class="hl-punc">,</span>
+  <span class="hl-key">"LeadDistance"</span><span class="hl-punc">:</span> <span class="hl-num">2.0</span><span class="hl-punc">,</span>
+  <span class="hl-key">"Allegiance"</span><span class="hl-punc">:</span> <span class="hl-str">"city:Ardonia"</span>
+<span class="hl-punc">}</span>
+</pre>
+
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Role-template requirement</div>
+        <p>
+          The native <code>Guard</code> instruction state lives in
+          <code>QLD_Template_Citizen.json</code> and is inherited by every variant (incl.
+          <code>QLD_PlayerNPC</code>). Custom roles that don't ship a <code>Guard</code>
+          instruction state will still accept <code>Behavior.Guard.Enabled=true</code>, but
+          when the runtime flips them into the <code>Guard</code> native state they'll find no
+          matching sensor block and the body will stay idle. Author custom roles to mirror the
+          shipped three-tier structure (sight-by-attitude &rarr; maintain-distance + combat
+          ability &rarr; return-to-<code>GuardTarget</code>-slot).
+        </p>
+      </div>
+    </div>
     </div>
 
     <!-- Animations -->
