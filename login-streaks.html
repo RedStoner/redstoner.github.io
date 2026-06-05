@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines &mdash; Login Streaks</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="login-streaks" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Core feature</div>
+      <h1 class="page-title">Login Streaks</h1>
+      <p class="page-subtitle">
+        A per-player <strong>consecutive-day login counter</strong> with configurable rewards &mdash;
+        the classic &quot;log in tomorrow&quot; retention hook. Players who return every day build a
+        streak; missing a day (beyond the grace allowance) resets it. Configured in
+        <code>QuestLines/loginstreak.json</code>; engine is
+        <code>net.evilcraft.questlines.managers.LoginStreakManager</code>.
+      </p>
+    </div>
+
+    <!-- ======================== HOW IT WORKS ======================== -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      On a player's <strong>first connect each day</strong>, the engine advances their streak and fires
+      the configured rewards. It is hooked off the same <code>PlayerReadyEvent</code> path as the
+      <code>playerConnect</code> event, and runs <strong>before</strong> <code>playerConnect</code>
+      actions so <code>{streak}</code> is already up to date for them.
+    </p>
+    <p>
+      A &quot;day&quot; is the UTC epoch-day, shiftable with <code>ResetOffsetHours</code> so roll-over
+      lines up with your server's local midnight (e.g. <code>-5</code> for US Eastern). Connecting again
+      later the same day does nothing. Streak state is stored on <code>PlayerData</code>
+      (<code>loginStreak</code>, <code>longestLoginStreak</code>, <code>lastStreakDay</code>) and
+      <strong>persists across restarts</strong>.
+    </p>
+    </div>
+
+    <!-- ======================== PROGRESSION ======================== -->
+    <div data-section-body="Streak Progression">
+    <h2 data-section="Streak Progression">Streak Progression</h2>
+    <p>
+      <code>GraceDays</code> is the number of <em>missed</em> days that are forgiven. <code>0</code> =
+      strict (must log in every consecutive day). <code>1</code> lets a player skip a single day and
+      still continue. Grace does <strong>not</strong> credit the skipped days &mdash; the streak still
+      advances by exactly <code>+1</code> per login day.
+    </p>
+    <table class="reference-table">
+      <thead><tr><th>Gap since last counted day</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>Same day</td><td>No change (already counted)</td></tr>
+        <tr><td>1 day (yesterday)</td><td>Streak <code>+1</code> (consecutive)</td></tr>
+        <tr><td>Missed days <code>&lt;= GraceDays</code></td><td>Streak <code>+1</code> &mdash; gap <strong>forgiven</strong> (counts as <em>grace used</em>)</td></tr>
+        <tr><td>Missed days <code>&gt; GraceDays</code></td><td>Streak resets to <code>1</code> (counts as <em>broken</em>)</td></tr>
+        <tr><td>Never logged in</td><td>Streak starts at <code>1</code></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- ======================== CONFIG ======================== -->
+    <div data-section-body="Config File">
+    <h2 data-section="Config File">Config File</h2>
+    <p>
+      <code>QuestLines/loginstreak.json</code> is seeded with a working example on first run. All
+      reward values are ordinary QuestLines action strings &mdash; any <code>ActionManager</code> type
+      works (<code>chat:</code>, <code>giveitem:</code>, <code>title:</code>, <code>elxp:</code>,
+      <code>rpgxp:</code>, <code>command:</code>, ...). Rewards fire <strong>after</strong> the counter
+      is bumped, so <code>{streak}</code> / <code>{streak:longest}</code> resolve to today's value
+      inside them.
+    </p>
+<pre><code>// QuestLines/loginstreak.json
+{
+  "Enabled": true,
+  "ResetOffsetHours": 0,
+  "GraceDays": 1,
+  "DailyActions": [
+    "chat:Welcome back! You're on a {streak}-day login streak."
+  ],
+  "BrokenActions": [
+    "chat:Your login streak reset. Log in daily to build it back up!"
+  ],
+  "GraceActions": [
+    "chat:You missed a day, but your {streak}-day streak survived."
+  ],
+  "Milestones": {
+    "3":  ["chat:3-day streak! Keep it going."],
+    "7":  ["chat:A full week! Here's a bonus.", "giveitem:SomeItemId:1"],
+    "14": ["chat:14-day streak - you're dedicated!"],
+    "30": ["chat:30-day streak! Legendary commitment.", "title:Devoted"]
+  },
+  "RepeatEvery": 0,
+  "RepeatActions": []
+}</code></pre>
+    <table class="reference-table">
+      <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>Enabled</code></td><td>bool</td><td>Master switch. When <code>false</code>, no streak tracking or rewards occur.</td></tr>
+        <tr><td><code>ResetOffsetHours</code></td><td>int</td><td>Hours to shift the UTC day boundary (negative = west of UTC).</td></tr>
+        <tr><td><code>GraceDays</code></td><td>int</td><td>Missed days forgiven before the streak resets. <code>0</code> = strict; <code>1</code> = one skipped day allowed.</td></tr>
+        <tr><td><code>DailyActions</code></td><td>string[]</td><td>Fired <strong>every</strong> new counted day &mdash; the base daily-login reward.</td></tr>
+        <tr><td><code>BrokenActions</code></td><td>string[]</td><td>Fired when a player returns after a gap too long to forgive (streak reset to 1).</td></tr>
+        <tr><td><code>GraceActions</code></td><td>string[]</td><td>Fired when a missed-day gap was forgiven by <code>GraceDays</code> (streak continued).</td></tr>
+        <tr><td><code>Milestones</code></td><td>map</td><td>Map of exact streak length &rarr; reward actions (fires once, on the day the streak hits that number).</td></tr>
+        <tr><td><code>RepeatEvery</code></td><td>int</td><td>Fire <code>RepeatActions</code> every N streak-days (<code>0</code> = disabled). Stacks with <code>DailyActions</code> / <code>Milestones</code>.</td></tr>
+        <tr><td><code>RepeatActions</code></td><td>string[]</td><td>The repeating reward list.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Firing order on a newly counted day: <code>DailyActions</code> &rarr; <code>BrokenActions</code>
+      (if broken) <strong>or</strong> <code>GraceActions</code> (if a gap was forgiven) &rarr;
+      <code>Milestones[streak]</code> (if any) &rarr; <code>RepeatActions</code> (if
+      <code>RepeatEvery</code> divides the streak). <code>BrokenActions</code> and
+      <code>GraceActions</code> are mutually exclusive.
+    </p>
+    </div>
+
+    <!-- ======================== QUEST INTEGRATION ======================== -->
+    <div data-section-body="Quest Integration">
+    <h2 data-section="Quest Integration">Quest Integration</h2>
+    <p>
+      The streak counter is exposed to the quest engine as requirements, actions, and text variables,
+      so you can gate content or display progress with the existing tooling.
+    </p>
+    <table class="reference-table">
+      <thead><tr><th>Surface</th><th>Format</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Requirement</td><td><code>streak:days</code></td><td>Current streak &ge; N</td></tr>
+        <tr><td>Requirement</td><td><code>longeststreak:days</code></td><td>All-time best &ge; N</td></tr>
+        <tr><td>Action</td><td><code>setstreak:N</code></td><td>Set current streak (raises best if higher)</td></tr>
+        <tr><td>Action</td><td><code>resetstreak</code></td><td>Clear current streak to zero</td></tr>
+        <tr><td>Variable</td><td><code>{streak}</code></td><td>Current streak</td></tr>
+        <tr><td>Variable</td><td><code>{streak:longest}</code></td><td>All-time best</td></tr>
+        <tr><td>Variable</td><td><code>{streak:next}</code></td><td>Next configured milestone day (empty if none)</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Gate a <a href="daily-quests.html">daily-quest</a> board on <code>streak:7</code>, show
+      <code>You're on day {streak}!</code> in dialogue, or hand a prestige <code>title:</code> at a
+      30-day milestone &mdash; all reuse the existing quest tooling.
+    </p>
+    </div>
+
+  </div>
+</div>
+
+<script src="nav.js" defer></script>
+<script src="toc.js" defer></script>
+<script src="sections.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines &mdash; Daily Quests</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="daily-quests" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Core feature</div>
+      <h1 class="page-title">Daily Quests</h1>
+      <p class="page-subtitle">
+        A pool of quests, of which a <strong>fresh subset is offered each day</strong>. Players open
+        <code>/daily</code>, pick up today's quests, complete them for rewards, and a different set
+        rotates in tomorrow &mdash; the recurring &quot;something new to do today&quot; hook that pairs
+        with <a href="login-streaks.html">login streaks</a>. Configured in
+        <code>QuestLines/dailyquests.json</code>; engine is
+        <code>net.evilcraft.questlines.managers.DailyQuestManager</code>.
+      </p>
+    </div>
+
+    <!-- ======================== HOW IT WORKS ======================== -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      Today's set is a <strong>deterministic selection</strong> from the configured pool, seeded by
+      the day number &mdash; so it is the <strong>same for every player</strong>, stable across
+      restarts, and changes each day. There is no per-server randomness to persist.
+    </p>
+    <p>
+      Players view and accept today's quests with <code>/daily</code> (aliases <code>dailies</code>,
+      <code>dq</code>), which opens a board-style UI (the same <code>QuestBoardUI</code> that powers
+      placed Quest Boards). Clicking a quest opens its normal dialogue / accept flow. Accepted dailies
+      show on the quest HUD like any other tracked quest.
+    </p>
+    <p>
+      A &quot;day&quot; is the UTC epoch-day shifted by <code>ResetOffsetHours</code> &mdash; its own
+      boundary, independent of the <a href="login-streaks.html">login-streak</a> offset.
+    </p>
+    </div>
+
+    <!-- ======================== DAILY RESET ======================== -->
+    <div data-section-body="Daily Reset">
+    <h2 data-section="Daily Reset">Daily Reset</h2>
+    <p>
+      Once per player per day &mdash; on connect (<code>EventActionsListener.onPlayerReady</code>) and
+      when <code>/daily</code> is opened &mdash; the player's <strong>completed / started / tracked
+      state for every pool quest is cleared</strong>, so the rotation is re-doable. Within a day,
+      quests the player has already completed are hidden from the board so they can't be repeated until
+      the next rotation.
+    </p>
+    <p>
+      Because reset wipes completion for pool quests, <strong>a pool quest ID should be dedicated to
+      the daily system</strong> &mdash; don't reuse a one-time story quest's ID in the pool. Mark pool
+      quests <code>"Repeatable": true</code> so the journal lists them in the repeatable tab rather than
+      as permanently completed.
+    </p>
+    </div>
+
+    <!-- ======================== CONFIG ======================== -->
+    <div data-section-body="Config File">
+    <h2 data-section="Config File">Config File</h2>
+    <p>
+      <code>QuestLines/dailyquests.json</code> is seeded with an empty pool on first run &mdash; add
+      your quest IDs.
+    </p>
+<pre><code>// QuestLines/dailyquests.json
+{
+  "Enabled": true,
+  "Count": 3,
+  "ResetOffsetHours": 0,
+  "Title": "Daily Quests",
+  "Pool": [
+    "daily_gather_wood",
+    "daily_slay_goblins",
+    "daily_catch_fish",
+    "daily_mine_ore",
+    "daily_deliver_parcel"
+  ]
+}</code></pre>
+    <table class="reference-table">
+      <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>Enabled</code></td><td>bool</td><td>Master switch. When <code>false</code>, <code>/daily</code> reports the feature is off and no reset runs.</td></tr>
+        <tr><td><code>Count</code></td><td>int</td><td>How many quests from the pool are offered each day.</td></tr>
+        <tr><td><code>ResetOffsetHours</code></td><td>int</td><td>Hours to shift the UTC day boundary (negative = west of UTC).</td></tr>
+        <tr><td><code>Title</code></td><td>string</td><td>Shown as the board subtitle (e.g. &quot;Daily Quests&quot;).</td></tr>
+        <tr><td><code>Pool</code></td><td>string[]</td><td>Quest IDs eligible for rotation. If <code>Count &gt;= pool size</code>, all of them show every day.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- ======================== AUTHORING ======================== -->
+    <div data-section-body="Authoring Daily Quests">
+    <h2 data-section="Authoring Daily Quests">Authoring Daily Quests</h2>
+    <p>
+      Daily quests are ordinary quests &mdash; give each one a quest JSON with pages, objectives, and
+      completion rewards (any action: <code>giveitem:</code>, <code>elxp:</code>, <code>title:</code>,
+      <code>chat:</code>, ...). Recommended:
+    </p>
+    <ul>
+      <li>Set <code>"Repeatable": true</code>.</li>
+      <li>Keep them short / completable in one session.</li>
+      <li>Reward currency or a streak-style token so dailies feed your economy.</li>
+    </ul>
+    <p>
+      Then list their IDs in <code>Pool</code>. That's it &mdash; the rotation, reset, and board are
+      automatic.
+    </p>
+    </div>
+
+    <!-- ======================== TIPS ======================== -->
+    <div data-section-body="Tips">
+    <h2 data-section="Tips">Tips</h2>
+    <ul>
+      <li>Pair with <a href="login-streaks.html">login streaks</a>: gate a bonus daily behind
+          <code>streak:7</code>, or have a milestone hand out a currency players spend elsewhere.</li>
+      <li>The same <code>QuestBoardUI</code> powers placed Quest Board blocks and NPC-as-board
+          questgivers, so a daily-style board is a natural companion to the <code>/daily</code>
+          command.</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<script src="nav.js" defer></script>
+<script src="toc.js" defer></script>
+<script src="sections.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines &mdash; Trigger Volumes</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="trigger-volumes" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Core feature</div>
+      <h1 class="page-title">Trigger Volumes</h1>
+      <p class="page-subtitle">
+        QuestLines plugs into Hytale's built-in <strong>Trigger Volumes</strong> system &mdash;
+        invisible 3D regions that fire on enter/exit. Admins author the volumes externally (Hytale's
+        in-world tools, prefabs, or the <code>/triggervolume</code> console command); QuestLines exposes
+        them to the quest engine through trackers, requirements, actions, and text variables, and adds
+        two custom volume types that run QL actions or check QL requirements directly.
+      </p>
+    </div>
+
+    <!-- ======================== HOW IT WORKS ======================== -->
+    <div data-section-body="How It Works">
+    <h2 data-section="How It Works">How It Works</h2>
+    <p>
+      QuestLines does <strong>not</strong> ship its own trigger-volume editor, wand, or JSON config.
+      The Hytale plugin already owns the spatial index, shape codecs, and persistence &mdash; QuestLines
+      just plugs in via a thin bridge (<code>integrations/triggervolumes/TriggerVolumesBridge</code>).
+      A global listener subscribed to <code>TriggerVolumeEvent</code> feeds enter/exit events to the
+      named tracker system.
+    </p>
+    <p>
+      When the plugin boots, the bridge registers two custom volume types with Hytale's trigger-volume
+      plugin so a volume can carry QuestLines behaviour directly:
+    </p>
+    <table class="reference-table">
+      <thead><tr><th>Hytale type id</th><th>Kind</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>questlines:actions</code></td><td>Effect</td><td>Carries a <code>List&lt;String&gt;</code> of QL action strings. On fire, runs them against the triggering player.</td></tr>
+        <tr><td><code>questlines:requirement</code></td><td>Condition</td><td>Carries a single <code>Requirement</code> string; delegates to the requirement engine. Supports the leading <code>!</code> negation operator.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Both no-op gracefully for non-player entities, so the same effect or condition can sit on a volume
+      whose target types include NPCs or projectiles.
+    </p>
+    </div>
+
+    <!-- ======================== CUSTOM TYPES ======================== -->
+    <div data-section-body="Custom Volume Types">
+    <h2 data-section="Custom Volume Types">Custom Volume Types</h2>
+    <p>
+      Attach these to a volume statically (via Hytale's in-game tool) or through its JSON. A
+      <code>questlines:actions</code> effect:
+    </p>
+<pre><code>{
+  "Type":   "questlines:actions",
+  "Event":  "ENTER",
+  "Actions": [
+    "chat:Welcome to the test zone",
+    "giveitem:Map:1",
+    "track:visited:volumeenter:[my_zone]"
+  ]
+}</code></pre>
+    <p>
+      <code>Actions</code> is a flat list of standard QL action strings &mdash; the full
+      <code>chat:</code>, <code>giveitem:</code>, <code>delay:</code>, <code>track:</code>,
+      <code>startEscort:</code>, <code>if:</code> &hellip; catalog works exactly as it does in a quest
+      response. Variable substitution runs first via the text formatter.
+    </p>
+    <p>
+      A <code>questlines:requirement</code> condition:
+    </p>
+<pre><code>{
+  "Type":        "questlines:requirement",
+  "Event":       "ENTER",
+  "Requirement": "questCompleted:tutorial"
+}</code></pre>
+    <p>
+      Any QL requirement is valid &mdash; <code>hasTag:vip</code>,
+      <code>nearPosition:100:64:200:10</code>, <code>track:foo:5</code>,
+      <code>!variable:dead:greater:0</code>, etc.
+    </p>
+    </div>
+
+    <!-- ======================== TRACKERS ======================== -->
+    <div data-section-body="Trackers">
+    <h2 data-section="Trackers">Trackers</h2>
+    <p>
+      Enter/exit events feed the named tracker system, so you can count zone visits like any other
+      objective. Targets, excludes, location gates, and world gates all use the standard
+      <code>track:</code> syntax.
+    </p>
+    <table class="reference-table">
+      <thead><tr><th>Type</th><th>Value</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>volumeenter</code></td><td>volume id</td><td>Fires when a player enters the volume.</td></tr>
+        <tr><td><code>volumeexit</code></td><td>volume id</td><td>Fires when a player exits the volume.</td></tr>
+      </tbody>
+    </table>
+<pre><code>track:visited:volumeenter:[my_zone]
+track:safehouse_visits:volumeenter:safehouse:loc:100:64:200:50
+track:left_dungeon:volumeexit:[dungeon_*]:exclude:[dungeon_lobby]</code></pre>
+    </div>
+
+    <!-- ======================== REQUIREMENTS ======================== -->
+    <div data-section-body="Requirements">
+    <h2 data-section="Requirements">Requirements</h2>
+    <table class="reference-table">
+      <thead><tr><th>Format</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>inVolume:volumeId</code></td><td>Player is currently inside the named enabled volume.</td></tr>
+        <tr><td><code>inVolume:[a,b,c]</code></td><td>Inside any of the listed volumes. Patterns support <code>*</code> wildcards.</td></tr>
+        <tr><td><code>volumeTag:key</code></td><td>Inside any volume carrying a tag with this key. Wildcards allowed.</td></tr>
+        <tr><td><code>volumeTag:key:value</code></td><td>Inside any volume with the matching key=value pair.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Both are <strong>contextual</strong> &mdash; skipped during HUD requirement resolution so a quest
+      doesn't lock just because the player walked out of a zone. Use them on response gates, page
+      requirements, or <code>if:</code> actions.
+    </p>
+    </div>
+
+    <!-- ======================== ACTIONS ======================== -->
+    <div data-section-body="Actions">
+    <h2 data-section="Actions">Actions</h2>
+    <p>
+      These mutate the world's trigger-volume manager. All are safe to call from any action context
+      (they run on the world thread); the spatial index rebuilds on the next tick.
+    </p>
+    <table class="reference-table">
+      <thead><tr><th>Format</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>createVolume:id:box:x1:y1:z1:x2:y2:z2[:enter:[a;b;c]][:exit:[a;b;c]][:tags:[k=v,k2]]</code></td><td>Register a new box-shaped player-targeted volume at the given world coords. Coords support <code>~</code>-relative syntax.</td></tr>
+        <tr><td><code>createVolume:id:sphere:cx:cy:cz:radius[:enter:[a;b;c]][:exit:[a;b;c]][:tags:[k=v,k2]]</code></td><td>Sphere variant.</td></tr>
+        <tr><td><code>deleteVolume:id</code></td><td>Unregister the volume from the player's current world.</td></tr>
+        <tr><td><code>enableVolume:id</code> / <code>disableVolume:id</code></td><td>Toggle the volume's enabled flag.</td></tr>
+        <tr><td><code>modifyVolumeTags:id[:add:[k=v,k2,k3=v3]][:remove:[k4,k5]]</code></td><td>Add/remove tags; fires synthetic tag-added/tag-removed events so conditions re-evaluate.</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Notes on <code>createVolume</code>:</strong></p>
+    <ul>
+      <li>Action lists inside <code>enter:[...]</code> / <code>exit:[...]</code> use <code>;</code> as
+          the separator so individual actions keep their <code>:</code> delimiters intact &mdash; e.g.
+          <code>enter:[chat:Hello;giveitem:Map:1;track:visited:volumeenter:[id]]</code>.</li>
+      <li>The volume is persisted automatically by Hytale's trigger-volume codec &mdash; it survives
+          server restarts. Use <code>deleteVolume:</code> to clean up.</li>
+      <li>Created volumes default to player target type and enabled. For advanced configurations
+          (cylinder shape, cooldowns, conditions, NPC target types, etc.) author the volume statically
+          via Hytale's tools.</li>
+      <li>The action attaches <code>questlines:actions</code> effects internally for enter/exit, so the
+          resulting volume looks identical to a statically-authored one.</li>
+    </ul>
+    </div>
+
+    <!-- ======================== TEXT VARIABLES ======================== -->
+    <div data-section-body="Text Variables">
+    <h2 data-section="Text Variables">Text Variables</h2>
+    <table class="reference-table">
+      <thead><tr><th>Variable</th><th>Returns</th></tr></thead>
+      <tbody>
+        <tr><td><code>{volume:id:active}</code></td><td><code>true</code>/<code>false</code> based on whether the volume is enabled.</td></tr>
+        <tr><td><code>{volume:id:exists}</code></td><td><code>true</code>/<code>false</code> &mdash; whether the volume is registered at all.</td></tr>
+        <tr><td><code>{volume:id:tags}</code></td><td>Comma-joined <code>key=value</code> pairs (or bare <code>key</code> when value is empty).</td></tr>
+        <tr><td><code>{volume:id:playercount}</code></td><td>Number of players currently inside the volume (player's current world).</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="nav.js" defer></script>
+<script src="toc.js" defer></script>
+<script src="sections.js" defer></script>
+</body>
+</html>

@@ -46,6 +46,9 @@
     { type: 'link', href: 'developer-api.html', icon: SVG.gear,    label: 'Plugin API',    plugin: 'core' },
     { type: 'link', href: 'ai-generation.html', icon: SVG.sparkle, label: 'AI Generation', plugin: 'core' },
     { type: 'link', href: 'wavearenas.html',    icon: SVG.swords,  label: 'Wave Arenas',   plugin: 'core' },
+    { type: 'link', href: 'daily-quests.html',  icon: SVG.target,  label: 'Daily Quests',  plugin: 'core' },
+    { type: 'link', href: 'login-streaks.html', icon: SVG.star,    label: 'Login Streaks', plugin: 'core' },
+    { type: 'link', href: 'trigger-volumes.html',icon: SVG.square, label: 'Trigger Volumes',plugin: 'core' },
 
     { type: 'section', label: 'Icons',          plugin: 'icons' },
     { type: 'link', href: 'icons.html',         icon: SVG.diamond, label: 'Overview',      plugin: 'icons' },
@@ -96,6 +99,7 @@
     { type: 'link', href: 'denizens-behavior.html',  icon: SVG.route,  label: 'Behavior & AI',       plugin: 'denizens' },
     { type: 'link', href: 'denizens-interaction.html',icon: SVG.chat,  label: 'Interaction & Quests',plugin: 'denizens' },
     { type: 'link', href: 'denizens-integration.html',icon: SVG.book,  label: 'Migration & API',     plugin: 'denizens' },
+    { type: 'link', href: 'denizens-runtime-api.html',icon: SVG.gear,  label: 'Runtime API',         plugin: 'denizens' },
     { type: 'link', href: 'denizens-license.html',   icon: SVG.diamond,label: 'Licensing',           plugin: 'denizens' },
 
     { type: 'section', label: 'Arcade',          plugin: 'arcade' },

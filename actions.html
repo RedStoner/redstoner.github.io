@@ -844,6 +844,40 @@
       </div>
     </div>
 
+    <div class="section-group" data-section-body="Login Streaks">
+      <h2 data-section="Login Streaks">Login Streaks</h2>
+      <p>
+        Read and write the per-player daily login-streak counter. The streak itself is advanced
+        automatically on each player's first connect of the day &mdash; these actions are for quests
+        that want to grant or clear it directly. See the full
+        <a href="login-streaks.html">Login Streaks</a> page for the reward config.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>setstreak:N</td>
+              <td>Set the player's current streak to <em>N</em>. Raises the all-time best if <em>N</em> is higher.</td>
+            </tr>
+            <tr>
+              <td>resetstreak</td>
+              <td>Clear the current streak to zero (does not touch the all-time best).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Pairs with the <code>streak:days</code> / <code>longeststreak:days</code> requirements and the
+        <code>{streak}</code> / <code>{streak:longest}</code> / <code>{streak:next}</code> text
+        variables.
+      </p>
+    </div>
+
     <div class="section-group" data-section-body="Macro">
       <h2 data-section="Macro">Macro</h2>
       <p>
@@ -940,6 +974,54 @@
       </div>
     </div>
 
+    <div class="section-group" data-section-body="Morph">
+      <h2 data-section="Morph">Morph</h2>
+      <p>
+        Swap a player's character model. In Hytale a &quot;morph&quot; is just a model change &mdash;
+        the in-game morph potions work the same way. <code>morph:</code> performs a <strong>direct
+        model swap</strong> to any registered model asset and remembers the original so it can be
+        restored. State is <strong>transient</strong> &mdash; players rejoin un-morphed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>morph:ModelId</td>
+              <td>Swap the player to the named model asset (e.g. <code>Zombie</code>, <code>Chicken</code>) until <code>unmorph</code> is called. The model id must resolve to a registered asset; case is preserved.</td>
+            </tr>
+            <tr>
+              <td>morph:ModelId:durationSeconds</td>
+              <td>Same, but auto-restores the original model after <em>durationSeconds</em>.</td>
+            </tr>
+            <tr>
+              <td>unmorph</td>
+              <td>Restore the player's original model immediately.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Detection is source-agnostic: the <code>morph</code> / <code>unmorph</code> trackers and the
+        <code>ismorph[:pattern]</code> requirement also fire for potion-driven and effect-driven morphs,
+        not just <code>morph:</code> swaps. Text variables: <code>{morph}</code> /
+        <code>{morph:active}</code> / <code>{morph:effect}</code>.
+      </p>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Turn the player into a chicken for 30 seconds as a curse</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"chat:You feel your bones shrink..."</span><span class="hl-punc">,</span>
+  <span class="hl-str">"morph:Chicken:30"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
     <div class="section-group" data-section-body="Named Trackers">
       <h2 data-section="Named Trackers">Named Trackers</h2>
       <p>
@@ -956,7 +1038,7 @@
           <tbody>
             <tr>
               <td>track:id:type:[target1,target2]</td>
-              <td>Creates (or resets) a named tracker. <em>id</em> is a unique name you choose. <em>type</em> is one of: <code>kill</code>, <code>killcitizen</code>, <code>block</code>, <code>place</code>, <code>playerkill</code>, <code>travel</code>, <code>craft</code>, <code>harvest</code>, <code>pickup</code>, <code>use</code>, <code>launch</code>, <code>portal</code>, <code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>, <code>catchfishzone</code>, <code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>releasefish</code>, <code>fishmiss</code>, <code>parry</code>, <code>counter</code>, <code>dodge</code>, <code>arena_complete</code>, <code>arena_wave</code> (arena types require EndgameQoL; AA types require Anglers' Almanac; <code>parry</code>/<code>counter</code> require Perfect Parries; <code>dodge</code> requires Perfect Dodges). Targets use a comma-separated bracket list or a bare single value; <code>*</code> matches any. For <code>use</code>, the targets are item IDs the player must be holding when clicking. For <code>launch</code>/<code>portal</code>, the targets are block IDs (<code>Launchpad</code>, <code>Portal_Device</code>, <code>Hub_Portal_*</code>, etc.). For <code>parry</code>/<code>counter</code>, the targets match the attacker's (parry) or countered entity's (counter) NPC type ID, or <code>Player</code>. For <code>dodge</code>, the targets match the attacker's NPC type ID, or <code>Player</code>.</td>
+              <td>Creates (or resets) a named tracker. <em>id</em> is a unique name you choose. <em>type</em> is one of: <code>kill</code>, <code>killcitizen</code>, <code>block</code>, <code>place</code>, <code>playerkill</code>, <code>travel</code>, <code>mount</code>, <code>dismount</code>, <code>mountdistance</code>, <code>morph</code>, <code>unmorph</code>, <code>volumeenter</code>, <code>volumeexit</code>, <code>craft</code>, <code>harvest</code>, <code>pickup</code>, <code>use</code>, <code>launch</code>, <code>portal</code>, <code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>, <code>catchfishzone</code>, <code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>releasefish</code>, <code>fishmiss</code>, <code>parry</code>, <code>counter</code>, <code>dodge</code>, <code>arena_complete</code>, <code>arena_wave</code> (arena types are first-party &mdash; no optional dependency; AA types require Anglers' Almanac; <code>parry</code>/<code>counter</code> require Perfect Parries; <code>dodge</code> requires Perfect Dodges). <code>mount</code>/<code>dismount</code>/<code>mountdistance</code> auto-scope their target to the player's current mount NPC type id (or controller name for non-NPC mounts); <code>morph</code>/<code>unmorph</code> fire on model-change edges and target the morph model id; <code>volumeenter</code>/<code>volumeexit</code> use Hytale <a href="trigger-volumes.html">trigger-volume</a> ids. Targets use a comma-separated bracket list or a bare single value; <code>*</code> matches any. For <code>use</code>, the targets are item IDs the player must be holding when clicking. For <code>launch</code>/<code>portal</code>, the targets are block IDs (<code>Launchpad</code>, <code>Portal_Device</code>, <code>Hub_Portal_*</code>, etc.). For <code>parry</code>/<code>counter</code>, the targets match the attacker's (parry) or countered entity's (counter) NPC type ID, or <code>Player</code>. For <code>dodge</code>, the targets match the attacker's NPC type ID, or <code>Player</code>.</td>
             </tr>
             <tr>
               <td>track:id:type:[targets]:exclude:[excl1,excl2]</td>
@@ -1948,6 +2030,53 @@
       </div>
     </div>
 
+    <div class="section-group" data-section-body="Trigger Volumes">
+      <h2 data-section="Trigger Volumes">Trigger Volumes</h2>
+      <p>
+        Create and manage Hytale built-in trigger volumes &mdash; invisible 3D regions that fire on
+        enter/exit. See the full <a href="trigger-volumes.html">Trigger Volumes</a> page for trackers,
+        requirements, and text variables.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>createVolume:id:box:x1:y1:z1:x2:y2:z2[:enter:[a;b;c]][:exit:[a;b;c]][:tags:[k=v,k2]]</td>
+              <td>Register a new box-shaped player-targeted volume at the given world coords (<code>~</code>-relative supported). Action lists inside <code>enter:</code>/<code>exit:</code> use <code>;</code> as the separator so inner action <code>:</code> delimiters survive. Persisted automatically.</td>
+            </tr>
+            <tr>
+              <td>createVolume:id:sphere:cx:cy:cz:radius[:enter:[a;b;c]][:exit:[a;b;c]][:tags:[k=v,k2]]</td>
+              <td>Sphere variant.</td>
+            </tr>
+            <tr>
+              <td>deleteVolume:id</td>
+              <td>Unregister the volume from the player's current world.</td>
+            </tr>
+            <tr>
+              <td>enableVolume:id / disableVolume:id</td>
+              <td>Toggle the volume's enabled flag.</td>
+            </tr>
+            <tr>
+              <td>modifyVolumeTags:id[:add:[k=v,k2]][:remove:[k3,k4]]</td>
+              <td>Add/remove tags; fires synthetic tag events so volume conditions re-evaluate.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Spawn a one-shot trap zone that greets and gifts on entry</span>
+<span class="hl-key">"Actions"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"createVolume:welcome_hut:box:100:64:200:106:69:206:enter:[chat:Welcome inside!;giveitem:Map:1]"</span>
+<span class="hl-punc">]</span></code></pre>
+      </div>
+    </div>
+
     <div class="section-group" data-section-body="World Map Markers">
       <h2 data-section="World Map Markers">World Map Markers</h2>
       <p>
@@ -2134,6 +2263,14 @@
           <tr><td>global:removetag:tagName</td><td>Global State</td><td>Remove tag from server-wide global tag list</td></tr>
           <tr><td>global:variable:name:op:value</td><td>Global State</td><td>Mutate server-wide variable (ops: add, subtract, multiply, divide, set)</td></tr>
           <tr><td>random:[action1,action2,...]</td><td>Random</td><td>Pick one action at random from bracket list (page: not supported inside)</td></tr>
+          <tr><td>morph:ModelId[:durationSeconds]</td><td>Morph</td><td>Swap the player to a registered model asset; optional auto-restore after N seconds. Transient.</td></tr>
+          <tr><td>unmorph</td><td>Morph</td><td>Restore the player's original model immediately</td></tr>
+          <tr><td>setstreak:N</td><td>Login Streak</td><td>Set the player's current login streak to N (raises all-time best if higher)</td></tr>
+          <tr><td>resetstreak</td><td>Login Streak</td><td>Clear the current login streak to zero</td></tr>
+          <tr><td>createVolume:id:box|sphere:coords[:enter:[a;b]][:exit:[a;b]][:tags:[k=v]]</td><td>Trigger Volume</td><td>Register a player-targeted trigger volume; inner action lists use <code>;</code> as the separator. Persisted.</td></tr>
+          <tr><td>deleteVolume:id</td><td>Trigger Volume</td><td>Unregister the named volume from the player's current world</td></tr>
+          <tr><td>enableVolume:id / disableVolume:id</td><td>Trigger Volume</td><td>Toggle a volume's enabled flag</td></tr>
+          <tr><td>modifyVolumeTags:id[:add:[k=v]][:remove:[k2]]</td><td>Trigger Volume</td><td>Add/remove volume tags; re-evaluates volume conditions</td></tr>
           <tr><td colspan="3" style="font-style:italic;color:var(--text-muted);font-size:0.85rem;">The actions above work in both <code>Response.Actions</code> and <code>Page.LoadActions</code>. Load actions fire automatically when the page is shown, before the player clicks any button.</td></tr>
         </tbody>
       </table>

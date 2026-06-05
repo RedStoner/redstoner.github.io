@@ -1010,6 +1010,36 @@
 <span class="hl-punc">]</span></code></pre>
     </div>
 
+    <div class="section-group" data-section-body="Login Streaks">
+      <h2 data-section="Login Streaks">Login Streaks</h2>
+      <p>
+        Gate content on the player's daily login-streak counter. See the
+        <a href="login-streaks.html">Login Streaks</a> page for the streak engine and reward config.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>streak:days</td>
+              <td>True when the player's <strong>current</strong> login streak is &ge; <em>days</em>.</td>
+            </tr>
+            <tr>
+              <td>longeststreak:days</td>
+              <td>True when the player's <strong>all-time best</strong> login streak is &ge; <em>days</em>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Loyalty page only for week-long streakers</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"streak:7"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
     <div class="section-group" data-section-body="Mailbox">
       <h2 data-section="Mailbox">Mailbox <span style="font-weight:400;opacity:0.55;font-size:0.75em">(Books and Papers optional dependency)</span></h2>
       <p>
@@ -1121,6 +1151,39 @@
       <h4>Example</h4>
       <pre class="code-block"><code><span class="hl-cmt">// Werewolf quest only during full moon</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"moonPhase:full"</span><span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Morph">
+      <h2 data-section="Morph">Morph</h2>
+      <p>
+        Checks whether the player is currently morphed into another model. A morph is any model change
+        &mdash; from the <code>morph:</code> action, a morph potion, or any other effect that swaps the
+        model. See the <a href="actions.html#morph">Morph action</a> for the swap itself.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ismorph:pattern</td>
+              <td><strong>Contextual.</strong> Passes while the player is morphed into a model whose id (then effect id) matches <em>pattern</em> (e.g. <code>Chicken</code>, <code>Tamed_*</code>). Use <code>ismorph:*</code> for &quot;any morph&quot;.</td>
+            </tr>
+            <tr>
+              <td>ismorph</td>
+              <td>A bare <code>ismorph</code> with no pattern is treated as <strong>always true</strong> &mdash; prefer <code>ismorph:*</code> when you mean &quot;any morph&quot;.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Contextual requirements are skipped during HUD requirement resolution so a quest doesn't lock
+        when the player un-morphs. Text variables: <code>{morph}</code> / <code>{morph:active}</code> /
+        <code>{morph:effect}</code>.
+      </p>
     </div>
 
     <div class="section-group" data-section-body="Named Trackers">
@@ -1802,6 +1865,46 @@
       </p>
     </div>
 
+    <div class="section-group" data-section-body="Trigger Volumes">
+      <h2 data-section="Trigger Volumes">Trigger Volumes</h2>
+      <p>
+        Check whether the player is standing inside a Hytale trigger volume. See the full
+        <a href="trigger-volumes.html">Trigger Volumes</a> page for trackers, actions, and text
+        variables.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>inVolume:volumeId</td>
+              <td><strong>Contextual.</strong> Player is currently inside the named enabled volume.</td>
+            </tr>
+            <tr>
+              <td>inVolume:[a,b,c]</td>
+              <td>Inside any of the listed volumes. Patterns support <code>*</code> wildcards.</td>
+            </tr>
+            <tr>
+              <td>volumeTag:key</td>
+              <td>Inside any volume carrying a tag with this key. Wildcards allowed.</td>
+            </tr>
+            <tr>
+              <td>volumeTag:key:value</td>
+              <td>Inside any volume with the matching key=value pair.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Both are contextual &mdash; skipped during HUD requirement resolution so a quest doesn't lock
+        just because the player walked out of a zone.
+      </p>
+    </div>
+
     <div class="section-group" data-section-body="World">
       <h2 data-section="World">World</h2>
 
@@ -1967,6 +2070,13 @@
           <tr><td>achievementcount:op:N</td><td>Achievements</td><td>Total unlocked achievement count comparison (op: greater, less, equal, greaterOrEqual, lessOrEqual)</td></tr>
           <tr><td>achievementstages:op:N</td><td>Achievements</td><td>Total unlocked stages across all achievements (op as above)</td></tr>
           <tr><td>achievementpoints:op:N</td><td>Achievements</td><td>Total achievement points earned (op as above)</td></tr>
+          <tr><td>streak:days</td><td>Login Streak</td><td>Current login streak &ge; days</td></tr>
+          <tr><td>longeststreak:days</td><td>Login Streak</td><td>All-time best login streak &ge; days</td></tr>
+          <tr><td>isMounted[:typePattern]</td><td>Player Stats</td><td>Contextual; player is riding a mount (optionally matching the mount NPC type id pattern)</td></tr>
+          <tr><td>mountDistance:qty</td><td>Player Stats</td><td>Player has traveled &ge; qty blocks while mounted (auto-tracked)</td></tr>
+          <tr><td>ismorph:pattern</td><td>Morph</td><td>Contextual; player is morphed into a model matching pattern (use <code>ismorph:*</code> for any)</td></tr>
+          <tr><td>inVolume:id | inVolume:[a,b]</td><td>Trigger Volume</td><td>Contextual; player is inside the named enabled trigger volume(s) (* wildcards)</td></tr>
+          <tr><td>volumeTag:key[:value]</td><td>Trigger Volume</td><td>Contextual; player is inside any volume carrying the matching tag</td></tr>
         </tbody>
       </table>
     </div>

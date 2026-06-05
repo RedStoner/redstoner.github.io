@@ -477,6 +477,19 @@
                 <td>The named title is the player&rsquo;s currently active selection</td>
                 <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
               </tr>
+
+              <tr class="table-group-header"><td colspan="3">Login Streak</td></tr>
+              <tr><td>streak:days</td><td>Current login streak &ge; days</td><td></td></tr>
+              <tr><td>longeststreak:days</td><td>All-time best login streak &ge; days</td><td></td></tr>
+
+              <tr class="table-group-header"><td colspan="3">Mount &amp; Morph</td></tr>
+              <tr><td>isMounted[:typePattern]</td><td>Contextual; player is riding a mount (optionally matching the mount NPC type id pattern)</td><td></td></tr>
+              <tr><td>mountDistance:qty</td><td>Player has traveled &ge; qty blocks while mounted (auto-tracked)</td><td></td></tr>
+              <tr><td>ismorph:pattern</td><td>Contextual; player is morphed into a model matching pattern (use <code>ismorph:*</code> for any)</td><td></td></tr>
+
+              <tr class="table-group-header"><td colspan="3">Trigger Volumes</td></tr>
+              <tr><td>inVolume:id / inVolume:[a,b]</td><td>Contextual; player is inside the named enabled trigger volume(s) (* wildcards)</td><td></td></tr>
+              <tr><td>volumeTag:key[:value]</td><td>Contextual; player is inside any volume carrying the matching tag</td><td></td></tr>
             </tbody>
           </table>
         </div>
@@ -917,6 +930,20 @@
                 <td>Pick and execute one action at random (page: not allowed inside)</td>
                 <td></td>
               </tr>
+
+              <tr class="table-group-header"><td colspan="3">Login Streak</td></tr>
+              <tr><td>setstreak:N</td><td>Set the player's current login streak to N (raises all-time best if higher)</td><td></td></tr>
+              <tr><td>resetstreak</td><td>Clear the current login streak to zero</td><td></td></tr>
+
+              <tr class="table-group-header"><td colspan="3">Morph</td></tr>
+              <tr><td>morph:ModelId[:durationSeconds]</td><td>Swap the player to a registered model asset; optional auto-restore after N seconds. Transient.</td><td></td></tr>
+              <tr><td>unmorph</td><td>Restore the player's original model immediately</td><td></td></tr>
+
+              <tr class="table-group-header"><td colspan="3">Trigger Volumes</td></tr>
+              <tr><td>createVolume:id:box|sphere:coords[:enter:[a;b]][:exit:[a;b]][:tags:[k=v]]</td><td>Register a player-targeted trigger volume; inner action lists use <code>;</code> as the separator. Persisted.</td><td></td></tr>
+              <tr><td>deleteVolume:id</td><td>Unregister the named volume from the player's current world</td><td></td></tr>
+              <tr><td>enableVolume:id / disableVolume:id</td><td>Toggle a volume's enabled flag</td><td></td></tr>
+              <tr><td>modifyVolumeTags:id[:add:[k=v]][:remove:[k2]]</td><td>Add/remove volume tags; re-evaluates volume conditions</td><td></td></tr>
             </tbody>
           </table>
         </div>
@@ -1119,6 +1146,36 @@
             <td class="cs-note"><span class="badge badge-blue">OrbisGuard</span></td>
           </tr>
           <tr>
+            <td>{streak} / {streak:longest} / {streak:next}</td>
+            <td>Current login streak / all-time best / next configured milestone day (empty if none)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{mounted}</td>
+            <td><code>true</code>/<code>false</code> — whether the player is currently riding a mount</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{mount}</td>
+            <td>Current mount's NPC type id (or controller name for non-NPC mounts; empty if not mounted)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{mountdistanceprogress}</td>
+            <td>Blocks traveled while mounted, current vs target (pairs with <code>mountDistance</code>)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{morph} / {morph:active} / {morph:effect}</td>
+            <td>Current morph model id / whether morphed (<code>true</code>/<code>false</code>) / the driving effect id</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>{volume:id:active|exists|tags|playercount}</td>
+            <td>Trigger-volume state: enabled flag / registered flag / comma-joined tags / players currently inside</td>
+            <td></td>
+          </tr>
+          <tr>
             <td>{title}</td>
             <td>Player's currently active title (plain text, no inline formatting). Empty if no title is active or Titles is not installed.</td>
             <td class="cs-note" style="font-size:0.74rem;color:var(--text-muted)">QuestLines Titles</td>
@@ -1204,6 +1261,10 @@
               <tr><td>mount</td><td>Times mounted; target matches the mount's NPC type id (e.g. <code>Tamed_Horse</code>, <code>*</code>; non-NPC mounts use controller name <code>Minecart</code>/<code>BlockMount</code>)</td></tr>
               <tr><td>dismount</td><td>Times dismounted; same target semantics as <code>mount</code></td></tr>
               <tr><td>mountdistance</td><td>Blocks traveled while mounted; target is the current mount NPC type id (use <code>*</code> for any)</td></tr>
+              <tr><td>morph</td><td>Times the player morphs into another model; target matches the morph model id (potion- and effect-driven morphs count too)</td></tr>
+              <tr><td>unmorph</td><td>Times the player reverts from a morph; same target semantics as <code>morph</code></td></tr>
+              <tr><td>volumeenter</td><td>Player enters a Hytale trigger volume; target is the volume id (* wildcard ok)</td></tr>
+              <tr><td>volumeexit</td><td>Player exits a Hytale trigger volume; target is the volume id (* wildcard ok)</td></tr>
               <tr><td>craft</td><td>Items crafted by item ID (* wildcard ok)</td></tr>
               <tr><td>harvest</td><td>Items harvested from blocks/crops by item ID (* wildcard ok)</td></tr>
               <tr><td>pickup</td><td>Item pickups by item ID (* wildcard ok)</td></tr>

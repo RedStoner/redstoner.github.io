@@ -117,12 +117,16 @@
           <tr><td>Animation</td><td><code>playAnimation</code>, <code>clearAnimation</code></td></tr>
           <tr><td>Behavior</td><td><code>overrideAttitudeTowardPlayer</code>, <code>swapRole</code>, <code>setLookAt</code></td></tr>
           <tr><td>Quest assignment</td><td><code>getAssignedQuests</code>, <code>setAssignedQuests</code>, <code>addAssignedQuest</code>, <code>removeAssignedQuest</code>, <code>getInteractionMode</code>, <code>setInteractionMode</code>, <code>isBoard</code>, <code>setBoard</code></td></tr>
+          <tr><td>Runtime control</td><td><code>cloneEphemeral</code>, <code>removeDenizen</code>, <code>moveTo</code>, <code>startPatrol</code>, <code>stopMovement</code>, <code>getLivePosition</code>, <code>getEntityRef</code>, <code>setHealth</code>, <code>setInvulnerable</code>, <code>setAttitude</code>, <code>setHidden</code>, <code>idsWithTag</code> &mdash; see <a href="denizens-runtime-api.html">Runtime API</a></td></tr>
+          <tr><td>Events</td><td><code>addDeathListener</code>, <code>addInteractListener</code>, <code>addSpawnListener</code>, <code>addDespawnListener</code> &mdash; see <a href="denizens-runtime-api.html#events">Runtime API &rarr; Events</a></td></tr>
         </tbody>
       </table>
     </div>
     <p>
       Lookups return lightweight <code>Snapshot</code> / <code>QuestAssignment</code> records so
-      callers never need the Denizens classes themselves.
+      callers never need the Denizens classes themselves. For spawning, cloning, instructing
+      movement, live state, and lifecycle events, see the dedicated
+      <a href="denizens-runtime-api.html">Runtime API</a> page.
     </p>
     </div>
 

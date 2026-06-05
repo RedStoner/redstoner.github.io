@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuestLines Denizens — Runtime API</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="ql-topic" content="denizens" />
+</head>
+<body>
+
+<nav class="sidebar" data-ql-sidebar></nav>
+
+<div class="main-wrapper">
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Denizens Plugin</div>
+      <h1 class="page-title">Runtime API</h1>
+      <p class="page-subtitle">
+        Spawn, clone, instruct, and react to Denizens at runtime &mdash; the API QuestLines Core
+        uses to drive NPCs, and the surface any plugin can call to move an NPC, set its state, or
+        listen for its death.
+      </p>
+    </div>
+
+    <!-- Overview -->
+    <div data-section-body="Overview">
+    <h2 id="overview" data-section="Overview">Overview</h2>
+    <p>
+      Beyond the identity and quest-assignment helpers on the
+      <a href="denizens-integration.html#api">Migration &amp; API</a> page, Denizens exposes a full
+      <strong>runtime-control</strong> surface: clone an NPC, walk it somewhere, change its health
+      or attitude, hide it, read its live position, and subscribe to lifecycle events. Everything is
+      reachable through the same reflection-resolved <code>DenizensAPI</code> object &mdash; no
+      compile-time dependency on Denizens.
+    </p>
+    <p>
+      QuestLines Core consumes this through a single routing helper, <code>NpcControl</code>, whose
+      policy is <strong>prefer Denizens &rarr; fall back to HyCitizens &rarr; no-op</strong>. That is
+      why every NPC quest action (move, patrol, attitude, equip, hide, escort, &hellip;) now works
+      on a Denizen with no HyCitizens installed, and still works on a HyCitizens citizen when only
+      that plugin is present. The same id verbs route to whichever provider owns the id.
+    </p>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Two audiences</div>
+        <p>
+          <strong>Quest authors</strong> never call this directly &mdash; you use the
+          <a href="actions.html">actions</a> below and Core routes them. <strong>Plugin developers</strong>
+          call <code>DenizensAPI</code> methods reflectively for direct control.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Quest actions -->
+    <div data-section-body="Quest Actions">
+    <h2 id="actions" data-section="Quest Actions">Quest Actions (provider-agnostic)</h2>
+    <p>
+      These quest actions route through <code>NpcControl</code>. Each takes an NPC id (a Denizen
+      name / short id <code>#N</code> / UUID, or a HyCitizens citizen id) and acts on whichever
+      provider owns it. See the <a href="actions.html">Actions</a> reference for full argument
+      formats.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Action</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>spawnCitizen:</code> / <code>spawnDenizen:</code></td><td>Clone a template by name into an ephemeral, auto-cleaned instance.</td></tr>
+          <tr><td><code>moveCitizen:</code> / <code>stopCitizen:</code></td><td>Walk the NPC to coords (pathfinding, not teleport) / halt it.</td></tr>
+          <tr><td><code>patrol:</code> / <code>stopPatrol:</code></td><td>Run / stop the NPC&rsquo;s patrol.</td></tr>
+          <tr><td><code>setAttitude:</code> / <code>setHealth:</code> / <code>setInvulnerable:</code> / <code>setEquip:</code></td><td>Live state changes.</td></tr>
+          <tr><td><code>hideCitizen:</code> / <code>hideNametag:</code></td><td>Global hide of the body / nametag.</td></tr>
+          <tr><td><code>hideNpc:</code> / <code>showNpc:</code></td><td>Per-player hide (only the calling player).</td></tr>
+          <tr><td><code>moveGroup:</code> / <code>patrolGroup:</code> / <code>stopGroup:</code> / <code>stopPatrolGroup:</code></td><td>Act on every group member (a Denizen <em>Tag</em> or a HyCitizens group).</td></tr>
+          <tr><td><code>startEscort:</code> &amp; the <code>escort*</code> family</td><td>Spawn a private follower clone and drive it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">spawnDenizen alias</div>
+        <p>
+          <code>spawnDenizen:</code> is an alias of <code>spawnCitizen:</code> with identical
+          behaviour &mdash; a clearer name when authoring against Denizens. Both clone a Denizen
+          <em>template</em> (a Denizen carrying that name) into an <a href="#clone">ephemeral clone</a>.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Access -->
+    <div data-section-body="Resolving the API">
+    <h2 id="access" data-section="Resolving the API">Resolving the API</h2>
+    <p>
+      Resolve the API once, reflectively, then invoke methods on it. Signatures use only primitives,
+      <code>String</code>, <code>UUID</code>, and Hytale server types (<code>PlayerRef</code>,
+      <code>Ref&lt;EntityStore&gt;</code>) plus JDK functional interfaces, so nothing from the
+      Denizens classloader has to cross into yours.
+    </p>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-type">PluginBase</span> denizens <span class="hl-punc">=</span> <span class="hl-type">HytaleServer</span>.get().getPluginManager().getPlugin(
+        <span class="hl-kw">new</span> <span class="hl-type">PluginIdentifier</span>(<span class="hl-str">"net.evilcraft"</span><span class="hl-punc">,</span> <span class="hl-str">"QuestLinesDenizens"</span>));
+<span class="hl-type">Object</span> api <span class="hl-punc">=</span> denizens.getClass().getMethod(<span class="hl-str">"getApi"</span>).invoke(denizens);
+
+<span class="hl-cmt">// e.g. walk Denizen #4 to a point</span>
+<span class="hl-type">UUID</span> id <span class="hl-punc">=</span> (<span class="hl-type">UUID</span>) api.getClass()
+        .getMethod(<span class="hl-str">"findByShortId"</span><span class="hl-punc">,</span> <span class="hl-kw">int</span>.<span class="hl-kw">class</span>).invoke(api<span class="hl-punc">,</span> <span class="hl-num">4</span>); <span class="hl-cmt">// Optional&lt;UUID&gt; in practice</span>
+api.getClass().getMethod(<span class="hl-str">"moveTo"</span><span class="hl-punc">,</span>
+        <span class="hl-type">UUID</span>.<span class="hl-kw">class</span><span class="hl-punc">,</span> <span class="hl-kw">double</span>.<span class="hl-kw">class</span><span class="hl-punc">,</span> <span class="hl-kw">double</span>.<span class="hl-kw">class</span><span class="hl-punc">,</span> <span class="hl-kw">double</span>.<span class="hl-kw">class</span>)
+        .invoke(api<span class="hl-punc">,</span> id<span class="hl-punc">,</span> x<span class="hl-punc">,</span> y<span class="hl-punc">,</span> z);</code></pre>
+    </div>
+    <p>
+      Write operations are non-blocking &mdash; native work is dispatched to the right world thread
+      internally. Most return <code>boolean</code>: <code>true</code> when the action was scheduled,
+      <code>false</code> when the Denizen is unknown or required state is missing.
+    </p>
+    </div>
+
+    <!-- Clone -->
+    <div data-section-body="Spawning & Cloning">
+    <h2 id="clone" data-section="Spawning &amp; Cloning">Spawning &amp; Cloning</h2>
+    <p>
+      <code>cloneEphemeral(sourceNameOrId, world, x, y, z)</code> deep-copies an existing Denizen
+      (the &ldquo;template&rdquo;) into a fresh instance and returns its new id. The clone is
+      <strong>ephemeral</strong>:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Property</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Not persisted</td><td>Never written to disk &mdash; gone after a server restart.</td></tr>
+          <tr><td>Not reconciled</td><td>The spawn reconciler ignores it; its lifecycle is managed by whoever spawned it.</td></tr>
+          <tr><td>Auto-deleted on death</td><td>Dies once and is removed (never respawns), regardless of the template&rsquo;s <code>RespawnOnDeath</code>.</td></tr>
+          <tr><td>Inherits the template</td><td>Role, appearance, behavior, scale, and combat flags (incl. <code>Invulnerable</code>) all copy from the source.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Use <code>removeDenizen(id)</code> to delete any Denizen outright (despawn + drop from the
+      registry + delete its file; a no-op file delete for ephemerals). This is the
+      <code>spawnCitizen:</code> / escort building block.
+    </p>
+    <div class="callout warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Killable clones need a killable template</div>
+        <p>
+          Denizens default to <code>Invulnerable: true</code>. If a clone is meant to be killed
+          (e.g. a <code>killcitizen</code> objective), make the template&rsquo;s combat block
+          vulnerable &mdash; the clone inherits it.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Movement -->
+    <div data-section-body="Instructing Movement">
+    <h2 id="movement" data-section="Instructing Movement">Instructing Movement</h2>
+    <p>
+      Movement commands drive the NPC&rsquo;s native pathfinder &mdash; the Denizen <em>walks</em>
+      and routes around obstacles. (This is distinct from <code>move</code>, which teleports.)
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Method</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>moveTo(id, x, y, z)</code></td><td>Walk to the point, then stand there on arrival.</td></tr>
+          <tr><td><code>startPatrol(id)</code></td><td>Run the Denizen&rsquo;s own configured patrol waypoints (ignores the <code>Enabled</code> flag).</td></tr>
+          <tr><td><code>stopMovement(id)</code></td><td>Halt in place, cancelling an active move/patrol command.</td></tr>
+          <tr><td><code>isPatrolling(id)</code></td><td>Whether it is patrolling right now.</td></tr>
+          <tr><td><code>getActivePatrolPath(id)</code></td><td>Synthetic path name (<code>"patrol"</code> while patrolling, else <code>null</code>).</td></tr>
+          <tr><td><code>getLivePosition(id)</code></td><td>Live <code>[x, y, z]</code>, or <code>null</code> if not currently ticking. Non-blocking (per-tick cache).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      A command takes precedence over the Denizen&rsquo;s configured behavior (schedule, guard,
+      patrol, wander) until cleared, and applies on the next tick &mdash; there is no warm-up
+      delay. This is what lets escort followers respond to <code>escortMove:</code> instantly.
+    </p>
+    </div>
+
+    <!-- Live state -->
+    <div data-section-body="Live State">
+    <h2 id="state" data-section="Live State">Live State</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Method</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>setHealth(id, maxHealth)</code></td><td>Override max health and refill; <code>null</code>/<code>&le;0</code> reverts to the role default.</td></tr>
+          <tr><td><code>setInvulnerable(id, bool)</code></td><td>Toggle damage immunity.</td></tr>
+          <tr><td><code>setAttitude(id, name)</code></td><td>Base attitude (<code>PASSIVE</code> / <code>NEUTRAL</code> / <code>AGGRESSIVE</code> / <code>HOSTILE</code>), pushed to nearby players immediately.</td></tr>
+          <tr><td><code>setEquipment(id, slot, itemId, qty)</code></td><td>Set an equipment slot (<code>head/chest/hands/legs/mainhand/offhand</code>).</td></tr>
+          <tr><td><code>setHidden(id, bool)</code></td><td>Globally hide / show the body (despawn-based; transient).</td></tr>
+          <tr><td><code>setNametagHidden(id, bool)</code></td><td>Hide / show the floating nameplate.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">No live damage knob</div>
+        <p>
+          <code>setDamage</code> is a no-op on Denizens &mdash; native NPC damage comes from the
+          equipped weapon, not a stat. Give the Denizen a weapon with <code>setEquipment</code>
+          (the <code>setEquip:</code> action) instead. On a HyCitizens citizen, <code>setDamage</code>
+          still applies.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Groups -->
+    <div data-section-body="Groups">
+    <h2 id="groups" data-section="Groups">Groups</h2>
+    <p>
+      A Denizen &ldquo;group&rdquo; is simply a <strong>Tag</strong>. <code>idsWithTag(tag)</code>
+      returns every Denizen id carrying that tag; callers compose group operations by looping the
+      single-id methods. Core&rsquo;s group actions act on the union of Denizens carrying the tag
+      and HyCitizens members of the same-named group.
+    </p>
+    </div>
+
+    <!-- Events -->
+    <div data-section-body="Lifecycle Events">
+    <h2 id="events" data-section="Lifecycle Events">Lifecycle Events</h2>
+    <p>
+      Subscribe to Denizen lifecycle with typed callbacks. Payloads carry only a <code>UUID</code>
+      (the Denizen id) and, where relevant, a <code>PlayerRef</code> &mdash; both shared
+      server-classloader types &mdash; and the listener types are JDK
+      <code>BiConsumer</code> / <code>Consumer</code>, so a lambda from your plugin passes straight in.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Method</th><th>Fires with</th></tr></thead>
+        <tbody>
+          <tr><td><code>addDeathListener(BiConsumer&lt;UUID, PlayerRef&gt;)</code></td><td><code>(denizenId, killer)</code> &mdash; killer is <code>null</code> for environmental/unknown deaths. Fires before any respawn is scheduled.</td></tr>
+          <tr><td><code>addInteractListener(BiConsumer&lt;UUID, PlayerRef&gt;)</code></td><td><code>(denizenId, player)</code> on every player click.</td></tr>
+          <tr><td><code>addSpawnListener(Consumer&lt;UUID&gt;)</code></td><td><code>(denizenId)</code> when the live entity is (re)spawned.</td></tr>
+          <tr><td><code>addDespawnListener(Consumer&lt;UUID&gt;)</code></td><td><code>(denizenId)</code> on explicit despawn (not death).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-block">
+      <pre class="code-block"><code><span class="hl-cmt">// Credit a quest kill when a player kills any Denizen</span>
+api.getClass().getMethod(<span class="hl-str">"addDeathListener"</span><span class="hl-punc">,</span> <span class="hl-type">BiConsumer</span>.<span class="hl-kw">class</span>).invoke(api<span class="hl-punc">,</span>
+    (<span class="hl-type">BiConsumer</span>&lt;<span class="hl-type">UUID</span><span class="hl-punc">,</span> <span class="hl-type">PlayerRef</span>&gt;) (denizenId<span class="hl-punc">,</span> killer) <span class="hl-punc">-&gt;</span> {
+        <span class="hl-kw">if</span> (killer <span class="hl-punc">!=</span> <span class="hl-kw">null</span>) creditKill(killer<span class="hl-punc">,</span> denizenId);
+    });</code></pre>
+    </div>
+    <div class="callout warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Threading</div>
+        <p>
+          Listeners fire on the world thread that raised the event. Keep handlers fast and
+          thread-aware, and never throw &mdash; a thrown listener is logged and skipped, but it
+          won&rsquo;t be retried.
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Limitations -->
+    <div data-section-body="Limitations">
+    <h2 id="limitations" data-section="Limitations">Limitations</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Area</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Named patrol paths</td><td>Denizens has no global named-path registry. <code>patrol:id:pathName</code> / <code>escortPatrol:</code> on a Denizen ignore <code>pathName</code> and run the Denizen&rsquo;s own waypoints.</td></tr>
+          <tr><td>Damage</td><td><code>setDamage</code> is a no-op on Denizens &mdash; equip a weapon instead.</td></tr>
+          <tr><td>Escort pause-on-click</td><td>Clicking a Denizen escort follower does not pause it (this is wired for HyCitizens clones only).</td></tr>
+          <tr><td>Schedule-state queries</td><td>The <code>citizen:schedule*</code> text variables and schedule-state requirements resolve against HyCitizens only.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+  </div>
+</div>
+<script src="nav.js"></script>
+<script src="sections.js"></script>
+<script src="toc.js"></script>
+</body>
+</html>
