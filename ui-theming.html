@@ -20,72 +20,352 @@
       <div class="page-eyebrow">Advanced</div>
       <h1 class="page-title">UI Theming</h1>
       <p class="page-subtitle">
-        Every QuestLines screen &mdash; the dialogue box, the journal, quest boards, the goal HUD,
-        the in-game editor &mdash; is drawn from Hytale UI markup that ships inside the plugin.
-        This page explains where the colors live and the three ways to re-skin them: tuning
-        config keys, editing the shipped <code>.ui</code> files, and (for a handful of values)
-        rebuilding from source.
+        Re-skin the QuestLines NPC dialogue &mdash; colours, sizes, background images,
+        transparency, the whole window frame &mdash; by shipping a small <strong>override asset
+        pack</strong>. Nothing is edited inside the QuestLines jar and nothing is rebuilt from
+        source: you drop a pack in <code>mods/</code> and Hytale's last-loaded-wins asset
+        resolution does the rest.
       </p>
     </div>
-
-    <!-- ======================== HOW IT IS STYLED ======================== -->
-    <div data-section-body="How QuestLines UI Is Styled">
-    <h2 data-section="How QuestLines UI Is Styled">How QuestLines UI Is Styled</h2>
-    <p>
-      QuestLines uses Hytale's native UI system. Each screen is built from a layout file written
-      in Hytale UI markup, shipped inside the plugin's asset pack at
-      <code>Common/UI/Custom/questlines/*.ui</code>. At runtime a screen's Java class loads its
-      layout (for example <code>cmd.append("questlines/Dialogue.ui")</code>) and then injects
-      dynamic content into it.
-    </p>
-    <p>Colors and styling come from <strong>three</strong> distinct places. Knowing which layer
-       a given color lives in tells you how to change it:</p>
-    <ol>
-      <li>
-        <strong>Stock Hytale styles.</strong> Every layout starts with
-        <code>$C = "../Common.ui";</code>, which resolves to <em>Hytale's own</em> Common.ui &mdash;
-        not a QuestLines file. Window frames (<code>$C.@DecoratedContainer</code>), titles
-        (<code>$C.@Title</code>), scrollbars, separators and default buttons all inherit Hytale's
-        base theme from here. You <em>can</em> re-theme these by shipping an asset pack that
-        overrides stock Common.ui &mdash; see
-        <a href="#">Overriding Stock Common.ui</a> below &mdash; but note that change is
-        <strong>global</strong>: it restyles every UI in the game, not just QuestLines.
-      </li>
-      <li>
-        <strong>Hardcoded values in QuestLines' own <code>.ui</code> files.</strong> Anything
-        QuestLines styles itself &mdash; the dialogue response buttons, HUD backgrounds, panel
-        insets &mdash; is hex-coded directly in the layout files. <em>These are fully editable
-        without recompiling.</em>
-      </li>
-      <li>
-        <strong>Java-computed inline colors.</strong> A few dynamic elements (dialogue response
-        button tints, journal category tabs, goal-HUD label colors) have their colors built as
-        strings in Java and injected at runtime. These are baked into the compiled plugin and
-        can only be changed by editing the source and rebuilding &mdash; see
-        <a href="#">Values That Require a Source Build</a> below.
-      </li>
-    </ol>
 
     <div class="callout note">
       <span class="callout-icon">&#8505;</span>
       <div class="callout-body">
-        <div class="callout-title">There is no theme config file</div>
+        <div class="callout-title">One method: an override pack</div>
         <p>
-          QuestLines does not ship a "theme.json" or a swappable color palette. Re-skinning is
-          done by tuning the handful of color keys in <code>QuestLines.conf</code> and by editing
-          the layout files in the asset pack. Plan your theme around those two surfaces.
+          Editing the files inside <code>questlines-&lt;version&gt;.jar</code> is no longer a
+          supported workflow &mdash; those edits are lost on every update and are easy to get wrong.
+          The supported way to theme QuestLines is to ship a <strong>separate</strong> asset pack
+          that replaces the layout files at their original paths. The dialogue window is purpose-built
+          for this: its entire look comes from one variables file you can override on its own.
         </p>
       </div>
     </div>
+
+    <!-- ======================== HOW IT IS STYLED ======================== -->
+    <h2>How QuestLines UI Is Styled</h2>
+    <p>
+      QuestLines uses Hytale's native UI system. Each screen is built from a layout file written in
+      Hytale UI markup, shipped inside the plugin's asset pack at
+      <code>Common/UI/Custom/questlines/*.ui</code>. At runtime a screen's Java class loads its
+      layout (for example <code>cmd.append("questlines/Dialogue.ui")</code>) and injects the dynamic
+      content into it.
+    </p>
+    <p>
+      The NPC dialogue window goes one step further: <strong>every</strong> piece of it &mdash; the
+      static shell <em>and</em> everything generated at runtime (response buttons, the item turn-in
+      picker, dialogue body text, inline icons) &mdash; is defined in <code>.ui</code> files, and all
+      of its colours, sizes and backgrounds live in a single variables file,
+      <code>DialogueTheme.ui</code>. Override that one file and you retheme the whole dialogue. No
+      plugin code is involved.
+    </p>
+    <p>
+      A handful of dynamic colours are still computed in Java and are <em>not</em> part of the
+      asset-pack theme surface (see <a href="#values-computed-at-runtime">Values Computed at
+      Runtime</a>). For the dialogue, the only such case &mdash; the per-response answer-button tint
+      &mdash; is controlled by a config key, not by editing code.
+    </p>
+
+    <!-- ======================== HOW HYTALE RESOLVES UI ======================== -->
+    <h2>How Hytale Loads UI Files</h2>
+    <p>
+      QuestLines declares <code>"IncludesAssetPack": true</code> in its manifest, so the whole
+      <code>Common/</code> tree inside the jar &mdash; including every <code>.ui</code> file &mdash;
+      is registered with the server as an <strong>asset pack</strong>. When a screen loads
+      <code>questlines/Dialogue.ui</code>, Hytale resolves it from that pack.
+    </p>
+    <p>
+      When several packs ship a file at the <em>same</em> client path, Hytale resolves the collision
+      with one rule: <strong>last loaded wins</strong>. Each path maps to a list of contributing
+      packs, and the client is sent only the last entry. So a later-loaded pack <em>can</em> shadow a
+      file that an earlier pack &mdash; including stock Hytale or QuestLines &mdash; already ships,
+      without touching the original jar.
+    </p>
+    <p>
+      "Last" is decided by <strong>load order</strong>, computed from manifest dependencies. Stock
+      Hytale is a core pack and loads first; QuestLines loads after it; and a pack that declares a
+      dependency on QuestLines loads after QuestLines. That dependency is how an override pack
+      guarantees it wins the collision against a QuestLines file.
+    </p>
+
+    <!-- ======================== BUILDING AN OVERRIDE PACK ======================== -->
+    <h2>Building an Override Pack</h2>
+    <p>An override pack is a tiny asset-only pack &mdash; no Main class, no code. It needs:</p>
+    <ol>
+      <li>
+        A <code>manifest.json</code> with a <strong>unique</strong> identifier (a
+        <code>Group</code> + <code>Name</code> that differ from every installed pack),
+        <code>"IncludesAssetPack": true</code>, and a dependency on
+        <code>net.evilcraft:QuestLines</code> so it loads <em>after</em> Core and wins the path
+        collision.
+      </li>
+      <li>
+        The replacement file(s) at the <strong>identical</strong> path they have in QuestLines, e.g.
+        <code>Common/UI/Custom/questlines/DialogueTheme.ui</code>. The pack only needs to contain the
+        files you are replacing &mdash; you do not mirror the whole asset tree.
+      </li>
+      <li>Drop the folder (or a zip of it) into the server's <code>mods/</code> folder and restart.</li>
+    </ol>
+    <div class="example-block">
+      <pre><code>MyTheme/
+  manifest.json
+  Common/
+    UI/
+      Custom/
+        questlines/
+          DialogueTheme.ui      &lt;-- your override (recolour / resize the dialogue)
+          golden/               &lt;-- (optional) your own textures, referenced from the theme
+            window.png</code></pre>
+    </div>
+    <p>A minimal <code>manifest.json</code> for an asset-only override pack:</p>
+    <div class="example-block">
+      <pre><code>{
+  "Group": "com.example",
+  "Name": "MyDialogueTheme",
+  "Version": "1.0.0",
+  "ServerVersion": "&gt;=0.5.0-pre.9 &lt;0.6.0",
+  "Description": "Custom QuestLines dialogue theme.",
+  "IncludesAssetPack": true,
+  "Dependencies": {
+    "net.evilcraft:QuestLines": "*"
+  }
+}</code></pre>
+    </div>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Survives QuestLines updates</div>
+        <p>
+          Because your theme is a separate pack, installing a new QuestLines build never wipes it.
+          The one thing to re-check after a big upgrade is whether the layout's <em>structure</em>
+          changed &mdash; if a new build reworks <code>Dialogue.ui</code>, a full <code>Dialogue.ui</code>
+          override can go stale. Overriding only <code>DialogueTheme.ui</code> (just the variables)
+          is the most upgrade-proof choice.
+        </p>
+      </div>
     </div>
 
-    <!-- ======================== QUICK WINS: CONFIG ======================== -->
-    <div data-section-body="No-Recompile Config Keys">
-    <h2 data-section="No-Recompile Config Keys">No-Recompile Config Keys</h2>
+    <!-- ======================== THEMING THE DIALOGUE ======================== -->
+    <h2>Theming the Dialogue Window</h2>
     <p>
-      Before touching any layout file, check whether a config key already exposes what you want.
-      These live in <code>QuestLines/QuestLines.conf</code> and take effect on
-      <code>/ql reload</code> &mdash; no jar editing, no restart.
+      The dialogue's look is fully driven by these <code>.ui</code> files under
+      <code>Common/UI/Custom/questlines/</code>. Override only the ones you need:
+    </p>
+    <table>
+      <thead><tr><th>File</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>DialogueTheme.ui</code></td><td><strong>The variables file.</strong> Every colour, size, and named button/label style. Override this to retheme everything.</td></tr>
+        <tr><td><code>Dialogue.ui</code></td><td>The static window shell (containers, panels, separator, portrait slots). Imports the theme.</td></tr>
+        <tr><td><code>DialogueResponse.ui</code></td><td>One response row (button + optional item-icon cell + optional typed-input field).</td></tr>
+        <tr><td><code>DialoguePickerItem.ui</code></td><td>One row in the "choose an item to turn in" picker.</td></tr>
+        <tr><td><code>DialogueTextSegment.ui</code></td><td>One line/segment of dialogue body text (a <code>Label</code>).</td></tr>
+        <tr><td><code>DialogueIconRow.ui</code></td><td>A horizontal host for a dialogue line that mixes text with inline <code>{icon:...}</code> icons.</td></tr>
+        <tr><td><code>DialogueIconSegment.ui</code></td><td>One inline <code>{icon:itemId}</code> item icon.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      For a recolour or resize you only need <code>DialogueTheme.ui</code>. Its tokens are grouped at
+      the top of the file (colours, dimensions) with named styles below them. The most-used colour
+      tokens:
+    </p>
+    <table>
+      <thead><tr><th>Token</th><th>Controls</th></tr></thead>
+      <tbody>
+        <tr><td><code>@ColDialogText</code></td><td>Body text of the NPC's dialogue.</td></tr>
+        <tr><td><code>@ColNpcName</code></td><td>The "Name:" label above the dialogue.</td></tr>
+        <tr><td><code>@ColResponseBg</code> / <code>...BgHover</code> / <code>...BgPress</code> / <code>...BgDisable</code></td><td>Response button background per state.</td></tr>
+        <tr><td><code>@ColResponseText</code> (+ <code>Hover</code>/<code>Press</code>/<code>Disable</code>)</td><td>Response label colour per state.</td></tr>
+        <tr><td><code>@ColResponseOutline</code></td><td>Response button outline colour.</td></tr>
+        <tr><td><code>@ColPickerText</code> (+ <code>Hover</code>/<code>Press</code>)</td><td>Item turn-in picker label colour.</td></tr>
+        <tr><td><code>@ColInputBg</code> / <code>@ColInputPlaceholder</code></td><td>Text/number input field background + placeholder text.</td></tr>
+      </tbody>
+    </table>
+    <p>And the dimension tokens (all plain pixel values):</p>
+    <ul>
+      <li><code>@ResponseSpacing</code>, <code>@ResponsePadH</code>, <code>@ResponsePadV</code>, <code>@ResponseOutlineSize</code> &mdash; response button spacing, padding and outline thickness.</li>
+      <li><code>@IconCell</code> / <code>@IconInner</code> &mdash; the item-icon cell beside a response and the icon inside it.</li>
+      <li><code>@InlineIconSize</code> &mdash; <code>{icon:...}</code> icons rendered inside dialogue text.</li>
+      <li><code>@InputHeight</code> / <code>@InputPadH</code> &mdash; a response's typed-input field.</li>
+      <li><code>@PickerRowHeight</code>, <code>@PickerIconSize</code>, <code>@PickerBtnPadH</code>, <code>@PickerFontSize</code> &mdash; the item turn-in picker rows.</li>
+    </ul>
+    <p>
+      Below the tokens are the named styles &mdash; <code>@ResponseButtonStyle</code>,
+      <code>@ContinueButtonStyle</code>, <code>@PickerCancelStyle</code>, <code>@PickerButtonStyle</code>,
+      <code>@NpcNameStyle</code>, <code>@DialogTextStyle</code>, <code>@PickerPromptStyle</code>,
+      <code>@InputPlaceholderStyle</code> &mdash; built from the tokens. Edit a token to recolour
+      everywhere it is used, or edit a named style for finer control of one element.
+    </p>
+    <div class="callout warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">A full DialogueTheme.ui replacement must define every token</div>
+        <p>
+          <code>Dialogue.ui</code> and the templates reference these tokens <em>by name</em>. If your
+          override replaces the whole file, it must keep every <code>@</code>-token that the shipped
+          file defines (including <code>@DialogHeight</code> / <code>@DialogBottom</code>) &mdash;
+          a missing name fails to resolve and the dialogue won't open. The safe approach is to copy
+          the stock <code>DialogueTheme.ui</code> and edit values in place.
+        </p>
+      </div>
+    </div>
+
+    <!-- ======================== BACKGROUNDS / IMAGES / TRANSPARENCY ======================== -->
+    <h2>Backgrounds, Images &amp; Transparency</h2>
+    <p>
+      The window frame is hand-built in <code>Dialogue.ui</code> (not the stock
+      <code>@DecoratedContainer</code>), so <strong>every surface is a theme token</strong> and can
+      take a colour, a custom image, or be made transparent:
+    </p>
+    <table>
+      <thead><tr><th>Token</th><th>Surface</th></tr></thead>
+      <tbody>
+        <tr><td><code>@WindowBackground</code></td><td>The dialogue body panel &mdash; the main "UI background".</td></tr>
+        <tr><td><code>@TitleBackground</code></td><td>The title bar strip.</td></tr>
+        <tr><td><code>@DividerBackground</code></td><td>The divider between the text and the responses.</td></tr>
+        <tr><td><code>@DecorationTop</code> / <code>@DecorationBottom</code></td><td>The top / bottom frame flourishes.</td></tr>
+        <tr><td><code>@DialogBoxBackground</code> / <code>@ResponsePanelBackground</code></td><td>The left (text) / right (responses) panels &mdash; transparent by default.</td></tr>
+        <tr><td><code>@CloseButtonStyle</code></td><td>The close (X) button textures.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Supplying an image</h3>
+    <p>Assign a <code>PatchStyle</code> with a texture path:</p>
+    <div class="example-block">
+      <pre><code>@WindowBackground  = PatchStyle(TexturePath: "MyPack/dialog_bg.png", Border: 24);
+@DividerBackground = PatchStyle(TexturePath: "MyPack/divider.png");</code></pre>
+    </div>
+    <p>
+      <code>Border</code> 9-slices the image so its corners/edges stay crisp at any window size; omit
+      it for a plain stretch. You can also fade an image with the <code>Color</code> field:
+      <code>PatchStyle(TexturePath: "MyPack/dialog_bg.png", Color: "#ffffff(0.6)")</code>.
+    </p>
+    <div class="callout warn">
+      <span class="callout-icon">&#9888;</span>
+      <div class="callout-body">
+        <div class="callout-title">Texture paths are relative to the .ui file</div>
+        <p>
+          A texture path resolves relative to the directory of the <code>.ui</code> file the path
+          literal sits in &mdash; here <code>Common/UI/Custom/questlines/</code>. Ship your own art
+          alongside the theme (e.g. a <code>golden/</code> subfolder) and reference it as
+          <code>"golden/window.png"</code>. To reach a <em>stock</em> Hytale texture under
+          <code>Custom/Common/</code> (one level up), prefix it with <code>../</code>, e.g.
+          <code>"../Common/ContainerPatch.png"</code> &mdash; which is exactly what the shipped
+          defaults do. A bare <code>"Common/..."</code> would resolve to the non-existent
+          <code>questlines/Common/...</code> and the image silently fails to load.
+        </p>
+      </div>
+    </div>
+
+    <h3>Transparency</h3>
+    <p>Every colour token accepts an alpha suffix, so any surface can be faded or made fully clear:</p>
+    <ul>
+      <li><code>#2b3542(0.8)</code> &mdash; 80% opaque.</li>
+      <li><code>#2b3542(0.0)</code> or the built-in <code>@Transparent</code> &mdash; fully clear (paints nothing).</li>
+      <li><code>#rrggbbaa</code> &mdash; the 8-digit hex form also works.</li>
+    </ul>
+    <p>
+      Use it on any <code>@Col*</code> token or any <code>*Background</code> token. For a fully
+      see-through "glass" window, set <code>@WindowBackground</code> / <code>@TitleBackground</code> to
+      translucent colours (e.g. <code>#101522(0.5)</code>) and
+      <code>@DecorationTop</code> / <code>@DecorationBottom</code> to <code>@Transparent</code>.
+    </p>
+
+    <!-- ======================== WINDOW SIZE ======================== -->
+    <h2>Window Size</h2>
+    <p>
+      The dialogue window's <strong>height</strong> and its <strong>gap from the bottom of the
+      screen</strong> are theme tokens:
+    </p>
+    <div class="example-block">
+      <pre><code>@DialogHeight = 300;   // window height (px)
+@DialogBottom = 20;    // gap from the bottom edge of the screen (px)</code></pre>
+    </div>
+    <p>
+      These resolve at <strong>parse time</strong> on the outer container, which QuestLines never
+      mutates at runtime &mdash; so overriding <code>DialogueTheme.ui</code> resizes the dialog with
+      no plugin code change. (A full theme replacement must define both tokens, since they are
+      referenced by name.)
+    </p>
+    <p>
+      The window <strong>width</strong> is chosen per-page (the <code>Full</code> / <code>Mid</code> /
+      <code>Compact</code> option on each page) and applied at runtime to the inner content wrapper.
+      The actual inset values live in <code>QuestLines.conf</code>
+      (<code>dialog_width_full</code> / <code>dialog_width_mid</code> / <code>dialog_width_compact</code>),
+      not in the theme file &mdash; see <a href="#no-recompile-config-keys">No-Recompile Config Keys</a>.
+    </p>
+
+    <!-- ======================== RESTRUCTURING ======================== -->
+    <h2>Restructuring the Dialogue</h2>
+    <p>
+      Recolouring is just the theme file. To change <em>layout</em> &mdash; move the response icon,
+      rework the frame, restyle the body text rows &mdash; override the relevant template or the
+      shell. The one rule: <strong>keep the element ids QuestLines addresses</strong>, or the runtime
+      content wiring won't find its targets.
+    </p>
+    <ul>
+      <li>
+        <strong>Response button</strong> (<code>DialogueResponse.ui</code>): keep
+        <code>#ResponseButton</code>, <code>#ResponseRow</code>, <code>#IconLeft</code>/<code>#IconLeftImg</code>,
+        <code>#IconRight</code>/<code>#IconRightImg</code>, <code>#ResponseInputText</code>,
+        <code>#ResponseInputNumber</code>.
+      </li>
+      <li><strong>Dialogue text:</strong> restyle via <code>@DialogTextStyle</code>, or override <code>DialogueTextSegment.ui</code>.</li>
+      <li>
+        <strong>Whole window frame</strong> (<code>Dialogue.ui</code>): keep
+        <code>#ResponsesContainer</code>, <code>#Dialog</code>, <code>#NPCName</code>,
+        <code>#RightPanel</code>, <code>#PickerContainer</code>, <code>#PickerItems</code>,
+        <code>#ContinueButton</code>, <code>#CloseButton</code>, <code>#DialogSeparator</code>, and the
+        portrait containers.
+      </li>
+    </ul>
+    <p>
+      QuestLines fills these templates by appending them and descending into named children &mdash;
+      e.g. <code>cmd.append("#ResponsesContainer", "questlines/DialogueResponse.ui")</code> then
+      setting <code>#ResponsesContainer[i] #ResponseButton.TextSpans</code>. The
+      <a href="developer-api.html">developer docs</a> and <code>docs/UI.md</code> describe this
+      <code>append</code> + <code>#Container[i]</code> pattern in full.
+    </p>
+
+    <!-- ======================== EXAMPLE PACK ======================== -->
+    <h2>Example: the Golden Glass Pack</h2>
+    <p>
+      QuestLines ships a complete worked example: <strong>Golden Glass</strong>, a theme where the
+      window, title and panels are translucent dark glass and every edge, frame and button carries a
+      golden accent. It lives in the repo at <code>server/ThemeOverrideTest/</code> and is exactly the
+      override-pack shape described above:
+    </p>
+    <ul>
+      <li>
+        <code>Common/UI/Custom/questlines/DialogueTheme.ui</code> &mdash; the single override. It
+        points every frame/button/divider/decoration background at the <code>golden/</code> PNGs, sets
+        warm-gold text colours, and bumps <code>@DialogHeight</code> / <code>@DialogBottom</code> to
+        show a theme controlling the window size.
+      </li>
+      <li>
+        <code>Common/UI/Custom/questlines/golden/*.png</code> &mdash; the gold-on-glass art
+        (9-sliced translucent panels and buttons, divider, flourishes, close-button states).
+      </li>
+      <li>
+        <code>_gen_golden_textures.py</code> &mdash; a reproducible Python + Pillow generator for
+        every PNG; tweak the palette at the top and re-run to restyle the art.
+      </li>
+      <li>
+        <code>manifest.json</code> &mdash; an asset-only pack (no Main class) that declares a hard
+        dependency on <code>net.evilcraft:QuestLines</code> purely to load after Core so its
+        <code>DialogueTheme.ui</code> wins.
+      </li>
+    </ul>
+    <p>
+      Copy that folder, rename it (give it a unique manifest identifier), and edit
+      <code>DialogueTheme.ui</code> to build your own theme.
+    </p>
+
+    <!-- ======================== QUICK WINS: CONFIG ======================== -->
+    <h2>No-Recompile Config Keys</h2>
+    <p>
+      Some look-and-feel values are exposed as config keys rather than theme tokens. These live in
+      <code>QuestLines/QuestLines.conf</code> and take effect on <code>/ql reload</code> &mdash; no
+      pack, no restart.
     </p>
     <table>
       <thead>
@@ -96,17 +376,16 @@
           <td><code>response_default_color</code></td>
           <td><em>(empty)</em></td>
           <td>
-            Base hex tint for dialogue response buttons (e.g. <code>#2b3542</code>). Hover, pressed
-            and disabled states are auto-derived by brightening/darkening this color. A per-response
-            <code>Color</code> set in the quest overrides it; when both are empty the built-in
-            <code>#2b3542</code> is used.
+            Base hex tint for the dynamic per-response answer buttons (e.g. <code>#2b3542</code>).
+            Hover, pressed and disabled states are auto-derived. A per-response <code>Color</code> set
+            in the quest overrides it; when both are empty the built-in <code>#2b3542</code> is used.
           </td>
         </tr>
         <tr>
           <td><code>response_default_opacity</code></td>
           <td><code>100</code></td>
           <td>
-            Background opacity (0&ndash;100) applied to response buttons. Lower values let the
+            Background opacity (0&ndash;100) applied to those response buttons. Lower values let the
             game world show through. Overridable per response with <code>BackgroundOpacity</code>.
           </td>
         </tr>
@@ -114,9 +393,9 @@
           <td><code>default_hud_position</code></td>
           <td><code>TopRight</code></td>
           <td>
-            Default anchor corner of the Quest Goal HUD for new players
-            (<code>TopRight</code>, <code>TopLeft</code>, <code>BottomRight</code>,
-            <code>BottomLeft</code>). Players can change their own via <code>/qlconfig</code>.
+            Default anchor corner of the Quest Goal HUD for new players (<code>TopRight</code>,
+            <code>TopLeft</code>, <code>BottomRight</code>, <code>BottomLeft</code>). Players can change
+            their own via <code>/qlconfig</code>.
           </td>
         </tr>
         <tr>
@@ -141,236 +420,63 @@ response_default_opacity=80
 default_hud_position=BottomRight
 default_hud_offset_y=150</code></pre>
     </div>
-    </div>
-
-    <!-- ======================== HOW HYTALE RESOLVES UI ======================== -->
-    <div data-section-body="How Hytale Loads UI Files">
-    <h2 data-section="How Hytale Loads UI Files">How Hytale Loads UI Files</h2>
-    <p>
-      QuestLines declares <code>"IncludesAssetPack": true</code> in its manifest, so the whole
-      <code>Common/</code> tree inside the jar &mdash; including every <code>.ui</code> file &mdash;
-      is registered with the server as an <strong>asset pack</strong>. When a screen loads
-      <code>questlines/Dialogue.ui</code>, Hytale resolves it from that pack.
-    </p>
-    <p>
-      When several packs ship a file at the <em>same</em> client path (e.g. two packs both
-      containing <code>Common/UI/Custom/Common.ui</code>), Hytale resolves the collision with a
-      simple rule: <strong>last loaded wins</strong>. Each path maps to a list of contributing
-      packs, and the client is sent only the last entry. This means a pack <em>can</em> override
-      files that another pack &mdash; including stock Hytale &mdash; already ships.
-    </p>
-    <p>
-      "Last" is decided by <strong>load order</strong>, which is computed from manifest
-      dependencies, not by where the pack came from. Stock Hytale is a core pack and loads first,
-      so any pack in the server's <code>mods/</code> folder loads <em>after</em> it and will win a
-      collision against a stock file. (The <code>CLI</code> / <code>CLASSPATH</code> /
-      <code>MODS</code> / <code>RUNTIME</code> "source" you may see referenced only decides which
-      copy is kept when two packs declare the <em>same identifier</em> &mdash; it does not govern
-      file-level shadowing.)
-    </p>
-    <p>This gives you two distinct override strategies:</p>
-    <ul>
-      <li>
-        <strong>Edit QuestLines' own files</strong> &mdash; change the <code>.ui</code> files
-        inside the QuestLines pack. Best for QuestLines-specific tweaks. Covered next.
-      </li>
-      <li>
-        <strong>Ship a separate override pack</strong> &mdash; a small asset pack that contains
-        only the files you want to replace at their stock paths. Loads after the pack it targets
-        and shadows those files without touching the original jar. This is the route for
-        overriding stock <code>Common.ui</code> &mdash; see
-        <a href="#">Overriding Stock Common.ui</a>.
-      </li>
-    </ul>
-    </div>
-
-    <!-- ======================== RESKINNING THE .UI FILES ======================== -->
-    <div data-section-body="Re-Skinning the Layout Files">
-    <h2 data-section="Re-Skinning the Layout Files">Re-Skinning the Layout Files</h2>
-    <p>
-      This is the main theming workflow. You edit the layout files that ship in the QuestLines jar,
-      then put the modified jar back in <code>mods/</code>.
-    </p>
-    <ol>
-      <li>Make a backup copy of <code>questlines-&lt;version&gt;.jar</code>.</li>
-      <li>
-        A jar is a zip. Open it with any archive tool (or
-        <code>jar xf questlines-&lt;version&gt;.jar Common/UI/Custom/questlines/</code>) and find the
-        layout files under <code>Common/UI/Custom/questlines/</code>.
-      </li>
-      <li>Edit the hex colors / styles in the <code>.ui</code> file(s) you want to re-theme.</li>
-      <li>
-        Write the changed files back into the jar
-        (<code>jar uf questlines-&lt;version&gt;.jar Common/UI/Custom/questlines/Dialogue.ui</code>),
-        drop it back into <code>mods/</code>, and restart the server.
-      </li>
-    </ol>
-    <div class="callout warn">
-      <span class="callout-icon">&#9888;</span>
-      <div class="callout-body">
-        <div class="callout-title">Re-apply on every update</div>
-        <p>
-          Edits made inside the jar are lost when you install a new QuestLines build. Keep your
-          theme changes as a small patch/diff so you can re-apply them after each upgrade, and
-          re-check the layout files in case they changed.
-        </p>
-      </div>
-    </div>
     <div class="callout note">
       <span class="callout-icon">&#8505;</span>
       <div class="callout-body">
-        <div class="callout-title">Prefer a separate override pack to survive updates</div>
+        <div class="callout-title">Theme + config should agree</div>
         <p>
-          Because QuestLines' own <code>.ui</code> files resolve last-loaded-wins just like stock
-          files, you can put your edited copies in a <em>separate</em> asset pack at the same
-          <code>Common/UI/Custom/questlines/</code> paths (see
-          <a href="#">Overriding Stock Common.ui</a> for the pack layout). Load it after QuestLines
-          and it shadows the shipped files &mdash; no jar surgery, and it survives QuestLines
-          upgrades. The trade-off: if a new build changes a layout's structure, your override can
-          go stale, so re-check it after upgrades either way.
+          The per-response answer buttons are tinted from <code>response_default_color</code> in Java,
+          <em>not</em> from <code>DialogueTheme.ui</code>. For a coherent look, set
+          <code>response_default_color</code> to match the response colours in your theme (the theme's
+          <code>@ResponseButtonStyle</code> drives the fixed <code>Continue</code> / <code>Cancel</code>
+          and picker buttons).
         </p>
       </div>
     </div>
 
-    <h3>Worked example: re-skinning dialogue response buttons</h3>
+    <!-- ======================== OVERRIDE OTHER FILES ======================== -->
+    <h2>Overriding Other UI Files</h2>
     <p>
-      The response button style is defined near the top of
-      <code>Common/UI/Custom/questlines/Dialogue.ui</code>. The shipped version is a cool slate blue:
+      The same override-pack mechanism works for <em>any</em> QuestLines layout file &mdash; the
+      journal, quest boards, the goal HUD, the in-game editor &mdash; and for stock Hytale files. Only
+      the dialogue has the clean <code>DialogueTheme.ui</code> token layer; for the others you place an
+      edited copy of the whole <code>.ui</code> file at its original path in your pack. See the
+      <a href="#layout-file-reference">Layout File Reference</a> for which file drives which screen.
     </p>
-    <div class="example-block">
-      <pre><code>@ResponseButtonStyle = TextButtonStyle(
-    Default:  ( Background: #2b3542, LabelStyle: (TextColor: #cccccc, Wrap: true) ),
-    Hovered:  ( Background: #3a4a5c, LabelStyle: (TextColor: #ffffff, Wrap: true) ),
-    Pressed:  ( Background: #1e2a38, LabelStyle: (TextColor: #aaaaaa, Wrap: true) ),
-    Disabled: ( Background: #1a2030, LabelStyle: (TextColor: #555555, Wrap: true) ),
-    Sounds: $Sounds.@ButtonsLight
-);</code></pre>
-    </div>
-    <p>To make it a warm parchment theme, change the four <code>Background</code> values
-       (and text colors to taste):</p>
-    <div class="example-block">
-      <pre><code>@ResponseButtonStyle = TextButtonStyle(
-    Default:  ( Background: #6b4a2f, LabelStyle: (TextColor: #f3e6c8, Wrap: true) ),
-    Hovered:  ( Background: #845c3a, LabelStyle: (TextColor: #ffffff, Wrap: true) ),
-    Pressed:  ( Background: #523722, LabelStyle: (TextColor: #d8c4a0, Wrap: true) ),
-    Disabled: ( Background: #3a2a1c, LabelStyle: (TextColor: #6b5a45, Wrap: true) ),
-    Sounds: $Sounds.@ButtonsLight
-);</code></pre>
-    </div>
-    <div class="callout note">
-      <span class="callout-icon">&#8505;</span>
-      <div class="callout-body">
-        <div class="callout-title">Static style vs. quest-driven color</div>
-        <p>
-          This <code>@ResponseButtonStyle</code> block styles fixed buttons such as
-          <code>Continue</code> and <code>Cancel</code>. The actual per-response answer buttons are
-          tinted dynamically in Java from <code>response_default_color</code> (or the quest's own
-          per-response <code>Color</code>). For a coherent look, set
-          <code>response_default_color</code> to match your edited style.
-        </p>
-      </div>
-    </div>
-
-    <h3>Worked example: the goal HUD background</h3>
+    <h3>Overriding stock Common.ui (server-wide reskin)</h3>
     <p>
-      <code>QuestGoalHUD.ui</code> draws the on-screen quest tracker. Its panel background and
-      outline are plain hex with alpha:
-    </p>
-    <div class="example-block">
-      <pre><code>Group {
-    LayoutMode: Top;
-    Background: #000000(0.4);     // 40% opaque black
-    Padding: (Full: 8);
-    OutlineColor: #000000(0.6);
-    OutlineSize: 1;
-    ...
-}</code></pre>
-    </div>
-    <p>
-      Change <code>#000000(0.4)</code> to any hex/alpha pair &mdash; e.g.
-      <code>#1a0f28(0.55)</code> for a translucent purple panel. There are four HUD layout
-      variants (<code>QuestGoalHUD.ui</code>, <code>_Bottom</code>, <code>_BottomLeft</code>,
-      <code>_BottomRight</code>, <code>_TopLeft</code>) for the different anchor positions &mdash;
-      edit each one you want to match.
-    </p>
-    </div>
-
-    <!-- ======================== OVERRIDE COMMON.UI ======================== -->
-    <div data-section-body="Overriding Stock Common.ui">
-    <h2 data-section="Overriding Stock Common.ui">Overriding Stock Common.ui</h2>
-    <p>
-      The window frames, titles, scrollbars and default buttons that QuestLines (and every other
-      plugin) pull in via <code>$C = "../Common.ui";</code> are defined in <em>Hytale's</em>
-      <code>Common/UI/Custom/Common.ui</code>. Because raw asset files resolve
-      <strong>last-loaded-wins</strong> (see <a href="#">How Hytale Loads UI Files</a>), you can
-      override that file by shipping your own asset pack that places a replacement at the exact
-      same path.
+      Window frames, titles, scrollbars and default buttons that QuestLines (and every other plugin)
+      pull in via <code>$C = "../Common.ui";</code> are defined in <em>Hytale's</em>
+      <code>Common/UI/Custom/Common.ui</code>. Because that file also resolves last-loaded-wins, an
+      override pack can replace it at the same path.
     </p>
     <div class="callout warn">
       <span class="callout-icon">&#9888;</span>
       <div class="callout-body">
         <div class="callout-title">This is a global, server-wide change</div>
         <p>
-          Overriding <code>Common.ui</code> restyles <strong>every</strong> UI that imports it
-          &mdash; QuestLines, all other plugins, and vanilla Hytale screens alike. It is the right
-          tool for a cohesive server-wide theme, and the wrong tool if you only want to restyle
-          QuestLines (edit the QuestLines <code>.ui</code> files for that). Test broadly before
-          shipping it to players.
+          Overriding <code>Common.ui</code> restyles <strong>every</strong> UI that imports it &mdash;
+          QuestLines, all other plugins, and vanilla Hytale screens alike. It is the right tool for a
+          cohesive server-wide theme and the wrong tool if you only want to restyle QuestLines (use
+          the dialogue theme for that). Keep every <code>@</code>-style name other files reference
+          &mdash; removing one breaks every layout that imports it &mdash; and test broadly before
+          shipping.
         </p>
       </div>
-    </div>
-    <p>To build an override pack:</p>
-    <ol>
-      <li>
-        Create a folder, e.g. <code>MyTheme/</code>, with a <code>manifest.json</code> declaring a
-        <strong>unique</strong> identifier (Group + Name different from any installed pack) and
-        <code>"IncludesAssetPack": true</code>.
-      </li>
-      <li>
-        Copy the stock <code>Common.ui</code> into it at the identical path
-        <code>Common/UI/Custom/Common.ui</code>, then edit the styles you want (button colors,
-        title colors, scrollbar look, etc.). Keep every <code>@</code>-style name that other files
-        reference &mdash; removing one breaks every layout that imports it.
-      </li>
-      <li>
-        Drop the pack (folder or zipped jar) into the server's <code>mods/</code> folder. As a
-        mod-source pack it loads after stock Hytale, so its <code>Common.ui</code> wins the
-        collision. Restart the server.
-      </li>
-    </ol>
-    <div class="example-block">
-      <pre><code>MyTheme/
-  manifest.json
-  Common/
-    UI/
-      Custom/
-        Common.ui        &lt;-- your edited copy of the stock file</code></pre>
-    </div>
-    <div class="callout note">
-      <span class="callout-icon">&#8505;</span>
-      <div class="callout-body">
-        <div class="callout-title">Override only what you change</div>
-        <p>
-          The pack only needs to contain the files you are replacing &mdash; you do not have to
-          mirror the whole stock asset tree. You can use the same technique to override any single
-          stock or plugin UI file (or texture) by matching its path. If two override packs target
-          the same file, the one that loads last wins; declare a manifest dependency to force the
-          order.
-        </p>
-      </div>
-    </div>
     </div>
 
     <!-- ======================== STYLE SYNTAX ======================== -->
-    <div data-section-body="Color &amp; Style Syntax">
-    <h2 data-section="Color &amp; Style Syntax">Color &amp; Style Syntax</h2>
+    <h2>Color &amp; Style Syntax</h2>
     <p>The Hytale markup used in the <code>.ui</code> files supports:</p>
     <ul>
       <li><strong>Hex color</strong> &mdash; <code>Background: #2b3542</code></li>
-      <li><strong>Hex with alpha</strong> &mdash; <code>#000000(0.4)</code> (the parenthesised
-          number is opacity, <code>0.0</code>&ndash;<code>1.0</code>)</li>
+      <li><strong>Hex with alpha</strong> &mdash; <code>#000000(0.4)</code> (the parenthesised number
+          is opacity, <code>0.0</code>&ndash;<code>1.0</code>) or the 8-digit <code>#rrggbbaa</code> form</li>
+      <li><strong>Image patch</strong> &mdash; <code>PatchStyle(TexturePath: "MyPack/x.png", Border: 16)</code>
+          (<code>Border</code> 9-slices; add <code>Color: "#ffffff(0.6)"</code> to tint/fade)</li>
       <li><strong>Style reference</strong> &mdash; <code>Style: $C.@DefaultScrollbarStyle</code>
-          (pulls from stock Hytale Common.ui)</li>
+          (pulls from stock Hytale Common.ui), or <code>$Theme.@ResponseButtonStyle</code>
+          (pulls from <code>DialogueTheme.ui</code>)</li>
       <li><strong>Inline label styling</strong> &mdash;
           <code>Style: (TextColor: #ffffff, FontSize: 14, RenderBold: true, Wrap: true)</code></li>
     </ul>
@@ -385,23 +491,24 @@ default_hud_offset_y=150</code></pre>
               (never <code>Left</code>/<code>Right</code>).</li>
           <li>Element IDs are camelCase and <strong>cannot contain underscores</strong>.</li>
           <li>Use plain ASCII only in any visible text &mdash; no arrows, bullets, em-dashes or accents.</li>
-          <li><code>$C.@Name</code> references resolve against <em>stock</em> Common.ui; don't invent
-              new <code>@</code>-styles expecting them to exist there.</li>
-          <li>Groups can't take a bare hex color in every context the way buttons/labels can &mdash;
-              when in doubt, copy the pattern from a working sibling element.</li>
+          <li>Texture paths resolve relative to the <code>.ui</code> file; use <code>../Common/...</code>
+              to reach stock textures from <code>questlines/</code>, never a bare <code>Common/...</code>.</li>
+          <li><code>$C.@Name</code> references resolve against <em>stock</em> Common.ui;
+              <code>$Theme.@Name</code> against <code>DialogueTheme.ui</code>. Don't reference a name
+              that isn't defined in the file you're importing from.</li>
+          <li>A full <code>DialogueTheme.ui</code> override must define every token the shipped file
+              defines &mdash; a missing token fails to resolve and the dialogue won't open.</li>
         </ul>
       </div>
     </div>
-    </div>
 
     <!-- ======================== LAYOUT FILE REFERENCE ======================== -->
-    <div data-section-body="Layout File Reference">
-    <h2 data-section="Layout File Reference">Layout File Reference</h2>
+    <h2>Layout File Reference</h2>
     <p>Which file drives which screen (all under <code>Common/UI/Custom/questlines/</code>):</p>
     <table>
       <thead><tr><th>File</th><th>Screen</th></tr></thead>
       <tbody>
-        <tr><td><code>Dialogue.ui</code></td><td>NPC dialogue box + response buttons</td></tr>
+        <tr><td><code>Dialogue.ui</code> + <code>DialogueTheme.ui</code> + <code>Dialogue*.ui</code> templates</td><td>NPC dialogue box, response buttons, item picker, body text, inline icons</td></tr>
         <tr><td><code>QuestJournal.ui</code></td><td>The <code>/journal</code> screen</td></tr>
         <tr><td><code>QuestBoard.ui</code></td><td>Quest board listing (blocks &amp; NPC-boards)</td></tr>
         <tr><td><code>QuestGoalHUD*.ui</code></td><td>On-screen quest tracker (5 anchor variants)</td></tr>
@@ -414,64 +521,48 @@ default_hud_offset_y=150</code></pre>
         <tr><td><code>WaveArenaEditor.ui</code></td><td>Wave arena editor (<code>/ql waveeditor</code>)</td></tr>
       </tbody>
     </table>
-    </div>
 
-    <!-- ======================== SOURCE-BUILD VALUES ======================== -->
-    <div data-section-body="Values That Require a Source Build">
-    <h2 data-section="Values That Require a Source Build">Values That Require a Source Build</h2>
+    <!-- ======================== VALUES COMPUTED AT RUNTIME ======================== -->
+    <h2>Values Computed at Runtime</h2>
     <p>
-      A handful of colors are generated in Java and injected at runtime, so they are <em>not</em>
-      in the <code>.ui</code> files and can't be changed by editing the asset pack. Re-theming
-      these requires editing the source and rebuilding the plugin.
+      A few dynamic colours are generated in Java and injected at runtime, so they are <em>not</em> in
+      the <code>.ui</code> files and an asset pack can't change them. They are listed here so you know
+      what an override pack does <strong>not</strong> reach &mdash; not as an invitation to edit code.
     </p>
     <table>
-      <thead><tr><th>Element</th><th>Source file</th><th>Shipped colors</th></tr></thead>
+      <thead><tr><th>Element</th><th>How it's set</th></tr></thead>
       <tbody>
         <tr>
           <td>Per-response answer button tint</td>
-          <td><code>ui/DialogueUI.java</code></td>
-          <td>Derived from <code>response_default_color</code> (config) &mdash; prefer the config key</td>
+          <td>Derived from <code>response_default_color</code> (config) or the quest's per-response <code>Color</code> &mdash; theme via the config key.</td>
         </tr>
         <tr>
-          <td>Journal category tabs (selected/idle)</td>
-          <td><code>ui/QuestJournalUI.java</code></td>
-          <td><code>#253040</code> / <code>#1a2030</code>, accent <code>#4a90d9</code>, text <code>#667788</code></td>
+          <td>Journal category tabs (selected / idle)</td>
+          <td>Computed in Java; not currently exposed to themes.</td>
         </tr>
         <tr>
-          <td>Goal HUD label colors</td>
-          <td><code>ui/QuestGoalHud.java</code></td>
-          <td>Title <code>#e8d48b</code>, body <code>#cccccc</code>, sub <code>#999999</code></td>
+          <td>Goal HUD label colours</td>
+          <td>Computed in Java; not currently exposed to themes.</td>
         </tr>
       </tbody>
     </table>
-    <div class="callout note">
-      <span class="callout-icon">&#8505;</span>
-      <div class="callout-body">
-        <div class="callout-title">Building from source</div>
-        <p>
-          QuestLines builds with Gradle 9. After editing the inline color strings, rebuild and
-          deploy the jar like any other change &mdash; there is no automated test suite, so verify
-          the affected screens in-game. The response button tint should almost always be themed via
-          the <code>response_default_color</code> config key instead of source edits.
-        </p>
-      </div>
-    </div>
-    </div>
 
     <!-- ======================== TESTING ======================== -->
-    <div data-section-body="Testing Your Theme">
-    <h2 data-section="Testing Your Theme">Testing Your Theme</h2>
+    <h2>Testing Your Theme</h2>
     <ul>
-      <li><strong>Config-only changes</strong> apply on <code>/ql reload</code> &mdash; no restart.</li>
-      <li><strong>Edited <code>.ui</code> files</strong> require a server restart, since the asset
-          pack is read from the jar at startup.</li>
-      <li>If a screen fails to open or players disconnect on open, the layout file has a parse
-          error &mdash; check the server console for the failing file and re-read the
-          <a href="#">markup gotchas</a> above. A broken first element cascades into bogus
-          "selector not found" errors for later elements, so fix the earliest reported problem first.</li>
-      <li>Test every width preset and HUD anchor variant you touched &mdash; they are separate files.</li>
+      <li><strong>Config-only changes</strong> (<code>QuestLines.conf</code>) apply on <code>/ql reload</code> &mdash; no restart.</li>
+      <li><strong>An override pack</strong> is read from disk at startup, so adding or changing one needs a server restart.</li>
+      <li>Open a dialogue by talking to a quest-giver NPC. If it opens in the stock blue/grey look instead
+          of your theme, check the server console for the asset-pack load line naming your pack and for any
+          duplicate-asset or <code>.ui</code> parse warnings &mdash; a pack that didn't load (missing
+          dependency / clashing identifier) won't win the collision.</li>
+      <li>If a screen fails to open or players disconnect on open, the layout file has a parse error.
+          Check the console for the failing file and re-read the markup gotchas above; a broken first element
+          cascades into bogus "selector not found" errors for later elements, so fix the earliest reported
+          problem first.</li>
+      <li>Test every width preset and, if you touched the goal HUD, every anchor variant you changed &mdash;
+          they are separate files.</li>
     </ul>
-    </div>
 
   </div>
 </div>

@@ -602,6 +602,65 @@
       </table>
     </div>
 
+    <h3 data-section="Theming the Dialogue UI">Theming the Dialogue UI</h3>
+    <p>
+      The NPC dialogue window is fully overridable through Hytale&rsquo;s asset system &mdash; both the
+      static frame <em>and</em> everything generated at runtime (response buttons, the item turn-in
+      picker, dialogue body text, inline icons). Hytale resolves duplicate asset paths
+      <strong>last-loaded-wins</strong>, so a pack loaded after QuestLines that ships a file at the same
+      path wins, with no plugin code changes. All of these live under
+      <code>Common/UI/Custom/questlines/</code>.
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>File</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>DialogueTheme.ui</code></td><td><strong>The variables file.</strong> All colours, sizes, and named button/label styles. Edit this to retheme everything at once.</td></tr>
+          <tr><td><code>Dialogue.ui</code></td><td>The window shell (containers, panels, separator, portrait slots).</td></tr>
+          <tr><td><code>DialogueResponse.ui</code></td><td>One response row (button + optional icon cell + optional typed-input field).</td></tr>
+          <tr><td><code>DialoguePickerItem.ui</code></td><td>One row of the &ldquo;choose an item to turn in&rdquo; picker.</td></tr>
+          <tr><td><code>DialogueTextSegment.ui</code></td><td>One line/segment of dialogue body text.</td></tr>
+          <tr><td><code>DialogueIconRow.ui</code> / <code>DialogueIconSegment.ui</code></td><td>Host + icon for dialogue lines that mix text with inline <code>{icon:...}</code> icons.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      To recolour or resize, edit the tokens at the top of <code>DialogueTheme.ui</code>
+      (<code>@ColResponseBg</code>, <code>@ColDialogText</code>, <code>@IconCell</code>, &hellip;) or the
+      named styles below them. To restructure, override the relevant template &mdash; keep the element
+      ids the plugin addresses (e.g. <code>#ResponseButton</code>, <code>#IconLeft</code>,
+      <code>#ResponseInputText</code>) so default wiring keeps working.
+    </p>
+    <p>
+      <strong>Background images &amp; transparency.</strong> The window frame is built from theme
+      tokens, so every surface can take a custom image or be made see-through:
+    </p>
+    <ul>
+      <li><strong>Image:</strong> point a background token at your own texture, e.g.
+        <code>@WindowBackground = PatchStyle(TexturePath: "MyPack/dialog_bg.png", Border: 24);</code>
+        or the divider <code>@DividerBackground = PatchStyle(TexturePath: "MyPack/divider.png");</code>.
+        Surfaces available: <code>@WindowBackground</code> (the body panel), <code>@TitleBackground</code>,
+        <code>@DividerBackground</code>, <code>@DecorationTop</code>/<code>@DecorationBottom</code>,
+        <code>@DialogBoxBackground</code>, <code>@ResponsePanelBackground</code>, and
+        <code>@CloseButtonStyle</code>.</li>
+      <li><strong>Transparency:</strong> every colour accepts an alpha suffix &mdash;
+        <code>#2b3542(0.8)</code> for 80% opacity, <code>@Transparent</code> for fully clear &mdash;
+        usable on any <code>@Col*</code> token or any <code>*Background</code> token. Set the window and
+        title backgrounds to translucent colours for a glass-style dialogue.</li>
+    </ul>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Per-response author colours</div>
+        <p>
+          A response with an author-set colour / border / opacity (or a server-wide default), or one
+          that takes typed input, is drawn with computed inline styling so author intent wins &mdash;
+          those buttons do not read <code>DialogueTheme.ui</code>. Every other response uses the themed
+          template and is fully moddable.
+        </p>
+      </div>
+    </div>
+
     <h3 data-section="Storage Backend">Storage Backend</h3>
     <p>
       QuestLines stores per-player state in a file by default, but can be switched to a database

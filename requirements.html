@@ -431,13 +431,13 @@
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span><span class="hl-str">"elclass:primary:warrior"</span><span class="hl-punc">]</span></code></pre>
     </div>
 
-    <div class="section-group" data-section-body="Fishing">
-      <h2 data-section="Fishing">Fishing <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyFishing optional dependency)</span></h2>
+    <div class="section-group" data-section-body="HyFishing">
+      <h2 data-section="HyFishing">HyFishing <span style="font-weight:400;opacity:0.55;font-size:0.75em">(HyFishing optional dependency)</span></h2>
       <p>
-        Fishing count requirements use named trackers. Set up a tracker with the appropriate
+        HyFishing count requirements use named trackers. Set up a tracker with the appropriate
         fishing type (<code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>,
         <code>catchfishzone</code>, or <code>releasefish</code>), then check with <code>track:id:qty</code>.
-        All fishing requirements return <strong>false</strong> if HyFishing is not installed.
+        All HyFishing requirements return <strong>false</strong> if HyFishing is not installed.
         The <code>hasfishinbag</code> check is a live bag inventory check that requires no tracker.
       </p>
 
@@ -449,11 +449,52 @@
           <tbody>
             <tr>
               <td>track:id:qty</td>
-              <td>True if the named fishing tracker has count &ge; <em>qty</em>. Tracker types: <code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>, <code>catchfishzone</code>, <code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>releasefish</code>, <code>fishmiss</code>. Supports <code>*</code> wildcard on target. AA-specific types (<code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>fishmiss</code>) require Anglers' Almanac.</td>
+              <td>True if the named fishing tracker has count &ge; <em>qty</em>. HyFishing tracker types: <code>catchfish</code>, <code>catchfishbiome</code>, <code>catchfishrarity</code>, <code>catchfishzone</code>, <code>releasefish</code>. Supports <code>*</code> wildcard on target.</td>
             </tr>
             <tr>
               <td>hasfishinbag:fishItemId:qty</td>
               <td>Live check — true if the player currently has &ge; <em>qty</em> of the fish item in their bag. Use <code>*</code> to match any fish. No tracker needed.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Example</h4>
+      <pre class="code-block"><code><span class="hl-cmt">// Require catching 10 fish of any type</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"questStarted:fishing_quest"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"track:fish_caught:10"</span>
+<span class="hl-punc">]</span>
+
+<span class="hl-cmt">// Gate a turn-in on having a specific fish in the bag right now</span>
+<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
+  <span class="hl-str">"hasfishinbag:golden_trout:1"</span>
+<span class="hl-punc">]</span></code></pre>
+    </div>
+
+    <div class="section-group" data-section-body="Anglers' Almanac">
+      <h2 data-section="Anglers' Almanac">Anglers' Almanac <span style="font-weight:400;opacity:0.55;font-size:0.75em">(Anglers' Almanac optional dependency)</span></h2>
+      <p>
+        Anglers' Almanac (AA) is a separate optional dependency that adds a catch minigame
+        with rarity, legendary/new-discovery flags and a per-catch performance rating. When AA
+        is installed, its catches <strong>also</strong> feed the standard <code>catchfish</code>
+        and <code>catchfishrarity</code> HyFishing counters (using the loot item ID and rarity);
+        biome and zone are not provided by AA. The requirements below expose the AA-specific
+        signals. Count requirements use named trackers — set up a tracker with the matching type
+        (<code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>,
+        or <code>fishmiss</code>), then check with <code>track:id:qty</code>. All AA requirements
+        return <strong>false</strong> if Anglers' Almanac is not installed.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>track:id:qty</td>
+              <td>True if the named AA tracker has count &ge; <em>qty</em>. AA tracker types: <code>catchfishlegendary</code>, <code>catchfishnew</code>, <code>catchfishperf</code>, <code>fishmiss</code>. Supports <code>*</code> wildcard on target.</td>
             </tr>
             <tr>
               <td>fishmiss:fishItemId:qty</td>
@@ -476,15 +517,10 @@
       </div>
 
       <h4>Example</h4>
-      <pre class="code-block"><code><span class="hl-cmt">// Require catching 10 fish of any type</span>
+      <pre class="code-block"><code><span class="hl-cmt">// Require landing 5 legendary catches, then 3 perfect-rated catches</span>
 <span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
-  <span class="hl-str">"questStarted:fishing_quest"</span><span class="hl-punc">,</span>
-  <span class="hl-str">"track:fish_caught:10"</span>
-<span class="hl-punc">]</span>
-
-<span class="hl-cmt">// Gate a turn-in on having a specific fish in the bag right now</span>
-<span class="hl-key">"Requirements"</span><span class="hl-punc">:</span> <span class="hl-punc">[</span>
-  <span class="hl-str">"hasfishinbag:golden_trout:1"</span>
+  <span class="hl-str">"catchfishlegendary:5"</span><span class="hl-punc">,</span>
+  <span class="hl-str">"catchfishperf:perfect:3"</span>
 <span class="hl-punc">]</span></code></pre>
     </div>
 
@@ -2054,7 +2090,11 @@
           <tr><td>elskill:SKILL:equal|greater|less|greaterOrEqual|lessOrEqual:value</td><td>EL Skill</td><td>Skill attribute level (requires EndlessLeveling)</td></tr>
           <tr><td>elrace:raceId</td><td>EL Race</td><td>Player's race matches (requires EndlessLeveling)</td></tr>
           <tr><td>elclass:classId, elclass:primary|secondary:classId</td><td>EL Class</td><td>Primary/secondary class match (requires EndlessLeveling)</td></tr>
-          <tr><td>hasfishinbag:fishItemId:qty</td><td>Fishing</td><td>Live bag check; * for any fish; no tracker needed (requires HyFishing)</td></tr>
+          <tr><td>hasfishinbag:fishItemId:qty</td><td>HyFishing</td><td>Live bag check; * for any fish; no tracker needed (requires HyFishing)</td></tr>
+          <tr><td>fishmiss:fishItemId:qty</td><td>Anglers' Almanac</td><td>Fish lost in the AA catch minigame; * wildcard (requires Anglers' Almanac)</td></tr>
+          <tr><td>catchfishlegendary:qty</td><td>Anglers' Almanac</td><td>Legendary catches (AA isLegendary flag) (requires Anglers' Almanac)</td></tr>
+          <tr><td>catchfishnew:qty</td><td>Anglers' Almanac</td><td>New-discovery catches (AA isNewDiscovery flag) (requires Anglers' Almanac)</td></tr>
+          <tr><td>catchfishperf:rating:qty</td><td>Anglers' Almanac</td><td>Catches at AA rating: perfect/great/good/fail/nil (requires Anglers' Almanac)</td></tr>
           <tr><td>inregion:regionId</td><td>Regions</td><td>Player is inside named region (QL Claims first, then OrbisGuard)</td></tr>
           <tr><td>regionowner:regionId</td><td>Regions</td><td>Player owns named region (QL Claims first, then OrbisGuard)</td></tr>
           <tr><td>regionmember:regionId</td><td>Regions</td><td>Player is member or owner of named region (QL Claims first, then OrbisGuard)</td></tr>
