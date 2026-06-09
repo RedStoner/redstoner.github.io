@@ -52,8 +52,35 @@
     <ul>
       <li><code>default_max_chunks</code> (default <code>25</code>) &mdash; base from config.</li>
       <li><strong>+ N</strong> for every <code>questlinesclaims.claim.chunks.N</code> permission the player holds. Multiple matching permissions stack (N = 1&ndash;500).</li>
-      <li><strong>+ bonus</strong> &mdash; admin-granted chunks via <code>/claim addchunks</code>.</li>
+      <li><strong>+ bonus</strong> &mdash; chunks granted by an admin via <code>/claim addchunks</code> <em>or</em> bought by the player with Claim Shards via <code>/claim buychunk</code> (see below). Both fold into the same bonus pool.</li>
     </ul>
+    </div>
+
+    <!-- Claim Shards -->
+    <div data-section-body="Claim Shards">
+    <h2 id="claim-shards" data-section="Claim Shards">Claim Shards</h2>
+    <p>
+      <strong>Claim Shards</strong> are a secondary-currency item
+      (<code>QuestLinesClaims_ClaimShard</code>) players spend to expand their own
+      chunk budget &mdash; no admin intervention needed. Run
+      <code>/claim buychunk [count]</code> to convert held shards into permanent
+      bonus chunks: each chunk costs <code>chunk_cost_shards</code> (config,
+      default <code>32</code>), the shards are taken from your inventory, and the
+      chunks are added to the same bonus pool as <code>/claim addchunks</code> so
+      they raise your limit everywhere.
+    </p>
+    <ul>
+      <li>Shards are counted across your hotbar <em>and</em> main storage; the cost is taken from there.</li>
+      <li><code>count</code> defaults to <code>1</code>. The purchase is all-or-nothing &mdash; if you can&rsquo;t cover the full cost nothing is spent.</li>
+      <li>Bought chunks are permanent bonus chunks; they survive relog and are not refundable.</li>
+    </ul>
+    <p>
+      Shards have no built-in faucet &mdash; servers hand them out however they
+      like. The intended sources are <strong>quest rewards</strong> (the Core
+      action <code>giveitem:QuestLinesClaims_ClaimShard:N</code>), shops, or other
+      plugins. Admins can mint a stack for themselves with
+      <code>/claim giveshards [amount]</code> for testing or hand-distribution.
+    </p>
     </div>
 
     <!-- Claim Separation -->

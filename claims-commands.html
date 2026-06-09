@@ -79,6 +79,14 @@
             <td>Open the Rent/Buy Browser to view and transact on available plots.</td>
           </tr>
           <tr>
+            <td>
+              <code>/claim buychunk [count]</code>
+              <br/><span class="muted">alias: <code>/claim buychunks</code></span>
+            </td>
+            <td><code>questlinesclaims.claim.use</code></td>
+            <td>Spend <a href="claims-player.html#claim-shards">Claim Shards</a> from your inventory to raise your chunk limit. Each chunk costs <code>chunk_cost_shards</code> (default 32); <code>count</code> defaults to 1. All-or-nothing &mdash; refused if you can&rsquo;t cover the full cost.</td>
+          </tr>
+          <tr>
             <td><code>/claim show</code></td>
             <td><em>none</em></td>
             <td>Outline every claim and admin region within a 6-chunk radius of the player for 30 seconds. Useful for spotting boundaries on the ground without opening the map.</td>
@@ -144,6 +152,10 @@
           <tr>
             <td><code>/claim settenant &lt;username|clear&gt;</code></td>
             <td>Set or clear the tenant of the rent region at the player&rsquo;s current position. Does not charge the new tenant and starts a fresh lease (<code>leaseStart</code> = now, <code>leaseEnd</code> = now + <code>durationSeconds</code>); members and warning thresholds are cleared. Pass <code>clear</code> to vacate the region instead. Also available as an Assign/Clear control on the admin region edit UI when the region is a rent region.</td>
+          </tr>
+          <tr>
+            <td><code>/claim giveshards [amount]</code></td>
+            <td>Give yourself a stack of <a href="claims-player.html#claim-shards">Claim Shards</a> (<code>amount</code> defaults to 16). For testing and hand-distribution &mdash; the intended in-world source is quest rewards (<code>giveitem:QuestLinesClaims_ClaimShard:N</code>).</td>
           </tr>
           <tr>
             <td><code>/claim reload</code></td>
