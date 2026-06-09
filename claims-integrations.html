@@ -21,8 +21,9 @@
       <h1 class="page-title">Integrations</h1>
       <p class="page-subtitle">
         How Claims plugs into the rest of the server &mdash; VaultUnlocked economy,
-        the world map, ECS enforcement systems, portal protection, claim decay, and
-        imports from other claims plugins.
+        the world map, ECS enforcement systems, portal protection, the
+        <code>ClaimGate</code> hook for other plugins &amp; asset packs, claim decay,
+        and imports from other claims plugins.
       </p>
     </div>
 
@@ -95,6 +96,101 @@
       and cancels it when the <code>PORTAL</code> flag is denied at the target
       block.
     </p>
+    </div>
+
+    <!-- ClaimGate -->
+    <div data-section-body="ClaimGate Node">
+    <h2 id="claimgate" data-section="ClaimGate Node">Custom Interactions: <code>ClaimGate</code></h2>
+    <p>
+      The protections above are <em>transparent</em> &mdash; they wrap built-in
+      interactions so existing content respects claims with no author effort. But
+      a third-party plugin or a code-free <strong>asset pack</strong> may want to
+      gate <em>its own</em> spell, ability, or item on claim permission &mdash;
+      &ldquo;only let this fireball break terrain where the caster is allowed to
+      build.&rdquo; <code>ClaimGate</code> is a reusable interaction node for
+      exactly that. Drop it into any interaction tree and it branches to
+      <code>Next</code> or <code>Failed</code> based on whether the casting player
+      may act in the claim at the interaction&rsquo;s target &mdash; no Java, and
+      no compile-time dependency on Claims.
+    </p>
+    <pre class="code-block"><code>{
+  <span class="hl-str">"Type"</span>:   <span class="hl-str">"ClaimGate"</span>,
+  <span class="hl-str">"Flag"</span>:   <span class="hl-str">"BUILD"</span>,              <span class="hl-cmt">// optional &mdash; RegionFlag to test (default BUILD)</span>
+  <span class="hl-str">"Next"</span>:   <span class="hl-str">"spell_place_block"</span>,  <span class="hl-cmt">// runs when the caster is allowed here</span>
+  <span class="hl-str">"Failed"</span>: <span class="hl-str">"spell_fizzle"</span>       <span class="hl-cmt">// runs in protected / untrusted land</span>
+}</code></pre>
+    <table>
+      <thead>
+        <tr><th>Field</th><th>Required</th><th>Meaning</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Type</code></td>
+          <td>Yes</td>
+          <td>Must be <code>"ClaimGate"</code>.</td>
+        </tr>
+        <tr>
+          <td><code>Next</code></td>
+          <td>Recommended</td>
+          <td>Interaction id to run when the player <strong>is allowed</strong> to act at the target.</td>
+        </tr>
+        <tr>
+          <td><code>Failed</code></td>
+          <td>Recommended</td>
+          <td>Interaction id to run when the action is <strong>denied</strong>. Leave both branches unset for a no-op gate that always proceeds.</td>
+        </tr>
+        <tr>
+          <td><code>Flag</code></td>
+          <td>Optional</td>
+          <td>
+            Which region flag to test &mdash; e.g. <code>BUILD</code>,
+            <code>BREAK</code>, <code>INTERACT</code>, <code>CONTAINER</code>,
+            <code>DOOR</code>, <code>HARVEST</code>, <code>PVP</code>,
+            <code>PVE</code>, <code>PORTAL</code>, <code>SIT</code>. Defaults to
+            <code>BUILD</code>; an unrecognised value also falls back to
+            <code>BUILD</code>. See <a href="claims-regions.html">Regions &amp; Flags</a>
+            for the full flag list.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>How the check behaves at runtime:</p>
+    <ul>
+      <li>
+        <strong>Server-authoritative.</strong> The branch is decided on the
+        server and synced to the client, so the client follows the correct path
+        instead of mispredicting (it cannot see claim state locally).
+      </li>
+      <li>
+        <strong>Target resolution.</strong> The check runs against the
+        interaction&rsquo;s target block. For a self-targeted ability with no
+        block target, it falls back to the casting player&rsquo;s own position.
+      </li>
+      <li>
+        <strong>Fails open.</strong> If no player, world, or position can be
+        resolved, the gate <em>allows</em> the action (takes <code>Next</code>)
+        &mdash; it never blocks on ambiguity.
+      </li>
+      <li>
+        <strong>Admin bypass.</strong> Players with the
+        <code>questlinesclaims.admin</code> permission always pass.
+      </li>
+    </ul>
+    <div class="callout note">
+      <span class="callout-icon">&#8505;</span>
+      <div class="callout-body">
+        <div class="callout-title">Requires Claims installed</div>
+        <p>
+          <code>ClaimGate</code> is registered by QuestLines Claims at startup. If
+          Claims is not installed, the node is an unknown interaction type &mdash;
+          author packs that use it should list QuestLines Claims as a dependency.
+          For interactions that <em>break</em>, <em>place</em>, or <em>damage</em>
+          through the engine&rsquo;s standard operations, you usually don&rsquo;t
+          need <code>ClaimGate</code> at all: those already fire cancellable events
+          that Claims vetoes automatically.
+        </p>
+      </div>
+    </div>
     </div>
 
     <!-- Claim Decay -->
